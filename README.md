@@ -28,7 +28,7 @@ O pipeline segue a arquitetura Medalhão em três camadas no Databricks:
 - **Silver** — limpeza, deduplicação, padronização de formatos e criação de colunas derivadas
 - **Gold** — tabelas analíticas consolidadas que alimentam o CRM e o agente de IA
 
-### Tabelas Bronze
+### Camada Bronze
 
 As 6 tabelas a seguir foram ingeridas na camada Bronze:
 
@@ -40,3 +40,29 @@ As 6 tabelas a seguir foram ingeridas na camada Bronze:
 | bronze.tb_clientes | clientes.csv |
 | bronze.tb_pedidos | pedidos.csv |
 | bronze.tb_suporte_tickets | suporte_tickets.csv |
+
+### Camada Silver
+
+Notebook responsável por:
+
+* Remover linhas duplicadas via Window Functions particionadas pelo ID e ordenadas de forma decrescente pela data de cadastro
+* Validar e nulificar datas inválidas (fora de faixa, futuras ou inconsistentes)
+* Padronizar valores categóricos para valores canônicos em minúsculo sem acento
+* Converter nulos falsos para nulo real
+* Validar e marcar e-mails inválidos via regex
+* Padronizar e separar campos compostos em colunas estruturadas
+* Corrigir combinações inválidas entre colunas relacionadas
+* Substituir valores inválidos pela mediana dos valores válidos
+* Criar flags booleanas para rastreabilidade de nulos esperados
+* Remover linhas com dados críticos ausentes
+* Criar coluna derivada `status_ticket` a partir de nulos legítimos de `data_resolucao`
+* Criar tabela 1:N entre `id_cliente` e `id_device` para normalizar múltiplos dispositivos por cliente
+
+Tabelas geradas:
+
+* `silver.dim_clientes`
+* `silver.fat_avaliacoes`
+* `silver.fat_pedidos`
+* `silver.fat_suporte_tickets`
+* `silver.dim_catalogo_produtos`
+* `silver.fat_clickstream`
