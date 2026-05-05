@@ -18,6 +18,37 @@ A V-Commerce é uma varejista digital brasileira com mais de 50.000 clientes e 3
 
 ---
 
+## Como Executar
+
+### Backend
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m app.main
+```
+
+Se o ambiente virtual já tiver sido criado, basta ativá-lo antes de instalar as dependências:
+
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m app.main
+```
+
+### Frontend
+
+```bash
+cd frontend
+pnpm install
+pnpm run dev
+```
+
+Se o `pnpm install` já tiver sido executado anteriormente, você pode ir direto para `pnpm run dev`.
+
 ## Engenharia de Dados
 
 ### Arquitetura Medalhão
