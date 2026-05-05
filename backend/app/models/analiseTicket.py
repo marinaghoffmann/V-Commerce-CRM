@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Float, Boolean, Date
+from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey
 from app.database import Base
 
 class AnaliseTicket(Base):
@@ -10,7 +10,7 @@ class AnaliseTicket(Base):
     __tablename__ = "analise_tickets"
 
     id_ticket:                  Mapped[str]        = mapped_column(String, primary_key=True, index=True)
-    id_cliente:                 Mapped[str]        = mapped_column(String, foreign_key="v_cliente_360.id_cliente", index=True)
+    id_cliente:                 Mapped[str]        = mapped_column(String, ForeignKey("v_cliente_360.id_cliente"), index=True)
     nome_cliente:               Mapped[str]        = mapped_column(String)
     tipo_problema:              Mapped[str]        = mapped_column(String)
     status_ticket:              Mapped[str]        = mapped_column(String)

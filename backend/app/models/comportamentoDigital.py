@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Float, Boolean, Date
+from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey
 from app.database import Base
 
 
@@ -10,7 +10,7 @@ class ComportamentoDigital(Base):
     """
     __tablename__ = "comportamento_digital"
 
-    id_cliente:                 Mapped[str]   = mapped_column(String,  primary_key=True, foreign_key="v_cliente_360.id_cliente", index=True)
+    id_cliente:                 Mapped[str]   = mapped_column(String, ForeignKey("v_cliente_360.id_cliente"), primary_key=True, index=True, )
     total_sessoes:              Mapped[int]   = mapped_column(Integer, default=0)
     total_eventos:              Mapped[int]   = mapped_column(Integer, default=0)
     total_visualizacoes_produto:Mapped[int]   = mapped_column(Integer, default=0)
