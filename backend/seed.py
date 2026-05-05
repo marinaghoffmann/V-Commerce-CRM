@@ -5,17 +5,11 @@ from datetime import date
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.database import engine, SessionLocal,Base
-from app.models import (
-    ClienteBase360,
-    DesempenhoProduto,
-    KpiPorCategoria,
-    KpiPorEstado,
-    KpiPorStatus,
-    ComportamentoDigital,
-    AnaliseTicket,
-)
-
-
+from app.models.kpi import KpiPorCategoria, KpiPorEstado, KpiPorStatus
+from app.models.comportamentoDigital import ComportamentoDigital
+from app.models.desempenhoProduto import DesempenhoProduto
+from app.models.analiseTicket import AnaliseTicket
+from app.models.cliente360 import ClienteBase360
 
 # Dados de seed
 
