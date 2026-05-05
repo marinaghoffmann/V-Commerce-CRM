@@ -66,3 +66,25 @@ Tabelas geradas:
 * `silver.fat_suporte_tickets`
 * `silver.dim_catalogo_produtos`
 * `silver.fat_clickstream`
+
+# Camada Gold
+
+A camada Gold consolida e agrega os dados das camadas Silver em tabelas prontas para consumo pelo CRM, dashboards e pelo Agente de IA. Cada tabela é orientada a um caso de uso específico e otimizada para leitura, não para transformação.
+
+
+## Tabelas
+
+### `gold.v_cliente_360`
+Consolida dados cadastrais com métricas de compra, suporte, satisfação e comportamento digital. 
+
+### `gold.desempenho_produtos`
+Consolida dados do catálogo com métricas de vendas, satisfação, suporte e visualizações. 
+
+### `gold.kpis_vendas`
+Métricas de vendas consolidadas com cortes por estado, categoria de produto e status do pedido. 
+
+### `gold.analise_tickets`
+Uma linha por ticket, com contexto completo do cliente e do produto envolvido.
+
+### `gold.comportamento_digital`
+Uma linha por cliente,com métricas de navegação agregadas do clickstream. 
