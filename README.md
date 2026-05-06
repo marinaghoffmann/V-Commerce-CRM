@@ -119,3 +119,51 @@ Uma linha por ticket, com contexto completo do cliente e do produto envolvido.
 
 ### `gold.comportamento_digital`
 Uma linha por cliente,com métricas de navegação agregadas do clickstream. 
+
+---
+
+## Agente de IA (Text-to-SQL)
+
+O agente converte perguntas em linguagem natural para queries SQL válidas sobre o banco local, utilizando o modelo Gemini 2.5 Flash.
+
+### Estrutura
+
+| Arquivo | Descrição |
+|---|---|
+| `ai-agent/agent.py` | Função `perguntar()` — chama o Gemini, executa o SQL e retorna os resultados |
+| `ai-agent/prompt.py` | System prompt com schema completo e exemplos few-shot |
+| `ai-agent/database.py` | Conexão com o SQLite e funções `get_schema()` e `execute_query()` |
+| `ai-agent/test_prompt.py` | Script para rodar todos os testes documentados |
+
+### Configuração
+
+```bash
+cd ai-agent
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r ../backend/requirements.txt
+cp ../.env.example .env
+# editar .env com a GOOGLE_API_KEY
+```
+
+A chave de API pode ser obtida em: https://aistudio.google.com/app/apikey
+
+### Rodando os testes
+
+```bash
+python test_prompt.py
+```
+
+O script executa 7 perguntas de negócio em sequência, com delay de 15s entre cada chamada para respeitar o rate limit do free tier (5 requests/min do Gemini 2.5 Flash).
+
+### Perguntas testadas
+
+| # | Pergunta | Status |
+|---|---|---|
+| 1 | Quais foram os 10 produtos mais vendidos? | ✅ Validado com dados reais |
+| 2 | Qual estado teve maior receita total? | ✅ Validado com dados reais |
+| 3 | Quais produtos estão gerando mais tickets de suporte? | ✅ Validado com dados reais |
+| 4 | Me mostre os clientes do segmento VIP com maior receita | ✅ Validado com dados reais |
+| 5 | Qual o ticket médio de cada categoria de produto? | ✅ Validado com dados reais |
+| 6 | Qual a taxa média de abandono de carrinho? | ✅ Validado com dados reais |
+| 7 | Qual a previsão do tempo para amanhã em São Paulo? | ✅ Guardrail ativado (fora do escopo) |
