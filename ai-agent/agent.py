@@ -26,7 +26,7 @@ client = genai.Client(api_key=google_api_key)
 
 def perguntar(question: str) -> dict:
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite-preview",
         contents=question,
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
