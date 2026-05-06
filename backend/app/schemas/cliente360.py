@@ -1,6 +1,22 @@
 from pydantic import BaseModel
 from datetime import date
 
+class PedidoResumo(BaseModel):
+    id_pedido: str | None = None
+    data_pedido: date | None = None
+    valor_pedido: float | None = 0.0
+    status: str | None = None
+    
+    model_config = {"from_attributes": True}
+
+class TicketResumo(BaseModel):
+    id_ticket: str | None = None
+    data_abertura: date | None = None
+    tipo_problema: str | None = None
+    status_ticket: str | None = None
+    
+    model_config = {"from_attributes": True}
+
 # v_cliente_360
 
 class Cliente360Schema(BaseModel):
@@ -44,5 +60,8 @@ class Cliente360Schema(BaseModel):
 
     # Segmento derivado
     segmento_cliente:           str | None = None
+
+    pedidos: list[PedidoResumo] = []
+    tickets: list[TicketResumo] = []
 
     model_config = {"from_attributes": True}
