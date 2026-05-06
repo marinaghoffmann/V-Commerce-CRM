@@ -1,8 +1,3 @@
-"""
-Script para rodar todos os testes documentados do prompt Text-to-SQL.
-Uso: python test_prompt.py
-"""
-
 import time
 from agent import perguntar
 
@@ -16,7 +11,7 @@ TESTES = [
     "Qual a previsão do tempo para amanhã em São Paulo?",  # teste do guardrail
 ]
 
-DELAY_ENTRE_TESTES = 15  # segundos — respeita o rate limit do free tier (5 req/min)
+DELAY_ENTRE_TESTES = 15  # rate limit 
 
 def rodar_testes():
     print("=" * 60)
@@ -38,10 +33,8 @@ def rodar_testes():
 
             if resultado['rows']:
                 print(f"Linhas: {len(resultado['rows'])}")
-                for row in resultado['rows'][:3]:
+                for row in resultado['rows']:
                     print(f"  {dict(row)}")
-                if len(resultado['rows']) > 3:
-                    print(f"  ... e mais {len(resultado['rows']) - 3} linha(s)")
 
         except Exception as e:
             print(f"ERRO NA CHAMADA: {e}")
