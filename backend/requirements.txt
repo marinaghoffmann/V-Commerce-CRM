@@ -2,3 +2,5 @@ fastapi
 uvicorn[standard]
 pydantic
 sqlalchemy
+google-genai
+python-dotenv
