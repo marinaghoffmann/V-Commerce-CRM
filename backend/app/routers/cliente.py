@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.cliente360 import ClienteBase360
 from app.schemas.cliente360 import Cliente360Schema
+from app.models.analiseTicket import AnaliseTicket
+from app.models.pedidosPorCliente import PedidosPorCliente
 
-router = APIRouter(prefix="/cliente", tags=["Cliente"])
-
+router = APIRouter(prefix="/clientes", tags=["Perfil 360"])
 
 @router.get("/", response_model=list[Cliente360Schema])
 def listar_clientes(
@@ -45,17 +46,16 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
     
-    lista_tickets = db.query(AnaliseTicket).filter(AnaliseTicket.id_cliente == cliente_id).all()
-    lista_pedidos = db.query(PedidosPorCliente).filter(PedidosPorCliente.id_cliente == cliente_id).all()
+    list_tickets = db.query(AnaliseTicket).filter(AnaliseTicket.id_cliente == cliente_id).all()
+    list_pedidos = db.query(PedidosPorCliente).filter(PedidosPorCliente.id_cliente == cliente_id).all()
     
     resultado = {
         **cliente.__dict__, 
-        "pedidos": lista_pedidos,
-        "tickets": lista_tickets
+        "pedidos": list_pedidos,
+        "tickets": list_tickets
     }
     
     return resultado
-
 
 @router.post("/", response_model=Cliente360Schema, status_code=status.HTTP_201_CREATED)
 def create_cliente(payload: Cliente360Schema, db: Session = Depends(get_db)):
