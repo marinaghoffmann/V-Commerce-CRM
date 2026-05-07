@@ -34,11 +34,9 @@ ENV/
 .env
 .env.*
 !.env.example
+__pycache__/
+*.pyc
 
 # OS files
 .DS_Store
 Thumbs.db
-
-
-__pycache__/
-*.pyc
