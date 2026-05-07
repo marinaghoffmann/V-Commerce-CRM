@@ -40,6 +40,46 @@ const MOCK_PEDIDOS: Pedido[] = [
   { id: 8,  idPedido: "#6632", cliente: "Camila Freitas",  produto: "Perfume Importado",       categoria: "Beleza",      status: "Entregue",         data: "05/04/2025" },
   { id: 9,  idPedido: "#7743", cliente: "Thiago Mendes",   produto: "Notebook Dell",           categoria: "Eletrônicos", status: "Atrasado",         data: "08/04/2025" },
   { id: 10, idPedido: "#8854", cliente: "Fernanda Lima",   produto: "Cadeira Gamer",           categoria: "Casa",        status: "Entregue",         data: "22/04/2025" },
+   { id: 1,  idPedido: "#2412", cliente: "Theo Michilles",  produto: "Airfryer Philips Walita", categoria: "Eletrônicos", status: "Entregue",         data: "12/04/2025" },
+  { id: 2,  idPedido: "#6769", cliente: "Luis Felipe",     produto: "Frigideira Inox",         categoria: "Casa",        status: "Em processamento", data: "03/04/2025" },
+  { id: 3,  idPedido: "#1331", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Em trânsito",      data: "28/04/2025" },
+  { id: 4,  idPedido: "#2412", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Atrasado",         data: "10/04/2025" },
+  { id: 5,  idPedido: "#3301", cliente: "Thiago Mendes",   produto: "Tênis Nike Air",          categoria: "Moda",        status: "Entregue",         data: "01/04/2025" },
+  { id: 6,  idPedido: "#4410", cliente: "Fernanda Lima",   produto: "Smart TV 55\"",           categoria: "Eletrônicos", status: "Em trânsito",      data: "15/04/2025" },
+  { id: 7,  idPedido: "#5521", cliente: "Felipe Peixoto",  produto: "Sofá 3 lugares",          categoria: "Casa",        status: "Em processamento", data: "20/04/2025" },
+  { id: 8,  idPedido: "#6632", cliente: "Camila Freitas",  produto: "Perfume Importado",       categoria: "Beleza",      status: "Entregue",         data: "05/04/2025" },
+  { id: 9,  idPedido: "#7743", cliente: "Thiago Mendes",   produto: "Notebook Dell",           categoria: "Eletrônicos", status: "Atrasado",         data: "08/04/2025" },
+  { id: 10, idPedido: "#8854", cliente: "Fernanda Lima",   produto: "Cadeira Gamer",           categoria: "Casa",        status: "Entregue",         data: "22/04/2025" },
+   { id: 1,  idPedido: "#2412", cliente: "Theo Michilles",  produto: "Airfryer Philips Walita", categoria: "Eletrônicos", status: "Entregue",         data: "12/04/2025" },
+  { id: 2,  idPedido: "#6769", cliente: "Luis Felipe",     produto: "Frigideira Inox",         categoria: "Casa",        status: "Em processamento", data: "03/04/2025" },
+  { id: 3,  idPedido: "#1331", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Em trânsito",      data: "28/04/2025" },
+  { id: 4,  idPedido: "#2412", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Atrasado",         data: "10/04/2025" },
+  { id: 5,  idPedido: "#3301", cliente: "Thiago Mendes",   produto: "Tênis Nike Air",          categoria: "Moda",        status: "Entregue",         data: "01/04/2025" },
+  { id: 6,  idPedido: "#4410", cliente: "Fernanda Lima",   produto: "Smart TV 55\"",           categoria: "Eletrônicos", status: "Em trânsito",      data: "15/04/2025" },
+  { id: 7,  idPedido: "#5521", cliente: "Felipe Peixoto",  produto: "Sofá 3 lugares",          categoria: "Casa",        status: "Em processamento", data: "20/04/2025" },
+  { id: 8,  idPedido: "#6632", cliente: "Camila Freitas",  produto: "Perfume Importado",       categoria: "Beleza",      status: "Entregue",         data: "05/04/2025" },
+  { id: 9,  idPedido: "#7743", cliente: "Thiago Mendes",   produto: "Notebook Dell",           categoria: "Eletrônicos", status: "Atrasado",         data: "08/04/2025" },
+  { id: 10, idPedido: "#8854", cliente: "Fernanda Lima",   produto: "Cadeira Gamer",           categoria: "Casa",        status: "Entregue",         data: "22/04/2025" },
+   { id: 1,  idPedido: "#2412", cliente: "Theo Michilles",  produto: "Airfryer Philips Walita", categoria: "Eletrônicos", status: "Entregue",         data: "12/04/2025" },
+  { id: 2,  idPedido: "#6769", cliente: "Luis Felipe",     produto: "Frigideira Inox",         categoria: "Casa",        status: "Em processamento", data: "03/04/2025" },
+  { id: 3,  idPedido: "#1331", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Em trânsito",      data: "28/04/2025" },
+  { id: 4,  idPedido: "#2412", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Atrasado",         data: "10/04/2025" },
+  { id: 5,  idPedido: "#3301", cliente: "Thiago Mendes",   produto: "Tênis Nike Air",          categoria: "Moda",        status: "Entregue",         data: "01/04/2025" },
+  { id: 6,  idPedido: "#4410", cliente: "Fernanda Lima",   produto: "Smart TV 55\"",           categoria: "Eletrônicos", status: "Em trânsito",      data: "15/04/2025" },
+  { id: 7,  idPedido: "#5521", cliente: "Felipe Peixoto",  produto: "Sofá 3 lugares",          categoria: "Casa",        status: "Em processamento", data: "20/04/2025" },
+  { id: 8,  idPedido: "#6632", cliente: "Camila Freitas",  produto: "Perfume Importado",       categoria: "Beleza",      status: "Entregue",         data: "05/04/2025" },
+  { id: 9,  idPedido: "#7743", cliente: "Thiago Mendes",   produto: "Notebook Dell",           categoria: "Eletrônicos", status: "Atrasado",         data: "08/04/2025" },
+  { id: 10, idPedido: "#8854", cliente: "Fernanda Lima",   produto: "Cadeira Gamer",           categoria: "Casa",        status: "Entregue",         data: "22/04/2025" },
+   { id: 1,  idPedido: "#2412", cliente: "Theo Michilles",  produto: "Airfryer Philips Walita", categoria: "Eletrônicos", status: "Entregue",         data: "12/04/2025" },
+  { id: 2,  idPedido: "#6769", cliente: "Luis Felipe",     produto: "Frigideira Inox",         categoria: "Casa",        status: "Em processamento", data: "03/04/2025" },
+  { id: 3,  idPedido: "#1331", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Em trânsito",      data: "28/04/2025" },
+  { id: 4,  idPedido: "#2412", cliente: "Gabriela Amorim", produto: "Bolsa com alça",          categoria: "Moda",        status: "Atrasado",         data: "10/04/2025" },
+  { id: 5,  idPedido: "#3301", cliente: "Thiago Mendes",   produto: "Tênis Nike Air",          categoria: "Moda",        status: "Entregue",         data: "01/04/2025" },
+  { id: 6,  idPedido: "#4410", cliente: "Fernanda Lima",   produto: "Smart TV 55\"",           categoria: "Eletrônicos", status: "Em trânsito",      data: "15/04/2025" },
+  { id: 7,  idPedido: "#5521", cliente: "Felipe Peixoto",  produto: "Sofá 3 lugares",          categoria: "Casa",        status: "Em processamento", data: "20/04/2025" },
+  { id: 8,  idPedido: "#6632", cliente: "Camila Freitas",  produto: "Perfume Importado",       categoria: "Beleza",      status: "Entregue",         data: "05/04/2025" },
+  { id: 9,  idPedido: "#7743", cliente: "Thiago Mendes",   produto: "Notebook Dell",           categoria: "Eletrônicos", status: "Atrasado",         data: "08/04/2025" },
+  { id: 10, idPedido: "#8854", cliente: "Fernanda Lima",   produto: "Cadeira Gamer",           categoria: "Casa",        status: "Entregue",         data: "22/04/2025" },
 ];
 
 const columns = [
@@ -68,6 +108,7 @@ export const PedidosPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState("");
   const [activeFilter, setActiveFilter] = useState("Todos");
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -110,8 +151,9 @@ export const PedidosPage = () => {
       <DataTable
         columns={columns}
         data={filtered}
-        maxHeight={600}
-        pageSize={10}
+        maxHeight={550}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
       />
     </div>
   );

@@ -13,6 +13,7 @@ interface DataTableProps<T> {
   data: T[];
   maxHeight?: number;
   pageSize?: number;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export const DataTable = <T extends object>({
@@ -20,6 +21,7 @@ export const DataTable = <T extends object>({
   data,
   maxHeight = 400,
   pageSize = 5,
+  setPageSize,
 }: DataTableProps<T>) => {
   const [page, setPage] = useState(1);
 
@@ -30,7 +32,9 @@ export const DataTable = <T extends object>({
 
   const goTo = (p: number) => setPage(Math.min(Math.max(1, p), totalPages));
 
+
   return (
+
     <div className="rounded-xl border border-gray-200 bg-white overflow-hidden w-[90vw] mx-auto">
 
       <div style={{ maxHeight }} className="overflow-y-auto">
@@ -45,6 +49,14 @@ export const DataTable = <T extends object>({
                   {col.label}
                 </th>
               ))}
+              <th> 
+                <select onChange={(e) => setPageSize(e.target.value)} value={pageSize} className="ml-2 p-1 border rounded"> 
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
+              </th>
             </tr>
           </thead>
 
