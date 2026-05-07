@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
 import { Navbar } from "./components/organisms/Navbar";
+import { PedidosPage } from "./components/pages/ClientePage";
 
 // Teste da paginação para checar seu funcionamento
 
@@ -8,9 +9,6 @@ function Dashboard() {
   return <h1>Dashboard</h1>;
 }
 
-function Clientes() {
-  return <h1>Clientes</h1>;
-}
 
 function Pedidos() {
   return <h1>Pedidos</h1>;
@@ -35,11 +33,10 @@ export default function App() {
 
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/pedidos" element={<Pedidos />} />
         <Route path="/produtos" element={<Produtos />} />
         <Route path="/suporte" element={<Suporte />} />
         <Route path="/assistente" element={<Assistente />} />
+        <Route path="/pedidos" element={<PedidosPage />} />
       </Routes>
     </>
   );
