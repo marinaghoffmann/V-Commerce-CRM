@@ -1,0 +1,28 @@
+resources:
+  jobs:
+    Workflow_Vcommerce_crm:
+      name: Workflow Vcommerce-crm
+      schedule:
+        quartz_cron_expression: 58 0 18 * * ?
+        timezone_id: America/Sao_Paulo
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: run_land_to_bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/algcf@cesar.school/Rocket/Rocket_land_to_bronze
+            source: WORKSPACE
+        - task_key: run_bronze_to_silver
+          depends_on:
+            - task_key: run_land_to_bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/algcf@cesar.school/Rocket/Rocket_bronze_to_silver
+            source: WORKSPACE
+        - task_key: run_silver_to_gold
+          depends_on:
+            - task_key: run_bronze_to_silver
+          notebook_task:
+            notebook_path: /Workspace/Users/algcf@cesar.school/Rocket/Rocket_silver_to_gold
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED
