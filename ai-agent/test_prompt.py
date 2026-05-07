@@ -5,7 +5,7 @@ TESTES = [
     "Quais foram os 10 produtos mais vendidos?",
     "Qual estado teve maior receita total?",
     "Quais produtos estão gerando mais tickets de suporte?",
-    "Me mostre os clientes do segmento VIP com maior receita",
+    "Me mostre os clientes do segmento Premium com maior receita",
     "Qual o ticket médio de cada categoria de produto?",
     "Qual a taxa média de abandono de carrinho?",
     "Qual a previsão do tempo para amanhã em São Paulo?",  # teste do guardrail
