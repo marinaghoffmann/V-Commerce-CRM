@@ -1,45 +1,5 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.so
-*.egg
-*.egg-info/
-dist/
-build/
-site/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-coverage.xml
-
-# Virtual env
-.venv/
-venv/
-env/
-ENV/
-
-# FastAPI / Uvicorn
-*.log
-
-# IDE / editor
-.vscode/
-.idea/
-*.swp
-*.swop
-
-# Environment variables
 .env
 .env.*
 !.env.example
 __pycache__/
 *.pyc
-
-# OS files
-.DS_Store
-Thumbs.db
-
-
-package-lock.json
