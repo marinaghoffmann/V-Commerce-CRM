@@ -11,7 +11,7 @@ router = APIRouter(prefix="/produto", tags=["Produto"])
 
 
 @router.get("/", response_model=List[DesempenhoProdutoSchema])
-def list_produto(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
+def list_produto(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
     query = db.query(DesempenhoProduto).offset(skip)
     if limit > 0:
         query = query.limit(limit)

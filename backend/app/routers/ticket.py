@@ -11,7 +11,7 @@ router = APIRouter(prefix="/ticket", tags=["Ticket"])
 
 
 @router.get("/", response_model=List[AnaliseTicketSchema])
-def list_ticket(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
+def list_ticket(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
     query = db.query(AnaliseTicket).offset(skip)
     if limit > 0:
         query = query.limit(limit)

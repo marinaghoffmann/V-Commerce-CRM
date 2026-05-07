@@ -11,7 +11,7 @@ router = APIRouter(prefix="/cliente", tags=["Cliente"])
 
 
 @router.get("/", response_model=List[Cliente360Schema])
-def list_cliente(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
+def list_cliente(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
     query = db.query(ClienteBase360).offset(skip)
     if limit > 0:
         query = query.limit(limit)
