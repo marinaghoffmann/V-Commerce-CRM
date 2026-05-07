@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.kpi import KpiPorCategoria
-from app.schemas.kpi import KpiCategoriaSchema, KpiCategoriaPayloadSchema, KpiCategoriaPatchSchema
+from app.models.kpi_categoria import KpiPorCategoria
+from app.schemas.kpi_categoria import KpiCategoriaSchema, KpiCategoriaPayloadSchema, KpiCategoriaPatchSchema
 from uuid import UUID
 
 router = APIRouter(prefix="/kpi-category", tags=["kpi-category"])

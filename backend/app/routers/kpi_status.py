@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.kpi import KpiPorStatus
-from app.schemas.kpi import KpiStatusSchema, KpiStatusPayloadSchema, KpiStatusPatchSchema
+from app.models.kpi_status import KpiPorStatus
+from app.schemas.kpi_status import KpiStatusSchema, KpiStatusPayloadSchema, KpiStatusPatchSchema
 from uuid import UUID
 
 router = APIRouter(prefix="/kpi-status", tags=["kpi-status"])
