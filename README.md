@@ -6,7 +6,7 @@ Plataforma integrada de CRM desenvolvida para o RocketLab 2026 (Visagio), com pi
 
 ## Visão Geral
 
-A V-Commerce é uma varejista digital brasileira com mais de 50.000 clientes e 300.000 pedidos acumulados. Este projeto centraliza dados de clientes, pedidos, produtos e suporte em uma única plataforma, com dashboards analíticos e um agente de IA capaz de responder perguntas de negócio em linguagem natural.
+A V-Commerce é uma varejista digital brasileira, com mais de 50.000 clientes e 300.000 pedidos acumulados. Este projeto centraliza dados de clientes, pedidos, produtos e suporte em uma única plataforma, com dashboards analíticos e um agente de IA capaz de responder perguntas de negócio em linguagem natural.
 
 ### Módulos
 
@@ -163,7 +163,7 @@ O script executa 7 perguntas de negócio em sequência, com delay de 15s entre c
 | 1 | Quais foram os 10 produtos mais vendidos? | ✅ Validado com dados reais |
 | 2 | Qual estado teve maior receita total? | ✅ Validado com dados reais |
 | 3 | Quais produtos estão gerando mais tickets de suporte? | ✅ Validado com dados reais |
-| 4 | Me mostre os clientes do segmento VIP com maior receita | ✅ Validado com dados reais |
+| 4 | Me mostre os clientes do segmento Premium com maior receita | ✅ Validado com dados reais |
 | 5 | Qual o ticket médio de cada categoria de produto? | ✅ Validado com dados reais |
 | 6 | Qual a taxa média de abandono de carrinho? | ✅ Validado com dados reais |
 | 7 | Qual a previsão do tempo para amanhã em São Paulo? | ✅ Guardrail ativado (fora do escopo) |
