@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db 
 from app.models.cliente360 import ClienteBase360
 from app.schemas.cliente360 import Cliente360Schema
+from app.models.analiseTicket import AnaliseTicket
+from app.models.pedidosPorCliente import PedidosPorCliente
 
 from app.models.analiseTicket import AnaliseTicket 
 
@@ -19,9 +21,8 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
     
     # 2. Busca o histórico de tickets desse cliente
     lista_tickets = db.query(AnaliseTicket).filter(AnaliseTicket.id_cliente == cliente_id).all()
+    lista_pedidos = db.query(PedidosPorCliente).filter(PedidosPorCliente.id_cliente == cliente_id).all()
     
-    
-    lista_pedidos = [] 
     
     resultado = {
         **cliente.__dict__, 
