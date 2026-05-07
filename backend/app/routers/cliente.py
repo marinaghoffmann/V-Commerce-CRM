@@ -17,13 +17,25 @@ def list_cliente(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
         query = query.limit(limit)
     return query.all()
 
-
-@router.get("/{id_cliente}", response_model=Cliente360Schema)
-def get_cliente(id_cliente: str, db: Session = Depends(get_db)):
-    cliente = db.query(ClienteBase360).filter(ClienteBase360.id_cliente == id_cliente).first()
+@router.get("/{cliente_id}", response_model=Cliente360Schema)
+def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
+    
+    cliente = db.query(ClienteBase360).filter(ClienteBase360.id_cliente == cliente_id).first()
+    
     if not cliente:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
-    return cliente
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    
+    lista_tickets = db.query(AnaliseTicket).filter(AnaliseTicket.id_cliente == cliente_id).all()
+    lista_pedidos = db.query(PedidosPorCliente).filter(PedidosPorCliente.id_cliente == cliente_id).all()
+    
+    
+    resultado = {
+        **cliente.__dict__, 
+        "pedidos": lista_pedidos,
+        "tickets": lista_tickets
+    }
+    
+    return resultado
 
 
 @router.post("/", response_model=Cliente360Schema, status_code=status.HTTP_201_CREATED)
