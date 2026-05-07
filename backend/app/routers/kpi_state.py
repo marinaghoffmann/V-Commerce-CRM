@@ -11,8 +11,8 @@ router = APIRouter(prefix="/kpi-state", tags=["kpi-state"])
 
 
 @router.get("", response_model=List[KpiEstadoSchema], status_code=status.HTTP_200_OK)
-def get_kpi_states(limit: int = 30, db: Session = Depends(get_db)):
-    kpi_states = db.query(KpiPorEstado).limit(limit).all()
+def get_kpi_states(limit: int = 30, offset: int = 0, db: Session = Depends(get_db)):
+    kpi_states = db.query(KpiPorEstado).limit(limit).offset(offset).all()
     return kpi_states
 
 
