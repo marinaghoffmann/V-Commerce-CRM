@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Float
+from sqlalchemy import String, Integer, Float, Uuid
+from uuid import uuid4
 from app.database import Base
 
 class KpiPorCategoria(Base):
@@ -9,7 +10,7 @@ class KpiPorCategoria(Base):
     """
     __tablename__ = "kpi_por_categoria"
 
-    id:                         Mapped[int]   = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id:                         Mapped[str]   = mapped_column(Uuid, primary_key=True, default=uuid4, index=True)
     ano_venda:                  Mapped[int]   = mapped_column(Integer)
     mes_venda:                  Mapped[int]   = mapped_column(Integer)
     categoria:                  Mapped[str]   = mapped_column(String)
@@ -26,7 +27,7 @@ class KpiPorEstado(Base):
     """
     __tablename__ = "kpi_por_estado"
 
-    id:                         Mapped[int]   = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id:                         Mapped[str]   = mapped_column(Uuid, primary_key=True, default=uuid4, index=True)
     ano_venda:                  Mapped[int]   = mapped_column(Integer)
     mes_venda:                  Mapped[int]   = mapped_column(Integer)
     estado:                     Mapped[str]   = mapped_column(String)
@@ -43,7 +44,7 @@ class KpiPorStatus(Base):
     """
     __tablename__ = "kpi_por_status"
 
-    id:                         Mapped[int]   = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id:                         Mapped[str]   = mapped_column(Uuid, primary_key=True, default=uuid4, index=True)
     ano_venda:                  Mapped[int]   = mapped_column(Integer)
     mes_venda:                  Mapped[int]   = mapped_column(Integer)
     status:                     Mapped[str]   = mapped_column(String)
