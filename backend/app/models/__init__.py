@@ -1,15 +1,15 @@
 from app.models.kpi import KpiPorCategoria, KpiPorEstado, KpiPorStatus
 from app.models.comportamentoDigital import ComportamentoDigital
-from app.models.desempenhoProduto import DesempenhoProduto
-from app.models.analiseTicket import AnaliseTicket
-from app.models.cliente360 import ClienteBase360
+from app.models.desempenhoProduto import Produto
+from app.models.analiseTicket import Ticket
+from app.models.cliente360 import Cliente
 
 __all__ = [
-    "ClienteBase360",
-    "DesempenhoProduto",
+    "Cliente",
+    "Produto",
     "KpiPorCategoria",
     "KpiPorEstado",
     "KpiPorStatus",
     "ComportamentoDigital",
-    "AnaliseTicket",
+    "Ticket",
 ]
