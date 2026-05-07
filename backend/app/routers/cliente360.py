@@ -13,6 +13,8 @@ def listar_clientes(
     busca: str = None,
     status: str = None,
     categoria: str = None,
+    page: int = 1,
+    limit: int = 10,
     db: Session = Depends(get_db)
 ):
     query = db.query(ClienteBase360)
@@ -30,7 +32,8 @@ def listar_clientes(
     if categoria:
         query = query.filter(ClienteBase360.categoria_preferida == categoria)
 
-    return query.limit(50).all()
+    offset = (page - 1) * limit
+    return query.order_by(ClienteBase360.id_cliente).offset(offset).limit(limit).all()
 
 @router.get("/{cliente_id}", response_model=Cliente360Schema)
 def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
