@@ -10,12 +10,32 @@ from app.schemas.cliente360 import Cliente360Schema
 router = APIRouter(prefix="/cliente", tags=["Cliente"])
 
 
-@router.get("/", response_model=List[Cliente360Schema])
-def list_cliente(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
-    query = db.query(ClienteBase360).offset(skip)
-    if limit > 0:
-        query = query.limit(limit)
-    return query.all()
+@router.get("/", response_model=list[Cliente360Schema])
+def listar_clientes(
+    busca: str = None,
+    status: str = None,
+    categoria: str = None,
+    page: int = 1,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    query = db.query(ClienteBase360)
+
+    if busca:
+        query = query.filter(
+            (ClienteBase360.nome.ilike(f"%{busca}%")) |
+            (ClienteBase360.sobrenome.ilike(f"%{busca}%")) |
+            (ClienteBase360.email.ilike(f"%{busca}%"))
+        )
+
+    if status:
+        query = query.filter(ClienteBase360.segmento_cliente == status)
+
+    if categoria:
+        query = query.filter(ClienteBase360.categoria_preferida == categoria)
+
+    offset = (page - 1) * limit
+    return query.order_by(ClienteBase360.id_cliente).offset(offset).limit(limit).all()
 
 @router.get("/{cliente_id}", response_model=Cliente360Schema)
 def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
@@ -27,7 +47,6 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
     
     lista_tickets = db.query(AnaliseTicket).filter(AnaliseTicket.id_cliente == cliente_id).all()
     lista_pedidos = db.query(PedidosPorCliente).filter(PedidosPorCliente.id_cliente == cliente_id).all()
-    
     
     resultado = {
         **cliente.__dict__, 
