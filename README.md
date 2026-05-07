@@ -6,7 +6,7 @@ Plataforma integrada de CRM desenvolvida para o RocketLab 2026 (Visagio), com pi
 
 ## Visão Geral
 
-A V-Commerce é uma varejista digital brasileira com mais de 50.000 clientes e 300.000 pedidos acumulados. Este projeto centraliza dados de clientes, pedidos, produtos e suporte em uma única plataforma, com dashboards analíticos e um agente de IA capaz de responder perguntas de negócio em linguagem natural.
+A V-Commerce é uma varejista digital brasileira, com mais de 50.000 clientes e 300.000 pedidos acumulados. Este projeto centraliza dados de clientes, pedidos, produtos e suporte em uma única plataforma, com dashboards analíticos e um agente de IA capaz de responder perguntas de negócio em linguagem natural.
 
 ### Módulos
 
