@@ -52,7 +52,7 @@ def update_kpi_state(state_id: int, payload: KpiEstadoSchema, db: Session = Depe
     return kpi
 
 
-@router.delete("/{state_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{state_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
 def delete_kpi_state(state_id: int, db: Session = Depends(get_db)):
     kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == state_id).first()
 

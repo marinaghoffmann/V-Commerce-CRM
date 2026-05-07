@@ -52,7 +52,7 @@ def update_kpi_category(category_id: int, payload: KpiCategoriaSchema, db: Sessi
     return kpi
 
 
-@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{category_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
 def delete_kpi_category(category_id: int, db: Session = Depends(get_db)):
     kpi = db.query(KpiPorCategoria).filter(KpiPorCategoria.id == category_id).first()
 
