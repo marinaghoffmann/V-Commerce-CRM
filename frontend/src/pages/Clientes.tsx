@@ -1,20 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Clientes.css"; // Importando o arquivo que acabamos de criar!
 
-interface Cliente {
-  id_cliente?: number;
-  nome?: string;
-  sobrenome?: string;
-  email?: string;
-  segmento_cliente?: string;
-  total_compras?: number;
-  receita_total_cliente?: number;
-  ticket_medio?: number;
-  data_ultima_compra?: string;
-}
-
-function Clientes(): React.ReactElement {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+function Clientes() {
+  const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [categoria, setCategoria] = useState("");
@@ -50,73 +39,85 @@ function Clientes(): React.ReactElement {
   };
 
   return (
-    <div>
-      <h1>Clientes</h1>
-      <p>Visão 360 de cada cliente: segmento, pedidos e métricas</p>
+    <div className="clientes-container">
+      <h1 className="titulo-pagina">Clientes</h1>
+      <p className="subtitulo-pagina">Visão 360 de cada cliente: segmento, pedidos e métricas</p>
 
-      <input
-        type="text"
-        placeholder="Buscar por nome ou email..."
-        value={busca}
-        onChange={handleBusca}
-      />
+      <div className="filtros-wrapper">
+        <input
+          className="input-busca"
+          type="text"
+          placeholder="Buscar por nome ou email..."
+          value={busca}
+          onChange={handleBusca}
+        />
+        <select className="select-filtro" value={status} onChange={handleStatus}>
+          <option value="">Todos os Segmentos</option>
+          <option value="Premium">Premium</option>
+          <option value="Inativo">Inativo</option>
+          <option value="Recorrente">Recorrente</option>
+          <option value="Novo">Novo</option>
+        </select>
+        <select className="select-filtro" value={categoria} onChange={handleCategoria}>
+          <option value="">Todas Categorias</option>
+          <option value="Eletronicos">Eletrônicos</option>
+          <option value="Moda">Moda</option>
+          <option value="Casa">Casa</option>
+        </select>
+      </div>
 
-      <select value={status} onChange={handleStatus}>
-        <option value="">Todos</option>
-        <option value="Premium">Premium</option>
-        <option value="Inativo">Inativo</option>
-        <option value="Recorrente">Recorrente</option>
-        <option value="Novo">Novo</option>
-      </select>
-
-      <select value={categoria} onChange={handleCategoria}>
-        <option value="">Todas categorias</option>
-        <option value="Eletronicos">Eletrônicos</option>
-        <option value="Moda">Moda</option>
-        <option value="Casa">Casa</option>
-        <option value="Beleza">Beleza</option>
-        <option value="Brinquedos">Brinquedos</option>
-      </select>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Segmento</th>
-            <th>Pedidos</th>
-            <th>LTV</th>
-            <th>Ticket médio</th>
-            <th>Último pedido</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clientes.map((c) => (
-            <tr
-              key={c.id_cliente}
-              onClick={() => c.id_cliente && navigate(`/clientes/${c.id_cliente}`)}
-              style={{ cursor: "pointer" }}
-            >
-              <td>
-                {c.nome} {c.sobrenome}
-                <br />
-                <small>{c.email}</small>
-              </td>
-              <td>{c.segmento_cliente}</td>
-              <td>{c.total_compras}</td>
-              <td>R$ {(c.receita_total_cliente ?? 0).toFixed(2)}</td>
-              <td>R$ {(c.ticket_medio ?? 0).toFixed(2)}</td>
-              <td>{c.data_ultima_compra}</td>
+      <div className="tabela-card">
+        <table className="tabela-base">
+          <thead className="tabela-header">
+            <tr>
+              <th className="tabela-th">Cliente</th>
+              <th className="tabela-th">Segmento</th>
+              <th className="tabela-th">Pedidos</th>
+              <th className="tabela-th">LTV</th>
+              <th className="tabela-th">Ticket Médio</th>
+              <th className="tabela-th">Último Pedido</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {clientes.map((c) => (
+              <tr 
+                key={c.id_cliente} 
+                onClick={() => navigate(`/clientes/${c.id_cliente}`)} 
+                className="tabela-linha"
+              >
+                <td className="px-6 py-4">
+                  <div className="font-medium text-gray-900">{c.nome} {c.sobrenome}</div>
+                  <div className="text-sm text-gray-500">{c.email}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="status-badge">{c.segmento_cliente}</span>
+                </td>
+                <td className="tabela-td">{c.total_compras}</td>
+                <td className="tabela-td font-medium text-blue-600">
+                  R$ {c.receita_total_cliente?.toFixed(2)}
+                </td>
+                <td className="tabela-td">R$ {c.ticket_medio?.toFixed(2)}</td>
+                <td className="px-6 py-4 text-gray-500 text-sm">{c.data_ultima_compra}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <div>
-        <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+      <div className="paginacao-wrapper">
+        <button 
+          onClick={() => setPage((p) => Math.max(p - 1, 1))} 
+          disabled={page === 1}
+          className="btn-paginacao"
+        >
           Anterior
         </button>
-        <span> Página {page} </span>
-        <button onClick={() => setPage((p) => p + 1)} disabled={clientes.length < limit}>
+        <span className="text-gray-600 font-bold"> Página {page} </span>
+        <button 
+          onClick={() => setPage((p) => p + 1)} 
+          disabled={clientes.length < limit}
+          className="btn-paginacao"
+        >
           Próximo
         </button>
       </div>
