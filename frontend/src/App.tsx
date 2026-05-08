@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
 import { Navbar } from "./components/organisms/Navbar";
-import { PedidosPage } from "./components/pages/ClientePage";
+import { PedidosPage } from "./components/pages/ProductPage";
 
 // Teste da paginação para checar seu funcionamento
 
