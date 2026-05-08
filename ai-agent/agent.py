@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import Optional, Any, List
 from database import get_schema, execute_query
 from prompt import SYSTEM_PROMPT
+from utils import validar_sql, get_tabelas_validas
 
 load_dotenv()
 
@@ -36,10 +37,13 @@ def perguntar(question: str) -> dict:
         ),
     )
 
+    TABELAS_VALIDAS = get_tabelas_validas()
+
     ctx: CHESSContext = response.parsed
 
     if ctx.is_valid and ctx.final_sql:
         try:
+            ctx.final_sql = validar_sql(ctx.final_sql, TABELAS_VALIDAS)
             ctx.rows = execute_query(ctx.final_sql)
         except Exception as e:
             ctx.is_valid = False
