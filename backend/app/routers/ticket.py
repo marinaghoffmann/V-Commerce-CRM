@@ -11,10 +11,33 @@ router = APIRouter(prefix="/ticket", tags=["Ticket"])
 
 
 @router.get("/", response_model=List[TicketSchema])
-def list_ticket(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
-    query = db.query(Ticket).offset(skip)
-    if limit > 0:
-        query = query.limit(limit)
+def list_ticket(
+    db: Session = Depends(get_db),
+    page: int = 1,
+    limit: int = 10,
+    status: str | None = None,
+    id_cliente: str | None = None,
+):
+    query = db.query(Ticket)
+    
+    filters = []
+    
+    if status:
+        filters.append(Ticket.status.ilike(f"%{status}%"))
+    
+    if id_cliente:
+        filters.append(Ticket.id_cliente.ilike(f"%{id_cliente}%"))
+    
+    offset = (page - 1) * limit
+    
+    query = (
+        query
+        .filter(*filters)
+        .order_by(Ticket.id_ticket)
+        .offset(offset)
+        .limit(limit)
+    )
+    
     return query.all()
 
 

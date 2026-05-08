@@ -11,8 +11,23 @@ router = APIRouter(prefix="/kpi-category", tags=["kpi-category"])
 
 
 @router.get("", response_model=List[KpiCategoriaSchema], status_code=status.HTTP_200_OK)
-def get_kpi_categories(limit: int = 30, offset: int = 0, db: Session = Depends(get_db)):
-    kpi_categories = db.query(KpiPorCategoria).limit(limit).offset(offset).all()
+def get_kpi_categories(
+    db: Session = Depends(get_db),
+    page: int = 1,
+    limit: int = 10,
+):
+    filters = []
+    
+    offset = (page - 1) * limit
+    
+    kpi_categories = (
+        db.query(KpiPorCategoria)
+        .filter(*filters)
+        .order_by(KpiPorCategoria.id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     return kpi_categories
 
 @router.get("/{category_id}", response_model=KpiCategoriaSchema, status_code=status.HTTP_200_OK)
