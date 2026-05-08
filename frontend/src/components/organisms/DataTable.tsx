@@ -14,6 +14,9 @@ interface DataTableProps<T> {
   maxHeight?: number;
   pageSize?: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  page?: number;
+  onPageChange?: (page: number) => void;
+  totalItems?: number;
 }
 
 export const DataTable = <T extends object>({
@@ -22,20 +25,31 @@ export const DataTable = <T extends object>({
   maxHeight = 400,
   pageSize = 5,
   setPageSize,
+  page: externalPage,
+  onPageChange,
+  totalItems,
 }: DataTableProps<T>) => {
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
 
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-  const safePage   = Math.min(page, totalPages);
+  const isControlled = externalPage !== undefined && onPageChange !== undefined;
+  const page       = isControlled ? externalPage : internalPage;
+  const total      = totalItems ?? data.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage   = isControlled ? externalPage : Math.min(page, totalPages);
+  const rows       = isControlled ? data : data.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-  const rows = data.slice((safePage - 1) * pageSize, safePage * pageSize);
-
-  const goTo = (p: number) => setPage(Math.min(Math.max(1, p), totalPages));
-
+const goTo = (p: number) => {
+  const next = Math.max(1, p);
+  if (isControlled) {
+    onPageChange(next);
+  } else {
+    setInternalPage(Math.min(next, totalPages));
+  }
+};
 
   return (
 
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden w-[90vw] mx-auto">
+    <div className="rounded-xl border-2 border-gray-200 bg-white overflow-hidden w-[95vw] mx-auto">
 
       <div style={{ maxHeight }} className="overflow-y-auto">
         <table className="w-full text-sm border-collapse">
@@ -50,7 +64,7 @@ export const DataTable = <T extends object>({
                 </th>
               ))}
               <th> 
-                <select onChange={(e) => setPageSize(e.target.value)} value={pageSize} className="ml-2 p-1 border rounded"> 
+                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="mr-2 p-1 border rounded"> 
                   <option value="5">5</option>
                   <option value="10">10</option>
                   <option value="20">20</option>
@@ -91,11 +105,11 @@ export const DataTable = <T extends object>({
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-        <span className="text-xs text-gray-400">
-          {data.length === 0
-            ? "0 resultados"
-            : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, data.length)} de ${data.length}`}
-        </span>
+      <span className="text-xs text-gray-400">
+        {total === 0
+        ? "0 resultados"
+        : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, total)} de ${total}`}
+      </span>
 
         <div className="flex items-center gap-1">
           <button
@@ -103,30 +117,20 @@ export const DataTable = <T extends object>({
             disabled={safePage === 1}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
-            <ChevronLeft size={16} />
-          </button>
+          <ChevronLeft size={16} />
+        </button>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => goTo(p)}
-              className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
-                p === safePage
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+        <span className="w-7 h-7 rounded-lg text-xs font-medium bg-blue-600 text-white flex items-center justify-center">
+        {safePage}
+        </span>
 
-          <button
-            onClick={() => goTo(safePage + 1)}
-            disabled={safePage === totalPages}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-          >
-            <ChevronRight size={16} />
-          </button>
+        <button
+          onClick={() => goTo(safePage + 1)}
+          disabled={isControlled ? data.length < pageSize : safePage === totalPages}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+        >
+        <ChevronRight size={16} />
+        </button>
         </div>
       </div>
     </div>
