@@ -19,7 +19,7 @@ class TicketResumo(BaseModel):
 
 # v_cliente_360
 
-class Cliente360Schema(BaseModel):
+class ClienteSchema(BaseModel):
     # Dados cadastrais
     id_cliente:                 str
     nome:                       str | None = None

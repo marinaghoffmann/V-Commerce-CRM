@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, Float, ForeignKey
 from app.database import Base
 
-class PedidosPorCliente(Base):
+class Pedido(Base):
     __tablename__ = "pedidos_por_cliente"
 
     id_pedido:        Mapped[str]   = mapped_column(String, primary_key=True)

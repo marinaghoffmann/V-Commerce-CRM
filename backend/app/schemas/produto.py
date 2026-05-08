@@ -3,7 +3,7 @@ from datetime import date
 
 # desempenho_produtos
 
-class DesempenhoProdutoSchema(BaseModel):
+class ProdutoSchema(BaseModel):
     id_produto:                 str
     nome_produto:               str | None = None
     categoria:                  str | None = None

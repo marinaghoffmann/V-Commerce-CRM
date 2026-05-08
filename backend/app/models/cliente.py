@@ -3,7 +3,7 @@ from sqlalchemy import String, Integer, Float, Boolean, Date
 from app.database import Base
 
 
-class ClienteBase360(Base):
+class Cliente(Base):
     """
     Visão 360 do cliente.
     Agrega métricas de pedidos, avaliações, tickets e clickstream.
