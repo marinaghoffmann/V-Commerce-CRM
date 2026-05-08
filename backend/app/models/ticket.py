@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey
 from app.database import Base
 
-class AnaliseTicket(Base):
+class Ticket(Base):
     """
     Tickets de suporte enriquecidos com contexto de cliente e produto.
     Tabela Gold: rocket.gold.analise_tickets

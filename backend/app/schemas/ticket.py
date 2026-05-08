@@ -3,7 +3,7 @@ from datetime import date
 
 # analise_tickets
 
-class AnaliseTicketSchema(BaseModel):
+class TicketSchema(BaseModel):
     id_ticket:                  str
     id_cliente:                 str
     nome_cliente:               str | None = None

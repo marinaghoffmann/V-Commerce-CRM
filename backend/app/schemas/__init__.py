@@ -1,17 +1,15 @@
-from .analiseTicket import AnaliseTicketSchema
-from .cliente360 import Cliente360Schema
-from .comportamentoDigital import ComportamentoDigitalSchema
-from .desempenhoProdutos import DesempenhoProdutoSchema
-from .kpi_categoria import KpiCategoriaSchema
-from .kpi_estado import KpiEstadoSchema
-from .kpi_status import KpiStatusSchema
+from .ticket import TicketSchema
+from .cliente import ClienteSchema
+from .comportamento_digital import ComportamentoDigitalSchema
+from .produto import ProdutoSchema
+from .kpi import KpiCategoriaSchema, KpiEstadoSchema, KpiStatusSchema
 
 __all__ = [
-    "Cliente360Schema",
-    "DesempenhoProdutoSchema",
+    "ClienteSchema",
+    "ProdutoSchema",
     "KpiCategoriaSchema",
     "KpiEstadoSchema",
     "KpiStatusSchema",
     "ComportamentoDigitalSchema",
-    "AnaliseTicketSchema",
+    "TicketSchema",
 ]

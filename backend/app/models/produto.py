@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, Float, Boolean, Date
 from app.database import Base
 
-class DesempenhoProduto(Base):
+class Produto(Base):
     """
     Métricas por produto: vendas, avaliações, tickets e visualizações.
     Tabela Gold: rocket.gold.desempenho_produtos
