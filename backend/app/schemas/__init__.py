@@ -1,19 +1,15 @@
-from app.schemas.gold import (
-    Cliente360Schema,
-    DesempenhoProdutoSchema,
-    KpiCategoriaSchema,
-    KpiEstadoSchema,
-    KpiStatusSchema,
-    ComportamentoDigitalSchema,
-    AnaliseTicketSchema,
-)
+from .ticket import TicketSchema
+from .cliente import ClienteSchema
+from .comportamento_digital import ComportamentoDigitalSchema
+from .produto import ProdutoSchema
+from .kpi import KpiCategoriaSchema, KpiEstadoSchema, KpiStatusSchema
 
 __all__ = [
-    "Cliente360Schema",
-    "DesempenhoProdutoSchema",
+    "ClienteSchema",
+    "ProdutoSchema",
     "KpiCategoriaSchema",
     "KpiEstadoSchema",
     "KpiStatusSchema",
     "ComportamentoDigitalSchema",
-    "AnaliseTicketSchema",
+    "TicketSchema",
 ]
