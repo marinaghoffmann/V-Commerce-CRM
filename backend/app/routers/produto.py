@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.desempenhoProduto import Produto
-from app.schemas.desempenhoProdutos import ProdutoSchema
+from app.models.produto import Produto
+from app.schemas.produto import ProdutoSchema
 
 router = APIRouter(prefix="/produto", tags=["Produto"])
 

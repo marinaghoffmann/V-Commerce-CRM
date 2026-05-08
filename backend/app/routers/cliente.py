@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.cliente360 import Cliente
-from app.schemas.cliente360 import ClienteSchema
-from app.models.analiseTicket import Ticket
-from app.models.pedidosPorCliente import Pedido
+from app.models.cliente import Cliente
+from app.schemas.cliente import ClienteSchema
+from app.models.ticket import Ticket
+from app.models.pedido import Pedido
 
 router = APIRouter(prefix="/clientes", tags=["Cliente"])
 
@@ -65,7 +65,6 @@ def create_cliente(payload: ClienteSchema, db: Session = Depends(get_db)):
     db.refresh(obj)
     return obj
 
-
 @router.put("/{id_cliente}", response_model=ClienteSchema)
 def update_cliente(id_cliente: str, payload: ClienteSchema, db: Session = Depends(get_db)):
     cliente = db.query(Cliente).filter(Cliente.id_cliente == id_cliente).first()
@@ -78,7 +77,6 @@ def update_cliente(id_cliente: str, payload: ClienteSchema, db: Session = Depend
     db.commit()
     db.refresh(cliente)
     return cliente
-
 
 @router.delete("/{id_cliente}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_cliente(id_cliente: str, db: Session = Depends(get_db)):

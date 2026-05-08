@@ -1,7 +1,7 @@
-from .analiseTicket import TicketSchema
-from .cliente360 import ClienteSchema
-from .comportamentoDigital import ComportamentoDigitalSchema
-from .desempenhoProdutos import ProdutoSchema
+from .ticket import TicketSchema
+from .cliente import ClienteSchema
+from .comportamento_digital import ComportamentoDigitalSchema
+from .produto import ProdutoSchema
 from .kpi import KpiCategoriaSchema, KpiEstadoSchema, KpiStatusSchema
 
 __all__ = [
