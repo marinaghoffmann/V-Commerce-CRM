@@ -1,8 +1,20 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Clientes() {
-  const [clientes, setClientes] = useState([]);
+interface Cliente {
+  id_cliente?: number;
+  nome?: string;
+  sobrenome?: string;
+  email?: string;
+  segmento_cliente?: string;
+  total_compras?: number;
+  receita_total_cliente?: number;
+  ticket_medio?: number;
+  data_ultima_compra?: string;
+}
+
+function Clientes(): React.ReactElement {
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [categoria, setCategoria] = useState("");
@@ -15,17 +27,27 @@ function Clientes() {
     if (busca) params.append("busca", busca);
     if (status) params.append("status", status);
     if (categoria) params.append("categoria", categoria);
-    params.append("page", page);
-    params.append("limit", limit);
+    params.append("page", String(page));
+    params.append("limit", String(limit));
 
     fetch(`http://localhost:8000/clientes/?${params.toString()}`)
       .then((r) => r.json())
-      .then(setClientes);
+      .then((json: Cliente[]) => setClientes(json))
+      .catch(() => setClientes([]));
   }, [busca, status, categoria, page]);
 
-  const handleBusca = (e) => { setBusca(e.target.value); setPage(1); };
-  const handleStatus = (e) => { setStatus(e.target.value); setPage(1); };
-  const handleCategoria = (e) => { setCategoria(e.target.value); setPage(1); };
+  const handleBusca = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBusca(e.target.value);
+    setPage(1);
+  };
+  const handleStatus = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(e.target.value);
+    setPage(1);
+  };
+  const handleCategoria = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategoria(e.target.value);
+    setPage(1);
+  };
 
   return (
     <div>
@@ -69,12 +91,20 @@ function Clientes() {
         </thead>
         <tbody>
           {clientes.map((c) => (
-            <tr key={c.id_cliente} onClick={() => navigate(`/clientes/${c.id_cliente}`)} style={{ cursor: "pointer" }}>
-              <td>{c.nome} {c.sobrenome}<br /><small>{c.email}</small></td>
+            <tr
+              key={c.id_cliente}
+              onClick={() => c.id_cliente && navigate(`/clientes/${c.id_cliente}`)}
+              style={{ cursor: "pointer" }}
+            >
+              <td>
+                {c.nome} {c.sobrenome}
+                <br />
+                <small>{c.email}</small>
+              </td>
               <td>{c.segmento_cliente}</td>
               <td>{c.total_compras}</td>
-              <td>R$ {c.receita_total_cliente?.toFixed(2)}</td>
-              <td>R$ {c.ticket_medio?.toFixed(2)}</td>
+              <td>R$ {(c.receita_total_cliente ?? 0).toFixed(2)}</td>
+              <td>R$ {(c.ticket_medio ?? 0).toFixed(2)}</td>
               <td>{c.data_ultima_compra}</td>
             </tr>
           ))}
