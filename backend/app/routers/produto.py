@@ -11,10 +11,33 @@ router = APIRouter(prefix="/produto", tags=["Produto"])
 
 
 @router.get("/", response_model=List[ProdutoSchema])
-def list_produto(skip: int = 0, limit: int = 30, db: Session = Depends(get_db)):
-    query = db.query(Produto).offset(skip)
-    if limit > 0:
-        query = query.limit(limit)
+def list_produto(
+    db: Session = Depends(get_db),
+    page: int = 1,
+    limit: int = 10,
+    nome_produto: str | None = None,
+    categoria: str | None = None,
+):
+    query = db.query(Produto)
+    
+    filters = []
+    
+    if nome_produto:
+        filters.append(Produto.nome_produto.ilike(f"%{nome_produto}%"))
+    
+    if categoria:
+        filters.append(Produto.categoria.ilike(f"%{categoria}%"))
+    
+    offset = (page - 1) * limit
+    
+    query = (
+        query
+        .filter(*filters)
+        .order_by(Produto.id_produto)
+        .offset(offset)
+        .limit(limit)
+    )
+    
     return query.all()
 
 

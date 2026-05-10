@@ -4,6 +4,7 @@ import { FilterBar } from "../molecules/FilterBar";
 import { PageHeader } from "../molecules/TitleHeaeder";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
+import { Navbar } from "../organisms/Navbar";
 
 interface Pedido {
   id_pedido:         string;
@@ -109,6 +110,8 @@ export const PedidosPage = () => {
 
   return (
     <div className="p-4">
+      <Navbar/>
+
       <div className="flex items-center justify-between mb-6 pl-24 pr-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Pedidos</h1>
