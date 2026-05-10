@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import ClienteDetalhe from "./pages/ClienteDetalhe";
 import Clientes from "./pages/Clientes";
 import { PedidosPage } from "./components/pages/ProductPage";
@@ -16,4 +16,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

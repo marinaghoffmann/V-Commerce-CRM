@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.kpi import KpiPorStatus
-from app.schemas.kpi import KpiStatusSchema
+from app.models.kpi_status import KpiPorStatus
+from app.schemas.kpi_status import KpiStatusSchema, KpiStatusPayloadSchema, KpiStatusPatchSchema
+from uuid import UUID
 
 router = APIRouter(prefix="/kpi-status", tags=["kpi-status"])
 
@@ -30,9 +31,9 @@ def get_kpi_status(
     )
     return kpi_statuses
 
-@router.get("/{status_id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
-def get_kpi_status_by_id(status_id: int, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == status_id).first()
+@router.get("/{id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
+def get_kpi_status_by_id(id: UUID, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == id).first()
 
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI status not found")
@@ -40,24 +41,22 @@ def get_kpi_status_by_id(status_id: int, db: Session = Depends(get_db)):
     return kpi
 
 @router.post("", response_model=KpiStatusSchema, status_code=status.HTTP_201_CREATED)
-def create_kpi_status(payload: KpiStatusSchema, db: Session = Depends(get_db)):
-    data = payload.model_dump(exclude={"id"})
-    kpi = KpiPorStatus(**data)
+def create_kpi_status(payload: KpiStatusPayloadSchema, db: Session = Depends(get_db)):
+    kpi = KpiPorStatus(**payload.model_dump())
     db.add(kpi)
     db.commit()
     db.refresh(kpi)
     return kpi
 
 
-@router.put("/{status_id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
-def update_kpi_status(status_id: int, payload: KpiStatusSchema, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == status_id).first()
+@router.put("/{id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
+def update_kpi_status(id: UUID, payload: KpiStatusPayloadSchema, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == id).first()
 
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI status not found")
     
-    update_data = payload.model_dump(exclude_unset=True)
-    update_data.pop("id", None)
+    update_data = payload.model_dump()
     for key, value in update_data.items():
         setattr(kpi, key, value)
     
@@ -67,9 +66,9 @@ def update_kpi_status(status_id: int, payload: KpiStatusSchema, db: Session = De
     return kpi
 
 
-@router.delete("/{status_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
-def delete_kpi_status(status_id: int, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == status_id).first()
+@router.delete("/{id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
+def delete_kpi_status(id: UUID, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == id).first()
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI status not found")
     db.delete(kpi)
@@ -77,15 +76,14 @@ def delete_kpi_status(status_id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.patch("/{status_id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
-def partially_update_kpi_status(status_id: int, payload: KpiStatusSchema, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == status_id).first()
+@router.patch("/{id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
+def partially_update_kpi_status(id: UUID, payload: KpiStatusPatchSchema, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorStatus).filter(KpiPorStatus.id == id).first()
     
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI status not found")
     
     update_data = payload.model_dump(exclude_unset=True)
-    update_data.pop("id", None)
     for key, value in update_data.items():
         setattr(kpi, key, value)
     
