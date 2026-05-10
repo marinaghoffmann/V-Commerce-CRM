@@ -14,6 +14,7 @@ class ProdutoSchema(BaseModel):
     receita_total:              float   = 0.0
     receita_media_por_pedido:   float   = 0.0
 
+    estoque_disponivel:         int | None = 0
     total_avaliacoes:           int     = 0
     media_nota_produto:         float   = 0.0
     media_nota_nps:             float   = 0.0
