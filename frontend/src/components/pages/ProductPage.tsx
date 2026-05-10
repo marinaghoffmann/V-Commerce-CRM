@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "../organisms/DataTable";
 import { FilterBar } from "../molecules/FilterBar";
 import { PageHeader } from "../molecules/TitleHeaeder";
+import { Navbar } from "../organisms/Navbar";
 
 interface Pedido {
   id_pedido:         string;
@@ -107,6 +108,7 @@ export const PedidosPage = () => {
 
   return (
     <div className="p-4">
+      <Navbar />
       <PageHeader title="Pedidos" subtitle="Acompanhe todos os pedidos e seus status" />
 
       <div className="mb-4">
