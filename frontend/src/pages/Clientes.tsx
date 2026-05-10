@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Clientes.css"; // Importando o arquivo que acabamos de criar!
 
@@ -16,17 +16,27 @@ function Clientes() {
     if (busca) params.append("busca", busca);
     if (status) params.append("status", status);
     if (categoria) params.append("categoria", categoria);
-    params.append("page", page);
-    params.append("limit", limit);
+    params.append("page", String(page));
+    params.append("limit", String(limit));
 
     fetch(`http://localhost:8000/clientes/?${params.toString()}`)
       .then((r) => r.json())
-      .then(setClientes);
+      .then((json: Cliente[]) => setClientes(json))
+      .catch(() => setClientes([]));
   }, [busca, status, categoria, page]);
 
-  const handleBusca = (e) => { setBusca(e.target.value); setPage(1); };
-  const handleStatus = (e) => { setStatus(e.target.value); setPage(1); };
-  const handleCategoria = (e) => { setCategoria(e.target.value); setPage(1); };
+  const handleBusca = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBusca(e.target.value);
+    setPage(1);
+  };
+  const handleStatus = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(e.target.value);
+    setPage(1);
+  };
+  const handleCategoria = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategoria(e.target.value);
+    setPage(1);
+  };
 
   return (
     <div className="clientes-container">
