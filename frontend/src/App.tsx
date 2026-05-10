@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import ClienteDetalhe from "./pages/ClienteDetalhe";
-import Clientes from "./pages/Clientes";
+import ClienteDetalhe from "./components/pages/ClienteDetalhe";
+import Clientes from "./components/pages/Clientes";
 import { PedidosPage } from "./components/pages/ProductPage";
 import './App.css';
 

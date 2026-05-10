@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Navbar } from "../components/organisms/Navbar";
+import { Navbar } from "../organisms/Navbar";
 import "./ClienteDetalhe.css";
 
 interface Cliente {
