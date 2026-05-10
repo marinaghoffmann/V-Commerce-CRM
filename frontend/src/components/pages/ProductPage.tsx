@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "../organisms/DataTable";
 import { FilterBar } from "../molecules/FilterBar";
 import { PageHeader } from "../molecules/TitleHeaeder";
+import { Upload } from "lucide-react";
+import { exportCSV } from "../../utils/exportCSV";
 
 interface Pedido {
   id_pedido:         string;
@@ -107,7 +109,19 @@ export const PedidosPage = () => {
 
   return (
     <div className="p-4">
-      <PageHeader title="Pedidos" subtitle="Acompanhe todos os pedidos e seus status" />
+      <div className="flex items-center justify-between mb-6 pl-24 pr-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Pedidos</h1>
+          <p className="mt-1 text-sm text-gray-500">Acompanhe todos os pedidos e seus status</p>
+        </div>
+        <button
+        onClick={() => exportCSV(pedidos, "pedidos")}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
+        >
+        <Upload size={16} />
+        Exportar CSV
+        </button>
+      </div>
 
       <div className="mb-4">
           <FilterBar
