@@ -74,12 +74,12 @@ function Clientes() {
   const totalPages = Math.ceil(total / limit) || 1;
 
   return (
-    <div className="cl-page">
+    <div className="cl-page" style={{ backgroundColor: "#F4F7FE" }}>
       <Navbar />
 
       <div className="cl-content">
         <div className="cl-header">
-          <h1 className="cl-title">Clientes</h1>
+          <h1 className="cl-title" style={{ color: "#000000" }}>Clientes</h1>
           <p className="cl-subtitle">Visão 360 de cada cliente: segmento, pedidos e métricas</p>
         </div>
 
