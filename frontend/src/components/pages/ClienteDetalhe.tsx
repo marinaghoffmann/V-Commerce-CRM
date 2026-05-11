@@ -91,7 +91,7 @@ function ClienteDetalhe(): React.ReactElement {
   const produtos = data.produtos_mais_adquiridos ?? ["Eletrônicos", "Acessórios", "Informática"];
 
   return (
-    <div className="cd-page">
+    <div className="cd-page" style={{ backgroundColor: "#F4F7FE" }}>
       <Navbar />
 
       <div className="cd-content">

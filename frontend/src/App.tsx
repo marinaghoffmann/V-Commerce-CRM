@@ -3,6 +3,7 @@ import ClienteDetalhe from "./components/pages/ClienteDetalhe";
 import Clientes from "./components/pages/Clientes";
 import { PedidosPage } from "./components/pages/ProductPage";
 import ProductsPage from "./components/pages/ProductsPage";
+import SuportePage from "./components/pages/SuportePage";
 import './App.css'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/clientes/:id" element={<ClienteDetalhe />} />
         <Route path="/pedidos" element={<PedidosPage />} />
         <Route path="/produtos" element={<ProductsPage />} />
+        <Route path="/suporte" element={<SuportePage />} />
       </Routes>
   );
 }
