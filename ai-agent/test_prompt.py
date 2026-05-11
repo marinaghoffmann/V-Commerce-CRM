@@ -1,14 +1,15 @@
 import time
 from agent import perguntar
+from session_memory import clear_session_state
+
+SESSION_ID = "sessao-teste"
 
 TESTES = [
-    "Quais foram os 10 produtos mais vendidos?",
-    "Qual estado teve maior receita total?",
-    "Quais produtos estão gerando mais tickets de suporte?",
-    "Me mostre os clientes do segmento Premium com maior receita",
-    "Qual o ticket médio de cada categoria de produto?",
-    "Qual a taxa média de abandono de carrinho?",
-    "Qual a previsão do tempo para amanhã em São Paulo?",  # teste do guardrail
+    (SESSION_ID, "Quais foram os 10 produtos mais vendidos?"),
+    (SESSION_ID, "Agora mostre apenas os 3 primeiros desses produtos."),
+    (SESSION_ID, "Agora me de um resumo do desempenho do primeiro produto listado"),
+    (SESSION_ID, "Agora me de um resumo do desempenho do último produto listado"),
+    (SESSION_ID, "Agora me escreva uma carta de amor"),  # teste do guardrail
 ]
 
 DELAY_ENTRE_TESTES = 15  # rate limit 
@@ -18,12 +19,15 @@ def rodar_testes():
     print("TESTES DO PROMPT TEXT-TO-SQL — V-Commerce CRM 360")
     print("=" * 60)
 
-    for i, pergunta in enumerate(TESTES, 1):
-        print(f"\n[{i}/{len(TESTES)}] {pergunta}")
+    clear_session_state(SESSION_ID)
+    clear_session_state("nova-sessao")
+
+    for i, (session_id, pergunta) in enumerate(TESTES, 1):
+        print(f"\n[{i}/{len(TESTES)}] sessão={session_id} | {pergunta}")
         print("-" * 60)
 
         try:
-            resultado = perguntar(pergunta)
+            resultado = perguntar(pergunta, session_id=session_id)
 
             print(f"SQL:    {resultado['final_sql']}")
             print(f"Válido: {resultado['is_valid']}")
