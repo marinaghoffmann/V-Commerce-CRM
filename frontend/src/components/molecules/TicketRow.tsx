@@ -16,7 +16,9 @@ function formatRelative(dateStr: string | null): string {
     const days = Math.floor(hours / 24);
     if (days < 30) return `há ${days} dia${days > 1 ? "s" : ""}`;
     const months = Math.floor(days / 30);
-    return `há ${months} mês${months > 1 ? "es" : ""}`;
+    if (months < 12) return `há ${months} mês${months > 1 ? "es" : ""}`;
+    const years = Math.floor(days / 365);
+    return `há ${years} ano${years > 1 ? "s" : ""}`;
   } catch {
     return dateStr;
   }
@@ -24,35 +26,23 @@ function formatRelative(dateStr: string | null): string {
 
 export function TicketRow({ ticket }: TicketRowProps) {
   return (
-    <div className="flex items-center gap-4 rounded-xl bg-white px-5 py-4 shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-150">
-      {/* Info principal */}
+    <div className="flex items-center justify-between py-4 gap-4">
+      {/* Coluna esquerda */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-400 mb-0.5">
-          #{ticket.id_ticket} · {ticket.nome_cliente ?? "Cliente"}
+        <p className="text-xs text-gray-400 mb-1">
+          #{ticket.id_ticket.slice(0, 8).toUpperCase()} · {ticket.nome_cliente ?? "Cliente"}
         </p>
-        <p className="text-sm font-semibold text-gray-800 truncate">
+        <p className="text-sm font-semibold text-[#1B2559] truncate mb-1.5">
           {ticket.tipo_problema ?? "Sem descrição"}
         </p>
-        {ticket.nome_produto && (
-          <p className="text-xs text-gray-400 mt-0.5 truncate">
-            Produto: {ticket.nome_produto}
-          </p>
-        )}
-      </div>
-
-      {/* Badge status */}
-      <div className="shrink-0">
         <StatusBadge status={ticket.status_ticket} />
       </div>
 
-      {/* Tempo */}
+      {/* Coluna direita */}
       <div className="shrink-0 text-right">
         <p className="text-xs text-gray-400 whitespace-nowrap">
           {formatRelative(ticket.data_abertura)}
         </p>
-        {ticket.agente_suporte && (
-          <p className="text-xs text-gray-300 mt-0.5">{ticket.agente_suporte}</p>
-        )}
       </div>
     </div>
   );
