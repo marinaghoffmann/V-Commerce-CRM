@@ -20,3 +20,7 @@ class TicketSchema(BaseModel):
     receita_total_cliente:      float   = 0.0
 
     model_config = {"from_attributes": True}
+
+class TicketDetalheSchema(TicketSchema):
+    cidade: str | None = None
+    estado: str | None = None

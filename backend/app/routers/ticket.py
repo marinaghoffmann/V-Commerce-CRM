@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.ticket import Ticket
-from app.schemas.ticket import TicketSchema
+from app.models.cliente import Cliente
+from app.schemas.ticket import TicketSchema, TicketDetalheSchema
 
 router = APIRouter(prefix="/ticket", tags=["Ticket"])
 
@@ -101,12 +102,19 @@ def list_ticket(
     return query.order_by(Ticket.data_abertura.desc()).offset(offset).limit(limit).all()
 
 
-@router.get("/{id_ticket}", response_model=TicketSchema)
+@router.get("/{id_ticket}", response_model=TicketDetalheSchema)
 def get_ticket(id_ticket: str, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id_ticket == id_ticket).first()
     if not ticket:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket não encontrado")
-    return ticket
+
+    cliente = db.query(Cliente).filter(Cliente.id_cliente == ticket.id_cliente).first()
+
+    return {
+        **{c.name: getattr(ticket, c.name) for c in ticket.__table__.columns},
+        "cidade": cliente.cidade if cliente else None,
+        "estado": cliente.estado if cliente else None,
+    }
 
 
 @router.post("/", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)

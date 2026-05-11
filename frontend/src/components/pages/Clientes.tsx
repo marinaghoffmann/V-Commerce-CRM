@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "../organisms/Navbar";
 import "./Clientes.css";
 
@@ -55,7 +56,7 @@ function Clientes() {
       .then((r) => r.json())
       .then((json: Cliente[]) => {
         setClientes(json);
-        setTotal((prev) => (json.length === limit ? Math.max(prev, page * limit + 1) : (page - 1) * limit + json.length));
+        setTotal((prev) => (json.length === limit ? Math.max(prev, page * limit + limit * 4) : (page - 1) * limit + json.length));
       })
       .catch(() => setClientes([]));
   }, [busca, status, page]);
@@ -69,7 +70,8 @@ function Clientes() {
     setPage(1);
   };
 
-  const inicio = (page - 1) * limit + 1;
+  // Correção: Se a lista for vazia, o início é 0.
+  const inicio = clientes.length === 0 ? 0 : (page - 1) * limit + 1;
   const fim = (page - 1) * limit + clientes.length;
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -155,18 +157,44 @@ function Clientes() {
             </tbody>
           </table>
 
-          <div className="cl-pagination">
-            <span className="cl-pagination-info">
+          <div className="mt-6 flex items-center justify-between px-6 pb-4">
+            <span className="text-xs text-gray-400">
               Mostrando {String(inicio).padStart(2, "0")} a {String(fim).padStart(2, "0")} de {String(total).padStart(2, "0")} resultados
             </span>
-            <div className="cl-pagination-controls">
-              <button className="cl-page-btn" onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>‹</button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
-                <button key={p} className={`cl-page-btn ${p === page ? "cl-page-btn--active" : ""}`} onClick={() => setPage(p)}>
-                  {p}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                <ChevronLeft size={15} />
+              </button>
+
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                return start + i;
+              }).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setPage(n)}
+                  className={[
+                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors",
+                    page === n
+                      ? "border-2 border-blue-500 text-blue-600 bg-white"
+                      : "text-gray-400 hover:bg-gray-100",
+                  ].join(" ")}
+                >
+                  {n}
                 </button>
               ))}
-              <button className="cl-page-btn" onClick={() => setPage((p) => p + 1)} disabled={clientes.length < limit}>›</button>
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                <ChevronRight size={15} />
+              </button>
             </div>
           </div>
         </div>
