@@ -19,34 +19,14 @@ from sqlalchemy import false
 #      Verificar se um pedido existente pode ser deletado com sucesso
 #      Verificar se a resposta para deleção de um pedido inexistente é adequada (404)
 
-
-mock_produto = {
-  "id_produto": "1111111",
-  "nome_produto": "Telefone Celular",
-  "categoria": "Eletronicos",
-  "preco": 1200,
-  "total_pedidos": 0,
-  "unidades_vendidas": 0,
-  "receita_total": 0,
-  "receita_media_por_pedido": 0,
-  "estoque_disponivel": 0,
-  "total_avaliacoes": 0,
-  "media_nota_produto": 0,
-  "media_nota_nps": 0,
-  "pct_recomenda": 0,
-  "total_tickets": 0,
-  "total_visualizacoes": 0,
-  "flag_alto_ticket": False
-}
-
 class TestProduto:
 
-    def test_create_produto(self, client: TestClient):
+    def test_create_produto(self, client: TestClient, mock_produto):
         produto_response = client.post("/produto/", json=mock_produto)
         assert produto_response.status_code == 201
         assert produto_response.json()["nome_produto"] == "Telefone Celular"
 
-    def test_create_duplicate_produto(self, client: TestClient):
+    def test_create_duplicate_produto(self, client: TestClient, mock_produto):
         produto_response = client.post("/produto/", json=mock_produto)
         assert produto_response.status_code == 201
         assert produto_response.json()["nome_produto"] == "Telefone Celular"
@@ -54,7 +34,7 @@ class TestProduto:
         duplicate_response = client.post("/produto/", json=mock_produto)
         assert duplicate_response.status_code == 400
 
-    def test_get_produto(self, client: TestClient):
+    def test_get_produto(self, client: TestClient, mock_produto):
         produto_response = client.post("/produto/", json=mock_produto)
         assert produto_response.status_code == 201
         produto_id = produto_response.json()["id_produto"]
@@ -68,7 +48,7 @@ class TestProduto:
         get_response = client.get("/produto/ID_INEXISTENTE")
         assert get_response.status_code == 404
     
-    def test_update_produto(self, client: TestClient):
+    def test_update_produto(self, client: TestClient, mock_produto):
         produto_response = client.post("/produto/", json=mock_produto)
         assert produto_response.status_code == 201
         produto_id = produto_response.json()["id_produto"]
@@ -80,11 +60,11 @@ class TestProduto:
         assert update_response.status_code == 200
         assert update_response.json()["nome_produto"] == "Produto Atualizado"
     
-    def test_update_nonexistent_produto(self, client: TestClient):
+    def test_update_nonexistent_produto(self, client: TestClient, mock_produto):
         update_response = client.put("/produto/ID_INEXISTENTE", json=mock_produto)
         assert update_response.status_code == 404
     
-    def test_delete_produto(self, client: TestClient):
+    def test_delete_produto(self, client: TestClient, mock_produto):
         produto_response = client.post("/produto/", json=mock_produto)
         assert produto_response.status_code == 201
         produto_id = produto_response.json()["id_produto"]

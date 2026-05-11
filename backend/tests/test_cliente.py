@@ -1,38 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-mock_cliente = {
-    "id_cliente": "CLI001",
-    "nome": "João",
-    "sobrenome": "Silva",
-    "email": "joao.silva@example.com",
-    "telefone_formatado": "(11) 98765-4321",
-    "telefone_ramal": "101",
-    "estado": "SP",
-    "cidade": "São Paulo",
-    "data_nascimento": "1995-08-14",
-    "data_cadastro": "2026-01-10",
-    "genero": "Masculino",
-    "total_compras": 0,
-    "receita_total_cliente": 0,
-    "ticket_medio": 0,
-    "data_primeira_compra": "2026-05-10",
-    "data_ultima_compra": "2026-05-10",
-    "metodo_pagamento_preferido": "string",
-    "categoria_preferida": "string",
-    "produto_mais_comprado": "string",
-    "total_avaliacoes": 0,
-    "media_nota_produto": 0,
-    "media_nota_nps": 0,
-    "total_tickets": 0,
-    "tickets_abertos": 0,
-    "tickets_fechados": 0,
-    "total_sessoes": 0,
-    "total_produtos_visitados": 0,
-    "tempo_medio_sessao_seg": 0,
-    "segmento_cliente": "string"
-    }
-
 # Testes realizados
 # Criação
 #       Verificar se um cliente pode ser criado com sucesso
@@ -52,12 +20,13 @@ mock_cliente = {
 
 class TestCliente:
 
-    def test_create_cliente(self, client: TestClient):
+    def test_create_cliente(self, client: TestClient, mock_cliente):
         cliente_response = client.post("/clientes/", json=mock_cliente)
+        print(cliente_response.status_code, cliente_response.text)
         assert cliente_response.status_code == 201
         assert cliente_response.json()["nome"] == "João"
 
-    def test_get_cliente(self, client: TestClient):
+    def test_get_cliente(self, client: TestClient, mock_cliente):
         cliente_response = client.post("/clientes/", json=mock_cliente)
         assert cliente_response.status_code == 201
         cliente_id = cliente_response.json()["id_cliente"]
@@ -67,7 +36,7 @@ class TestCliente:
         assert get_response.json()["id_cliente"] == cliente_id
         assert get_response.json()["nome"] == "João"
 
-    def test_create_duplicate_client(self, client: TestClient):
+    def test_create_duplicate_client(self, client: TestClient, mock_cliente):
         cliente_response = client.post("/clientes/", json=mock_cliente)
         assert cliente_response.status_code == 201
         assert cliente_response.json()["nome"] == "João"
@@ -81,7 +50,7 @@ class TestCliente:
         assert get_response.status_code == 404
         assert get_response.json()["detail"] == "Cliente não encontrado"
 
-    def test_update_cliente(self, client: TestClient):
+    def test_update_cliente(self, client: TestClient, mock_cliente):
         cliente_response = client.post("/clientes/", json=mock_cliente)
         assert cliente_response.status_code == 201
         cliente_id = cliente_response.json()["id_cliente"]
@@ -93,7 +62,7 @@ class TestCliente:
         assert update_response.status_code == 200
         assert update_response.json()["nome"] == "João Atualizado"
     
-    def test_update_nonexistent_cliente(self, client: TestClient):
+    def test_update_nonexistent_cliente(self, client: TestClient, mock_cliente):
         update_payload = mock_cliente.copy()
         update_payload["nome"] = "João Atualizado"
 
@@ -101,7 +70,7 @@ class TestCliente:
         assert update_response.status_code == 404
         assert update_response.json()["detail"] == "Cliente não encontrado"
     
-    def test_delete_cliente(self, client: TestClient):
+    def test_delete_cliente(self, client: TestClient, mock_cliente):
         cliente_response = client.post("/clientes/", json=mock_cliente)
         assert cliente_response.status_code == 201
         cliente_id = cliente_response.json()["id_cliente"]
