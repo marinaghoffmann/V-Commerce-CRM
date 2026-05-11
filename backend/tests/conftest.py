@@ -135,3 +135,20 @@ def mock_pedido():
   "status": "string",
   "metodo_pagamento": "string"
     }
+
+@pytest.fixture
+def mock_ticket():
+    return {
+  "id_ticket": "111-222-333",
+  "id_cliente": "1231241335123123123",
+  "nome_cliente": "João Silva",
+  "tipo_problema": "Técnico",
+  "status_ticket": "aberto",
+  "data_abertura": "2026-05-11",
+  "agente_suporte": "string",
+  "nome_produto": "Celular",
+  "categoria_produto": "Eletronico",
+  "valor_pedido": 1200,
+  "total_pedidos_cliente": 2,
+  "receita_total_cliente": 1800
+}
