@@ -1,5 +1,6 @@
 import type { Ticket } from "../types/ticket.types";
 import { StatusBadge } from "../atoms/StatusBadge";
+import { useNavigate } from "react-router-dom"; // 1. IMPORTA O HOOK DE NAVEGAÇÃO
 
 interface TicketRowProps {
   ticket: Ticket;
@@ -25,8 +26,13 @@ function formatRelative(dateStr: string | null): string {
 }
 
 export function TicketRow({ ticket }: TicketRowProps) {
+  const navigate = useNavigate(); // 2. INICIA O HOOK
+
   return (
-    <div className="flex items-center justify-between py-4 gap-4">
+    <div 
+      onClick={() => navigate(`/suporte/${ticket.id_ticket}`)}
+      className="flex items-center justify-between py-4 px-2 gap-4 cursor-pointer hover:bg-blue-50/50 transition-colors rounded-xl"
+    >
       {/* Coluna esquerda */}
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-400 mb-1">
