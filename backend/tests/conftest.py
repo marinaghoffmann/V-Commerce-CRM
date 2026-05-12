@@ -1,0 +1,154 @@
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from fastapi.testclient import TestClient
+import app.database as db_module
+
+test_engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+db_module.engine = test_engine
+db_module.SessionLocal = TestingSessionLocal
+
+from app.database import Base, get_db
+from app.models import (
+    Cliente,
+    Produto,
+    pedido,
+    KpiPorCategoria,
+    KpiPorEstado,
+    KpiPorStatus,
+    ComportamentoDigital,
+    Ticket,
+)
+from app.main import app as fastapi_app
+
+Base.metadata.create_all(bind=test_engine)
+
+
+def override_get_db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+fastapi_app.dependency_overrides[get_db] = override_get_db
+
+
+@pytest.fixture(autouse=True)
+def clean_database():
+    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
+    yield
+
+
+@pytest.fixture
+def db_session():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture
+def client():
+    with TestClient(fastapi_app) as c:
+        yield c
+
+
+@pytest.fixture
+def mock_cliente():
+    return {
+  "id_cliente": "1231241335123123123",
+  "nome": "João",
+  "sobrenome": "Silva",
+  "email": "joao@silva.com",
+  "telefone_formatado": "string",
+  "telefone_ramal": "string",
+  "estado": "string",
+  "cidade": "string",
+  "data_nascimento": "2026-05-11",
+  "data_cadastro": "2026-05-11",
+  "genero": "string",
+  "total_compras": 0,
+  "receita_total_cliente": 0,
+  "ticket_medio": 0,
+  "data_primeira_compra": "2026-05-11",
+  "data_ultima_compra": "2026-05-11",
+  "metodo_pagamento_preferido": "string",
+  "categoria_preferida": "string",
+  "produto_mais_comprado": "string",
+  "total_avaliacoes": 0,
+  "media_nota_produto": 0,
+  "media_nota_nps": 0,
+  "total_tickets": 0,
+  "tickets_abertos": 0,
+  "tickets_fechados": 0,
+  "total_sessoes": 0,
+  "total_produtos_visitados": 0,
+  "tempo_medio_sessao_seg": 0,
+  "segmento_cliente": "string"
+}
+
+@pytest.fixture
+def mock_produto():
+    return {
+  "id_produto": "1111111",
+  "nome_produto": "Telefone Celular",
+  "categoria": "Eletronicos",
+  "preco": 1200,
+  "total_pedidos": 0,
+  "unidades_vendidas": 0,
+  "receita_total": 0,
+  "receita_media_por_pedido": 0,
+  "estoque_disponivel": 0,
+  "total_avaliacoes": 0,
+  "media_nota_produto": 0,
+  "media_nota_nps": 0,
+  "pct_recomenda": 0,
+  "total_tickets": 0,
+  "total_visualizacoes": 0,
+  "flag_alto_ticket": False
+}
+
+@pytest.fixture
+def mock_pedido():
+    return {
+  "id_pedido": "123-213-123",
+  "id_cliente": "1231241335123123123",
+  "id_produto": "1111111",
+  "nome_completo": "João Silva",
+  "email": "joao@silva.com",
+  "cidade": "string",
+  "estado": "string",
+  "data_pedido": "2026-05-11",
+  "valor_pedido": 0,
+  "quantidade": 0,
+  "status": "string",
+  "metodo_pagamento": "string"
+    }
+
+@pytest.fixture
+def mock_ticket():
+    return {
+  "id_ticket": "111-222-333",
+  "id_cliente": "1231241335123123123",
+  "nome_cliente": "João Silva",
+  "tipo_problema": "Técnico",
+  "status_ticket": "aberto",
+  "data_abertura": "2026-05-11",
+  "agente_suporte": "string",
+  "nome_produto": "Celular",
+  "categoria_produto": "Eletronico",
+  "valor_pedido": 1200,
+  "total_pedidos_cliente": 2,
+  "receita_total_cliente": 1800
+}
