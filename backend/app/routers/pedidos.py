@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 
-from app.schemas.pedidos import PedidoClienteSchemaRead, PedidoClienteCreateSchema, PedidoClienteUpdateSchema;
+from app.schemas.pedidos import PedidoClienteSchemaRead, PedidoClienteCreateSchema, PedidoClienteUpdateSchema
 from app.models.pedido import Pedido as Pedidos
 from app.models.cliente import Cliente
 from app.models.produto import Produto
@@ -34,9 +34,9 @@ def get_pedido_cliente(
             Pedidos.metodo_pagamento,
             Pedidos.data_pedido,
             Produto.nome_produto,
+            Produto.categoria,
             Cliente.nome,
             Cliente.sobrenome,
-            Cliente.categoria_preferida,
         )
         .join(
             Cliente,
@@ -57,9 +57,7 @@ def get_pedido_cliente(
 
     if categoria_produto:
         filters.append(
-            Cliente.categoria_preferida.ilike(
-                f"%{categoria_produto}%"
-            )
+            Produto.categoria.ilike(f"%{categoria_produto}%")
         )
 
     if status:
@@ -69,9 +67,7 @@ def get_pedido_cliente(
 
     if metodo_pagamento:
         filters.append(
-            Pedidos.metodo_pagamento.ilike(
-                f"%{metodo_pagamento}%"
-            )
+            Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%")
         )
 
     if nome_cliente:
@@ -97,7 +93,7 @@ def get_pedido_cliente(
             id_pedido=row.id_pedido,
             nome_cliente=f"{row.nome} {row.sobrenome}",
             nome_produto=row.nome_produto,
-            categoria_produto=row.categoria_preferida,
+            categoria_produto=row.categoria,
             status=row.status,
             valor_pedido=row.valor_pedido,
             quantidade=row.quantidade,
@@ -111,7 +107,7 @@ def get_pedido_cliente(
 def create_pedido_cliente(pedido: PedidoClienteCreateSchema, db: Session = Depends(get_db)):
     pedido_existente = db.query(Pedidos).filter(Pedidos.id_pedido == pedido.id_pedido).first()
     if pedido_existente:
-        raise HTTPException(status_code=400, detail="Pedido com este ID já existe") 
+        raise HTTPException(status_code=400, detail="Pedido com este ID já existe")
 
     db_pedido = Pedidos(**pedido.model_dump())
     db.add(db_pedido)
@@ -124,10 +120,10 @@ def update_pedido_cliente(id_pedido: str, pedido: PedidoClienteUpdateSchema, db:
     db_pedido = db.query(Pedidos).filter(Pedidos.id_pedido == id_pedido).first()
     if not db_pedido:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
-    
+
     for key, value in pedido.model_dump(exclude_unset=True).items():
         setattr(db_pedido, key, value)
-    
+
     db.commit()
     db.refresh(db_pedido)
     return db_pedido
@@ -137,6 +133,6 @@ def delete_pedido_cliente(id_pedido: str, db: Session = Depends(get_db)):
     db_pedido = db.query(Pedidos).filter(Pedidos.id_pedido == id_pedido).first()
     if not db_pedido:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
-    
+
     db.delete(db_pedido)
     db.commit()

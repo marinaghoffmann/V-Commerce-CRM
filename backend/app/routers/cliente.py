@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database import get_db
 from app.models.cliente import Cliente
@@ -10,6 +11,26 @@ from app.models.ticket import Ticket
 from app.models.pedido import Pedido
 
 router = APIRouter(prefix="/clientes", tags=["Cliente"])
+
+@router.get("/count")
+def contar_clientes(
+    busca: str = None,
+    status: str = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(func.count(Cliente.id_cliente))
+
+    if busca:
+        query = query.filter(
+            (Cliente.nome.ilike(f"%{busca}%")) |
+            (Cliente.sobrenome.ilike(f"%{busca}%")) |
+            (Cliente.email.ilike(f"%{busca}%"))
+        )
+
+    if status:
+        query = query.filter(Cliente.segmento_cliente == status)
+
+    return {"total": query.scalar()}
 
 @router.get("/", response_model=list[ClienteSchema])
 def listar_clientes(

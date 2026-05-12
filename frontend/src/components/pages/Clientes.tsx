@@ -56,15 +56,17 @@ function Clientes() {
     params.append("page", String(page));
     params.append("limit", String(limit));
 
-    fetch(`http://localhost:8000/clientes/?${params.toString()}`)
-      .then((r) => r.json())
-      .then((json: Cliente[]) => {
-        setClientes(json);
-        setTotal((prev) =>
-          json.length === limit
-            ? Math.max(prev, page * limit + limit * 4)
-            : (page - 1) * limit + json.length
-        );
+    const countParams = new URLSearchParams();
+    if (busca) countParams.append("busca", busca);
+    if (status) countParams.append("status", status);
+
+    Promise.all([
+      fetch(`http://localhost:8000/clientes/?${params.toString()}`).then((r) => r.json()),
+      fetch(`http://localhost:8000/clientes/count?${countParams.toString()}`).then((r) => r.json()),
+    ])
+      .then(([clientesJson, countJson]) => {
+        setClientes(clientesJson);
+        setTotal(countJson.total ?? 0);
       })
       .catch(() => setClientes([]));
   }, [busca, status, page]);
