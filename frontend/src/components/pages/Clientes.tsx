@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "../organisms/Navbar";
+import { Upload } from "lucide-react";
+import { exportCSV } from "../../utils/exportCSV";
+
 
 interface Cliente {
   id_cliente: number;
@@ -84,13 +87,22 @@ function Clientes() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-8 pb-12">
-        <div className="mb-6">
+        <div className="flex items-center justify-between mb-6">
+        <div>
           <h1 className="text-3xl font-bold text-black mb-1" style={{ letterSpacing: "-0.02em" }}>
             Clientes
           </h1>
           <p className="text-gray-400 text-sm">
             Visão 360 de cada cliente: segmento, pedidos e métricas
           </p>
+        </div>
+        <button
+          onClick={() => exportCSV(clientes, "clientes")}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
+        >
+          <Upload size={16} />
+          Exportar CSV
+        </button>
         </div>
 
         <div className="flex gap-3 mb-6">
