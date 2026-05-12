@@ -1,7 +1,7 @@
 from typing import List
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy import distinct
 
 from app.database import get_db
 from app.models.produto import Produto
@@ -10,26 +10,30 @@ from app.schemas.produto import ProdutoSchema
 router = APIRouter(prefix="/produto", tags=["Produto"])
 
 
+@router.get("/categorias", response_model=List[str])
+def list_categorias(db: Session = Depends(get_db)):
+    rows = db.query(distinct(Produto.categoria)).filter(Produto.categoria != None).order_by(Produto.categoria).all()
+    return [r[0] for r in rows]
+
+
 @router.get("/", response_model=List[ProdutoSchema])
 def list_produto(
     db: Session = Depends(get_db),
     page: int = 1,
     limit: int = 10,
     nome_produto: str | None = None,
-    categoria: str | None = None,
+    categoria: List[str] | None = Query(default=None),
 ):
     query = db.query(Produto)
-    
     filters = []
-    
+
     if nome_produto:
         filters.append(Produto.nome_produto.ilike(f"%{nome_produto}%"))
-    
+
     if categoria:
-        filters.append(Produto.categoria.ilike(f"%{categoria}%"))
-    
+        filters.append(Produto.categoria.in_(categoria))
+
     offset = (page - 1) * limit
-    
     query = (
         query
         .filter(*filters)
@@ -37,7 +41,6 @@ def list_produto(
         .offset(offset)
         .limit(limit)
     )
-    
     return query.all()
 
 

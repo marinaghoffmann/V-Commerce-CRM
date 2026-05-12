@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Product } from "../components/types/product.types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -7,7 +7,7 @@ interface UseProductsArgs {
   page?: number;
   limit?: number;
   nome_produto?: string | null;
-  categoria?: string | null;
+  categorias?: string[];
 }
 
 export function useProducts(initArgs: UseProductsArgs = {}) {
@@ -16,6 +16,9 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(initArgs.page ?? 1);
   const [limit, setLimit] = useState<number>(initArgs.limit ?? 12);
+  const categoriasRef = useRef<string[]>(initArgs.categorias ?? []);
+
+  categoriasRef.current = initArgs.categorias ?? [];
 
   const fetchProducts = useCallback(async (args?: UseProductsArgs) => {
     setLoading(true);
@@ -25,7 +28,7 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
       params.append("page", String(args?.page ?? page));
       params.append("limit", String(args?.limit ?? limit));
       if (args?.nome_produto) params.append("nome_produto", args.nome_produto);
-      if (args?.categoria) params.append("categoria", args.categoria);
+      (args?.categorias ?? []).forEach((c) => params.append("categoria", c));
 
       const res = await fetch(`${BASE_URL}/produto?${params.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -40,10 +43,13 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
   }, [page, limit]);
 
   useEffect(() => {
-    fetchProducts({ page, limit });
-  }, [fetchProducts, page, limit]);
+    fetchProducts({ page, limit, categorias: categoriasRef.current });
+  }, [fetchProducts, page, limit, initArgs.categorias?.join(",")]);
 
-  const refetch = useCallback(() => fetchProducts({ page, limit }), [fetchProducts, page, limit]);
+  const refetch = useCallback(
+    () => fetchProducts({ page, limit, categorias: categoriasRef.current }),
+    [fetchProducts, page, limit]
+  );
 
   return { data, loading, error, page, setPage, limit, setLimit, refetch };
 }
