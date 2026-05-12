@@ -19,7 +19,6 @@ from fastapi.testclient import TestClient
 #      Verificar se a resposta para deleção de um cliente inexistente é adequada (404)
 
 class TestCliente:
-
     def test_create_cliente(self, client: TestClient, mock_cliente):
         cliente_response = client.post("/clientes/", json=mock_cliente)
         print(cliente_response.status_code, cliente_response.text)
