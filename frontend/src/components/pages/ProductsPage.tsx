@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react"; // Adicionado useMemo
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import { Navbar } from "../organisms/Navbar";
 import ProductGrid from "../organisms/ProductGrid";
@@ -19,20 +19,19 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string
   "Vestuario":  { bg: "bg-pink-50",   border: "border-pink-200",   text: "text-pink-700"   },
 };
 
-const ALL_CATEGORIES = Object.keys(CATEGORY_COLORS);
-
 function getCategoryColor(cat: string) {
   return CATEGORY_COLORS[cat] ?? { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-600" };
 }
 
-// ─── Dropdown de Categoria ──────────────────────────────────────────────────────
+// ─── Dropdown de Categoria (AGORA RECEBE CATEGORIAS DINÂMICAS) ──────────────────
 
 interface CategoryFilterProps {
   selected: string[];
   onApply: (selected: string[]) => void;
+  availableCategories: string[]; // Nova prop para as categorias dinâmicas
 }
 
-function CategoryFilter({ selected, onApply }: CategoryFilterProps) {
+function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilterProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string[]>(selected);
   const ref = useRef<HTMLDivElement>(null);
@@ -84,8 +83,8 @@ function CategoryFilter({ selected, onApply }: CategoryFilterProps) {
               )}
             </div>
 
-            <div className="divide-y divide-gray-50">
-              {ALL_CATEGORIES.map((cat) => {
+            <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+              {availableCategories.map((cat) => {
                 const color = getCategoryColor(cat);
                 const checked = draft.includes(cat);
                 return (
@@ -362,6 +361,19 @@ export default function ProductsPage() {
   const { data: products, loading, error, page, setPage, limit, setLimit, refetch } =
     useProducts({ page: 1, limit: 12, categorias: categoriasSelecionadas });
 
+  // ─── LOGICA DE CATEGORIAS DINÂMICAS ───
+  const availableCategories = useMemo(() => {
+    // 1. Pega as categorias padrão definidas no objeto de cores
+    const predefined = Object.keys(CATEGORY_COLORS);
+    // 2. Extrai categorias únicas que existem no array de produtos vindo do banco
+    const fromData = products
+      .map((p) => p.categoria)
+      .filter((c): c is string => !!c); // Remove valores nulos ou vazios
+    
+    // 3. Junta tudo num Set para remover duplicados e ordena alfabeticamente
+    return Array.from(new Set([...predefined, ...fromData])).sort();
+  }, [products]);
+
   function openCreate() { setFormModal({ open: true, product: null }); }
   function openEdit(product: Product) { setFormModal({ open: true, product }); }
   function closeForm() { setFormModal({ open: false, product: null }); }
@@ -402,6 +414,7 @@ export default function ProductsPage() {
 
         <div className="mb-6">
           <CategoryFilter
+            availableCategories={availableCategories} // Passando a lista dinâmica aqui
             selected={categoriasSelecionadas}
             onApply={(cats) => {
               setCategoriasSelecionadas(cats);
