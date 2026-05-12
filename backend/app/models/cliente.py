@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, Float, Boolean, Date
 from app.database import Base
-from app.schemas.cliente import PedidoResumo, TicketResumo, TicketResumo
+from app.schemas.cliente import PedidoResumo, TicketResumo
 
 
 class Cliente(Base):

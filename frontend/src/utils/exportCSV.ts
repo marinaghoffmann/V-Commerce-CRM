@@ -1,4 +1,6 @@
 export function exportCSV(data: object[], fileName: string) {
+  if (!data.length) return;
+
   // Pega os nomes das colunas a partir da primeira linha
   const headers = Object.keys(data[0]);
 
