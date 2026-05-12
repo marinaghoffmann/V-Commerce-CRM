@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.kpi import KpiPorEstado
-from app.schemas.kpi import KpiEstadoSchema
+from app.models.kpi_estado import KpiPorEstado
+from app.schemas.kpi_estado import KpiEstadoSchema, KpiEstadoPayloadSchema, KpiEstadoPatchSchema
+from uuid import UUID
 
 router = APIRouter(prefix="/kpi-state", tags=["kpi-state"])
 
@@ -31,33 +32,31 @@ def get_kpi_states(
     return kpi_states
 
 
-@router.get("/{state_id}", response_model=KpiEstadoSchema, status_code=status.HTTP_200_OK)
-def get_kpi_state(state_id: int, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == state_id).first()
+@router.get("/{id}", response_model=KpiEstadoSchema, status_code=status.HTTP_200_OK)
+def get_kpi_state(id: UUID, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == id).first()
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI state not found")
     return kpi
 
 
 @router.post("", response_model=KpiEstadoSchema, status_code=status.HTTP_201_CREATED)
-def create_kpi_state(payload: KpiEstadoSchema, db: Session = Depends(get_db)):
-    data = payload.model_dump(exclude={"id"})
-    kpi = KpiPorEstado(**data)
+def create_kpi_state(payload: KpiEstadoPayloadSchema, db: Session = Depends(get_db)):
+    kpi = KpiPorEstado(**payload.model_dump())
     db.add(kpi)
     db.commit()
     db.refresh(kpi)
     return kpi
 
 
-@router.put("/{state_id}", response_model=KpiEstadoSchema, status_code=status.HTTP_200_OK)
-def update_kpi_state(state_id: int, payload: KpiEstadoSchema, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == state_id).first()
+@router.put("/{id}", response_model=KpiEstadoSchema, status_code=status.HTTP_200_OK)
+def update_kpi_state(id: UUID, payload: KpiEstadoPayloadSchema, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == id).first()
 
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI state not found")
     
-    update_data = payload.model_dump(exclude_unset=True)
-    update_data.pop("id", None)
+    update_data = payload.model_dump()
     for key, value in update_data.items():
         setattr(kpi, key, value)
     
@@ -67,9 +66,9 @@ def update_kpi_state(state_id: int, payload: KpiEstadoSchema, db: Session = Depe
     return kpi
 
 
-@router.delete("/{state_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
-def delete_kpi_state(state_id: int, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == state_id).first()
+@router.delete("/{id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
+def delete_kpi_state(id: UUID, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == id).first()
 
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI state not found")
@@ -79,15 +78,14 @@ def delete_kpi_state(state_id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.patch("/{state_id}", response_model=KpiEstadoSchema, status_code=status.HTTP_200_OK)
-def partially_update_kpi_state(state_id: int, payload: KpiEstadoSchema, db: Session = Depends(get_db)):
-    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == state_id).first()
+@router.patch("/{id}", response_model=KpiEstadoSchema, status_code=status.HTTP_200_OK)
+def partially_update_kpi_state(id: UUID, payload: KpiEstadoPatchSchema, db: Session = Depends(get_db)):
+    kpi = db.query(KpiPorEstado).filter(KpiPorEstado.id == id).first()
 
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI state not found")
     
     update_data = payload.model_dump(exclude_unset=True)
-    update_data.pop("id", None)
     for key, value in update_data.items():
         setattr(kpi, key, value)
 
