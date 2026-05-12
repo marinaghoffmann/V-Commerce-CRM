@@ -9,15 +9,15 @@ interface Cliente {
   email?: string;
   segmento_cliente?: string;
   total_compras?: number;
+  total_tickets?: number;
   receita_total_cliente?: number;
   ticket_medio?: number;
   data_ultima_compra?: string;
   data_primeira_compra?: string;
-  origem?: string;
-  regiao?: string;
   cidade?: string;
   estado?: string;
-  produtos_mais_adquiridos?: string[];
+  categoria_preferida?: string;
+  produto_mais_comprado?: string;
 }
 
 interface Evento {
@@ -91,11 +91,10 @@ function ClienteDetalhe(): React.ReactElement {
   const eventosPagina = eventos.slice((eventPage - 1) * eventsPerPage, eventPage * eventsPerPage);
 
   const nomeCompleto = `${data.nome ?? ""} ${data.sobrenome ?? ""}`.trim();
-  const cidade = data.cidade ?? "Recife";
-  const estado = data.estado ?? "PE";
-  const origem = data.origem ?? "Redes Sociais";
-  const regiao = data.regiao ?? "Recife, Pernambuco";
-  const produtos = data.produtos_mais_adquiridos ?? ["Eletrônicos", "Acessórios", "Informática"];
+  const cidade = data.cidade ?? "—";
+  const estado = data.estado ?? "—";
+  const regiao = (data.cidade && data.estado) ? `${data.cidade}, ${data.estado}` : "—";
+  const produtos = [data.categoria_preferida, data.produto_mais_comprado].filter(Boolean) as string[];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
@@ -169,7 +168,7 @@ function ClienteDetalhe(): React.ReactElement {
                 { label: "Primeiro pedido", valor: data.data_primeira_compra ?? "—" },
                 { label: "Freq. de interação", valor: `${data.total_compras ?? 0}x` },
                 { label: "Último pedido", valor: data.data_ultima_compra ?? "—" },
-                { label: "Freq. de suporte", valor: "2x" },
+                { label: "Freq. de suporte", valor: `${data.total_tickets ?? 0}x` },
               ].map(({ label, valor }) => (
                 <div key={label} className="bg-slate-50 rounded-xl p-4 flex flex-col gap-1">
                   <span className="text-xs text-gray-400 font-medium">{label}</span>
@@ -188,10 +187,6 @@ function ClienteDetalhe(): React.ReactElement {
                     <span key={p} className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">{p}</span>
                   ))}
                 </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Origem</span>
-                <span className="text-sm text-gray-700">{origem}</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Região</span>
