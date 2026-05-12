@@ -17,7 +17,7 @@ export function Navbar({}: NavbarProps) {
   return (
     <nav
       aria-label="Menu principal"
-      className="bg-blue-500 rounded-full flex items-center gap-1 p-2 w-fit h-15 mx-auto my-10"
+      className="bg-blue-500 rounded-full flex items-center justify-between gap-1 p-2 px-6 h-15 mx-auto my-10 w-[95%]"
     >
       {NAV_ITEMS.map((item) => (
         <NavItem
