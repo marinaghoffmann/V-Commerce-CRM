@@ -32,6 +32,7 @@ class ClienteSchema(BaseModel):
     data_nascimento:            date | None = None
     data_cadastro:              date | None = None
     genero:                     str | None = None
+    origem:                     str | None = None
 
     # Métricas de pedidos
     total_compras:              int     = 0
