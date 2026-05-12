@@ -26,7 +26,6 @@ class CHESSContext(BaseModel):
 client = genai.Client(api_key=google_api_key)
 
 def perguntar(question: str, session_id: str = "default") -> dict:
-    # Adicionou session context
     session_context = build_session_context(session_id)
     prompt_parts = []
 
@@ -59,7 +58,6 @@ def perguntar(question: str, session_id: str = "default") -> dict:
             ctx.rows = None
             ctx.error_message = f"Erro ao executar SQL: {str(e)}"
 
-    # Adicionou essa função
     register_turn(
         session_id,
         question=question,
@@ -72,7 +70,6 @@ def perguntar(question: str, session_id: str = "default") -> dict:
     return ctx.model_dump()
 
 if __name__ == "__main__":
-    # Adicionou clear session state
     clear_session_state("default")
     resultado = perguntar("Quais foram os 10 produtos mais vendidos?", session_id="default")
     print(f"SQL:    {resultado['final_sql']}")
