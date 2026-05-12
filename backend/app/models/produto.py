@@ -19,6 +19,7 @@ class Produto(Base):
     receita_total:              Mapped[float] = mapped_column(Float,   default=0.0)
     receita_media_por_pedido:   Mapped[float] = mapped_column(Float,   default=0.0)
 
+    estoque_disponivel:         Mapped[int]   = mapped_column(Integer, default=0, nullable=True)
     total_avaliacoes:           Mapped[int]   = mapped_column(Integer, default=0)
     media_nota_produto:         Mapped[float] = mapped_column(Float,   default=0.0)
     media_nota_nps:             Mapped[float] = mapped_column(Float,   default=0.0)

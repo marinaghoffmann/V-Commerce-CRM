@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, Float, Boolean, Date
 from app.database import Base
+from app.schemas.cliente import PedidoResumo, TicketResumo, TicketResumo
 
 
 class Cliente(Base):
@@ -46,3 +47,6 @@ class Cliente(Base):
     tempo_medio_sessao_seg:     Mapped[float] = mapped_column(Float,   default=0.0)
 
     segmento_cliente:           Mapped[str]   = mapped_column(String)
+
+    pedidos: list[PedidoResumo] = []
+    tickets: list[TicketResumo] = []
