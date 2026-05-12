@@ -4,7 +4,6 @@ import Clientes from "./components/pages/Clientes";
 import { PedidosPage } from "./components/pages/ProductPage";
 import ProductsPage from "./components/pages/ProductsPage";
 import SuportePage from "./components/pages/SuportePage";
-import './App.css'
 
 function App() {
   return (
