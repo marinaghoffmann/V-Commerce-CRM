@@ -119,6 +119,10 @@ def get_ticket(id_ticket: str, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)
 def create_ticket(payload: TicketSchema, db: Session = Depends(get_db)):
+    ticket_existente = db.query(Ticket).filter(Ticket.id_ticket == payload.id_ticket).first()
+    if ticket_existente:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ticket com este ID já existe")
+
     obj = Ticket(**payload.model_dump())
     db.add(obj)
     db.commit()
