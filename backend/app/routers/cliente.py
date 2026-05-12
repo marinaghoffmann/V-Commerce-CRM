@@ -59,6 +59,10 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=ClienteSchema, status_code=status.HTTP_201_CREATED)
 def create_cliente(payload: ClienteSchema, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.email == payload.email).first()
+    if cliente:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email já cadastrado")
+
     obj = Cliente(**payload.model_dump())
     db.add(obj)
     db.commit()

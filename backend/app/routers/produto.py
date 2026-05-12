@@ -54,6 +54,10 @@ def get_produto(id_produto: str, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=ProdutoSchema, status_code=status.HTTP_201_CREATED)
 def create_produto(payload: ProdutoSchema, db: Session = Depends(get_db)):
+    produto_existente = db.query(Produto).filter(Produto.nome_produto == payload.nome_produto).first()
+    if produto_existente:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Produto com este nome já existe")
+
     obj = Produto(**payload.model_dump())
     db.add(obj)
     db.commit()

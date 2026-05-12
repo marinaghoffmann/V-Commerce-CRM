@@ -109,6 +109,10 @@ def get_pedido_cliente(
 
 @router.post("/", response_model=PedidoClienteSchemaRead, status_code=status.HTTP_201_CREATED)
 def create_pedido_cliente(pedido: PedidoClienteCreateSchema, db: Session = Depends(get_db)):
+    pedido_existente = db.query(Pedidos).filter(Pedidos.id_pedido == pedido.id_pedido).first()
+    if pedido_existente:
+        raise HTTPException(status_code=400, detail="Pedido com este ID já existe") 
+
     db_pedido = Pedidos(**pedido.model_dump())
     db.add(db_pedido)
     db.commit()
