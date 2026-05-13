@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Cliente } from "../components/types/cliente.types";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import api from "../services/api";
 
 export function useClienteDetalhe(id: string | undefined) {
   const [data, setData] = useState<Cliente | null>(null);
@@ -12,12 +11,8 @@ export function useClienteDetalhe(id: string | undefined) {
     if (!id) return;
     setLoading(true);
     setError(null);
-    fetch(`${BASE_URL}/clientes/${id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Erro ao buscar detalhes do cliente");
-        return r.json();
-      })
-      .then((json: Cliente) => setData(json))
+    api.get(`/clientes/${id}`)
+      .then((res) => setData(res.data))
       .catch((err) => {
         setError(err.message);
         setData(null);

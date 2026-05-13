@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Cliente } from "../components/types/cliente.types";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import api from "../services/api";
 
 interface UseClientesArgs {
   busca: string;
@@ -31,8 +30,8 @@ export function useClientes({ busca, status, page, limit }: UseClientesArgs) {
     if (status) countParams.append("status", status);
 
     Promise.all([
-      fetch(`${BASE_URL}/clientes/?${params.toString()}`).then((r) => r.json()),
-      fetch(`${BASE_URL}/clientes/count?${countParams.toString()}`).then((r) => r.json()),
+      api.get(`/clientes/?${params.toString()}`).then((r) => r.data),
+      api.get(`/clientes/count?${countParams.toString()}`).then((r) => r.data),
     ])
       .then(([clientesJson, countJson]) => {
         setClientes(clientesJson);

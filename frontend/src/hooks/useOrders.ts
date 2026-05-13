@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Pedido } from "../components/types/pedido.types";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import api from "../services/api";
 
 interface UseOrdersArgs {
   page: number;
@@ -29,8 +28,8 @@ export function useOrders({ page, pageSize, search, searchField, activeFilter }:
         if (search) params.append(searchField, search);
         if (activeFilter !== "Todos") params.append("status", activeFilter);
 
-        const res = await fetch(`${BASE_URL}/pedidos_cliente?${params.toString()}`);
-        const data = await res.json();
+        const res = await api.get(`/pedidos_cliente?${params.toString()}`);
+        const data = res.data;
         const items = Array.isArray(data) ? data : data.items ?? data.data ?? [];
         
         setPedidos(items);
