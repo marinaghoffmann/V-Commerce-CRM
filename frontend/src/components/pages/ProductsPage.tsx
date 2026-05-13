@@ -9,14 +9,14 @@ import type { Product } from "../types/product.types";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  "Automotivo": { bg: "bg-zinc-50",   border: "border-zinc-200",   text: "text-zinc-700"   },
-  "Beleza":     { bg: "bg-rose-50",   border: "border-rose-200",   text: "text-rose-700"   },
+  "Automotivo": { bg: "bg-zinc-50", border: "border-zinc-200", text: "text-zinc-700" },
+  "Beleza": { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
   "Brinquedos": { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
-  "Casa":       { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" },
-  "Eletronicos":{ bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-700"   },
-  "Esportes":   { bg: "bg-green-50",  border: "border-green-200",  text: "text-green-700"  },
-  "Moveis":     { bg: "bg-amber-50",  border: "border-amber-200",  text: "text-amber-700"  },
-  "Vestuario":  { bg: "bg-pink-50",   border: "border-pink-200",   text: "text-pink-700"   },
+  "Casa": { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" },
+  "Eletronicos": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
+  "Esportes": { bg: "bg-green-50", border: "border-green-200", text: "text-green-700" },
+  "Moveis": { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  "Vestuario": { bg: "bg-pink-50", border: "border-pink-200", text: "text-pink-700" },
 };
 
 function getCategoryColor(cat: string) {
@@ -201,7 +201,6 @@ function ProductFormModal({ initial, isEdit, onClose, onSave }: ProductFormModal
 
   function validate(): boolean {
     const e: Partial<FormState> = {};
-    if (!form.id_produto.trim()) e.id_produto = "ID obrigatório";
     if (!form.nome_produto.trim()) e.nome_produto = "Nome obrigatório";
     if (!form.categoria.trim()) e.categoria = "Categoria obrigatória";
     if (!form.preco || isNaN(Number(form.preco)) || Number(form.preco) < 0)
@@ -252,13 +251,15 @@ function ProductFormModal({ initial, isEdit, onClose, onSave }: ProductFormModal
         </div>
 
         <div className="flex flex-col gap-4">
-          <Field
-            label="ID do produto"
-            value={form.id_produto}
-            onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
-            disabled={isEdit}
-            error={errors.id_produto}
-          />
+          {/* Campo de ID só aparece na edição (somente leitura) */}
+          {isEdit && (
+            <Field
+              label="ID do produto"
+              value={form.id_produto}
+              onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
+              disabled={true}
+            />
+          )}
           <Field
             label="Nome"
             value={form.nome_produto}
@@ -369,7 +370,7 @@ export default function ProductsPage() {
     const fromData = products
       .map((p) => p.categoria)
       .filter((c): c is string => !!c); // Remove valores nulos ou vazios
-    
+
     // 3. Junta tudo num Set para remover duplicados e ordena alfabeticamente
     return Array.from(new Set([...predefined, ...fromData])).sort();
   }, [products]);
@@ -382,12 +383,12 @@ export default function ProductsPage() {
 
   const editInitial: FormState = formModal.product
     ? {
-        id_produto: formModal.product.id_produto,
-        nome_produto: formModal.product.nome_produto ?? "",
-        categoria: formModal.product.categoria ?? "",
-        preco: String(formModal.product.preco ?? ""),
-        estoque_disponivel: String(formModal.product.estoque_disponivel ?? ""),
-      }
+      id_produto: formModal.product.id_produto,
+      nome_produto: formModal.product.nome_produto ?? "",
+      categoria: formModal.product.categoria ?? "",
+      preco: String(formModal.product.preco ?? ""),
+      estoque_disponivel: String(formModal.product.estoque_disponivel ?? ""),
+    }
     : EMPTY_FORM;
 
   return (
