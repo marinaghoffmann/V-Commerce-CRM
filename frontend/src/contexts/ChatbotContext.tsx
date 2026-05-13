@@ -20,7 +20,12 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
   return (
     <ChatbotContext.Provider value={{ isOpen, toggleOverlay, openOverlay, closeOverlay }}>
       {children}
-      {isOpen && <ChatbotOverlay onClose={closeOverlay} />}
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40" onClick={closeOverlay} />
+          <ChatbotOverlay onClose={closeOverlay} />
+        </>
+      )}
     </ChatbotContext.Provider>
   );
 }
