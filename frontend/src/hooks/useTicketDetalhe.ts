@@ -38,5 +38,16 @@ export function useTicketDetalhe(id: string | undefined) {
       .finally(() => setLoading(false));
   }, [id]);
 
-  return { ticket, loading, error };
+  const enviarMensagem = async (mensagem: string) => {
+    if (!id || !mensagem.trim()) return;
+    const response = await fetch(`${BASE_URL}/ticket/${id}/mensagem`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mensagem }),
+    });
+    if (!response.ok) throw new Error("Falha ao enviar a mensagem.");
+    return await response.json();
+  };
+
+  return { ticket, loading, error, enviarMensagem };
 }

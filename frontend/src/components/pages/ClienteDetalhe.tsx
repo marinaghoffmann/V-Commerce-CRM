@@ -1,24 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "../organisms/Navbar";
-
-interface Cliente {
-  id_cliente?: number;
-  nome?: string;
-  sobrenome?: string;
-  email?: string;
-  segmento_cliente?: string;
-  total_compras?: number;
-  total_tickets?: number;
-  receita_total_cliente?: number;
-  ticket_medio?: number;
-  data_ultima_compra?: string;
-  data_primeira_compra?: string;
-  cidade?: string;
-  estado?: string;
-  categoria_preferida?: string;
-  produto_mais_comprado?: string;
-}
+import { useClienteDetalhe } from "../../hooks/useClienteDetalhe";
 
 interface Evento {
   tipo: "pedido" | "entrega" | "suporte";
@@ -59,19 +42,9 @@ function EventoBullet({ tipo }: { tipo: Evento["tipo"] }) {
 function ClienteDetalhe(): React.ReactElement {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [data, setData] = useState<Cliente | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading } = useClienteDetalhe(id);
   const [eventPage, setEventPage] = useState(1);
   const eventsPerPage = 4;
-
-  useEffect(() => {
-    if (!id) return;
-    fetch(`http://localhost:8000/clientes/${id}`)
-      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((json: Cliente) => setData(json))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, [id]);
 
   if (loading) return (
     <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>

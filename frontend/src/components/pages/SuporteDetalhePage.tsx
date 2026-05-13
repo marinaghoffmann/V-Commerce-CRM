@@ -4,12 +4,10 @@ import { MapPin, Calendar, Send, X, Loader2 } from "lucide-react";
 import { Navbar } from "../organisms/Navbar";
 import { useTicketDetalhe } from "../../hooks/useTicketDetalhe";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
 export default function SuporteDetalhePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { ticket, loading, error } = useTicketDetalhe(id);
+  const { ticket, loading, error, enviarMensagem } = useTicketDetalhe(id);
   const [mensagem, setMensagem] = useState("");
 
   const localFormatado =
@@ -17,13 +15,14 @@ export default function SuporteDetalhePage() {
       ? `${ticket.cidade} - ${ticket.estado}`
       : ticket?.cidade ?? ticket?.estado ?? null;
 
-  const handleEnviar = () => {
+  const handleEnviar = async () => {
     if (!mensagem.trim()) return;
-    fetch(`${BASE_URL}/ticket/${id}/mensagem`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mensagem }),
-    }).then(() => setMensagem(""));
+    try {
+      await enviarMensagem(mensagem);
+      setMensagem("");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   if (loading) {

@@ -6,8 +6,6 @@ import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   "Automotivo": { bg: "bg-zinc-50", border: "border-zinc-200", text: "text-zinc-700" },
   "Beleza": { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
@@ -192,9 +190,11 @@ interface ProductFormModalProps {
   isEdit: boolean;
   onClose: () => void;
   onSave: () => void;
+  addProduct: (data: any) => Promise<any>;
+  editProduct: (id: string, data: any) => Promise<any>;
 }
 
-function ProductFormModal({ initial, isEdit, onClose, onSave }: ProductFormModalProps) {
+function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editProduct }: ProductFormModalProps) {
   const [form, setForm] = useState<FormState>(initial);
   const [errors, setErrors] = useState<Partial<FormState>>({});
   const [saving, setSaving] = useState(false);
@@ -222,14 +222,11 @@ function ProductFormModal({ initial, isEdit, onClose, onSave }: ProductFormModal
         preco: Number(form.preco),
         estoque_disponivel: form.estoque_disponivel ? Number(form.estoque_disponivel) : 0,
       };
-      const url = isEdit ? `${BASE_URL}/produto/${form.id_produto}` : `${BASE_URL}/produto/`;
-      const method = isEdit ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (isEdit) {
+        await editProduct(form.id_produto.trim(), body);
+      } else {
+        await addProduct(body);
+      }
       onSave();
     } catch (err) {
       console.error(err);
@@ -307,16 +304,16 @@ interface ConfirmDeleteModalProps {
   product: Product;
   onCancel: () => void;
   onConfirm: () => void;
+  deleteProduct: (id: string) => Promise<void>;
 }
 
-function ConfirmDeleteModal({ product, onCancel, onConfirm }: ConfirmDeleteModalProps) {
+function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: ConfirmDeleteModalProps) {
   const [deleting, setDeleting] = useState(false);
 
   async function handleConfirm() {
     setDeleting(true);
     try {
-      const res = await fetch(`${BASE_URL}/produto/${product.id_produto}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await deleteProduct(product.id_produto);
       onConfirm();
     } catch (err) {
       console.error(err);
@@ -359,7 +356,7 @@ export default function ProductsPage() {
   const [formModal, setFormModal] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null });
   const [deleteModal, setDeleteModal] = useState<Product | null>(null);
 
-  const { data: products, loading, error, page, setPage, limit, setLimit, refetch } =
+  const { data: products, loading, error, page, setPage, limit, setLimit, refetch, addProduct, editProduct, deleteProduct } =
     useProducts({ page: 1, limit: 12, categorias: categoriasSelecionadas });
 
   // ─── LOGICA DE CATEGORIAS DINÂMICAS ───
@@ -478,6 +475,8 @@ export default function ProductsPage() {
           isEdit={formModal.product !== null}
           onClose={closeForm}
           onSave={handleSaved}
+          addProduct={addProduct}
+          editProduct={editProduct}
         />
       )}
 
@@ -486,6 +485,7 @@ export default function ProductsPage() {
           product={deleteModal}
           onCancel={() => setDeleteModal(null)}
           onConfirm={handleDeleted}
+          deleteProduct={deleteProduct}
         />
       )}
     </div>

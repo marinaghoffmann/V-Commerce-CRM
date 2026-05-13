@@ -17,6 +17,19 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(initArgs.page ?? 1);
   const [limit] = useState<number>(initArgs.limit ?? 7);
+  const [kpis, setKpis] = useState<Record<string, number | string>>({});
+
+  const fetchKpis = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/ticket/kpis/resumo`);
+      if (res.ok) {
+        const json = await res.json();
+        setKpis(json);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar KPIs", err);
+    }
+  }, []);
 
   const fetchTickets = useCallback(
     async (args?: UseTicketsArgs) => {
@@ -59,10 +72,14 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
     fetchTickets({ page, limit });
   }, [fetchTickets, page, limit]);
 
+  useEffect(() => {
+    fetchKpis();
+  }, [fetchKpis]);
+
   const refetch = useCallback(
     (args?: UseTicketsArgs) => fetchTickets({ page, limit, ...args }),
     [fetchTickets, page, limit]
   );
 
-  return { data, total, loading, error, page, setPage, limit, refetch };
+  return { data, total, loading, error, page, setPage, limit, refetch, kpis, fetchKpis };
 }

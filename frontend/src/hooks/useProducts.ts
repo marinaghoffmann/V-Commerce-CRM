@@ -51,5 +51,30 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
     [fetchProducts, page, limit]
   );
 
-  return { data, loading, error, page, setPage, limit, setLimit, refetch };
+  const addProduct = useCallback(async (productBody: Omit<Product, "id_produto"> & { id_produto?: string }) => {
+    const res = await fetch(`${BASE_URL}/produto/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productBody),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  }, []);
+
+  const editProduct = useCallback(async (id_produto: string, productBody: Partial<Product>) => {
+    const res = await fetch(`${BASE_URL}/produto/${id_produto}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productBody),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  }, []);
+
+  const deleteProduct = useCallback(async (id_produto: string) => {
+    const res = await fetch(`${BASE_URL}/produto/${id_produto}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  }, []);
+
+  return { data, loading, error, page, setPage, limit, setLimit, refetch, addProduct, editProduct, deleteProduct };
 }

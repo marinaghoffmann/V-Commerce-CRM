@@ -4,8 +4,6 @@ import { Navbar } from "../organisms/Navbar";
 import { TicketRow } from "../molecules/TicketRow";
 import { useTickets } from "../../hooks/useTickets";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
 const STATUS_FILTERS = ["Todos", "aberto", "fechado"];
 
 const FILTER_LABELS: Record<string, string> = {
@@ -37,17 +35,9 @@ function KpiCard({ icon, iconBg, label, value }: KpiCardProps) {
 
 export default function SuportePage() {
   const [activeFilter, setActiveFilter] = useState("Todos");
-  const [kpis, setKpis] = useState<Record<string, number | string>>({});
 
-  const { data: tickets, total, loading, error, page, setPage, limit, refetch } =
+  const { data: tickets, total, loading, error, page, setPage, limit, refetch, kpis } =
     useTickets({ page: 1, limit: 7 });
-
-  useEffect(() => {
-    fetch(`${BASE_URL}/ticket/kpis/resumo`)
-      .then((r) => r.json())
-      .then(setKpis)
-      .catch(() => { });
-  }, []);
 
   useEffect(() => {
     refetch({ page, status: activeFilter });

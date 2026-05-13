@@ -5,15 +5,8 @@ import { PageHeader } from "../molecules/TitleHeaeder";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import { Navbar } from "../organisms/Navbar";
-
-interface Pedido {
-  id_pedido:         string;
-  nome_cliente:      string | null;
-  categoria_produto: string | null;
-  status:            string | null;
-  valor_pedido:      number | null;
-  quantidade:        number | null;
-}
+import { useOrders } from "../../hooks/useOrders";
+import type { Pedido } from "../types/pedido.types";
 
 type StatusKey = "entregue" | "processando" | "em trânsito" | "atrasado" | "aprovado" | "recusado" | "processado" | "reembolsado";
 
@@ -59,45 +52,21 @@ const columns = [
   { key: "data_pedido", label: "Data do Pedido" },
 ];
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
 export const PedidosPage = () => {
-  const [pedidos, setPedidos]         = useState<Pedido[]>([]);
-  const [isFetching, setIsFetching]   = useState(true);
   const [search, setSearch]           = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [searchField, setSearchField] = useState("nome_cliente");
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [page, setPage]               = useState(1);
-  const [total, setTotal]             = useState(0);
   const [pageSize, setPageSize]       = useState(10);
 
-  useEffect(() => {
-    const fetchPedidos = async () => {
-      setIsFetching(true);
-      try {
-        const offset = (page - 1) * pageSize;
-        const params = new URLSearchParams({
-          limit:  String(pageSize),
-          offset: String(offset),
-        });
-
-        if (search)               params.append(searchField, search);
-        if (activeFilter !== "Todos") params.append("status", activeFilter);
-
-        const res = await fetch(`${BASE_URL}/pedidos_cliente?${params}`);
-        const data = await res.json();
-        const items = Array.isArray(data) ? data : data.items ?? data.data ?? [];
-        setPedidos(items);
-        if (data.total) setTotal(data.total);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsFetching(false);
-      }
-    };
-    fetchPedidos();
-  }, [page, pageSize, search, searchField, activeFilter]);
+  const { pedidos, isFetching, total } = useOrders({
+    page,
+    pageSize,
+    search,
+    searchField,
+    activeFilter
+  });
 
       useEffect(() => {
         const timer = setTimeout(() => {

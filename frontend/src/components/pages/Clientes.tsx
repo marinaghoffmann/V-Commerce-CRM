@@ -4,19 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "../organisms/Navbar";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
-
-
-interface Cliente {
-  id_cliente: number;
-  nome: string;
-  sobrenome: string;
-  email: string;
-  segmento_cliente: string;
-  total_compras: number;
-  receita_total_cliente: number;
-  ticket_medio: number;
-  data_ultima_compra: string;
-}
+import { useClientes } from "../../hooks/useClientes";
 
 function getInitials(nome: string, sobrenome: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -41,35 +29,13 @@ function getAvatarColor(nome: string): string {
 }
 
 function Clientes() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const limit = 10;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (busca) params.append("busca", busca);
-    if (status) params.append("status", status);
-    params.append("page", String(page));
-    params.append("limit", String(limit));
-
-    const countParams = new URLSearchParams();
-    if (busca) countParams.append("busca", busca);
-    if (status) countParams.append("status", status);
-
-    Promise.all([
-      fetch(`http://localhost:8000/clientes/?${params.toString()}`).then((r) => r.json()),
-      fetch(`http://localhost:8000/clientes/count?${countParams.toString()}`).then((r) => r.json()),
-    ])
-      .then(([clientesJson, countJson]) => {
-        setClientes(clientesJson);
-        setTotal(countJson.total ?? 0);
-      })
-      .catch(() => setClientes([]));
-  }, [busca, status, page]);
+  const { clientes, total, loading } = useClientes({ busca, status, page, limit });
 
   const handleBusca = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBusca(e.target.value);
