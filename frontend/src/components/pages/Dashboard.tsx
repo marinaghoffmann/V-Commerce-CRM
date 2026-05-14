@@ -1,13 +1,11 @@
-//import React from "react";
 import {
-  Package,
   TrendingUp,
   TrendingDown,
-  Truck,
-  RefreshCcw,
-  Clock3,
   XCircle,
   CheckCircle2,
+  RotateCcw,
+  Clock3,
+  Package,
 } from "lucide-react";
 
 import {
@@ -23,9 +21,10 @@ import {
   Filler,
 } from "chart.js";
 
-import { Line, Pie, Bar } from "react-chartjs-2";
+import { Line, Pie } from "react-chartjs-2";
+import type { KpiStatusItem } from "../../components/types/dashboard.types";
 
-import { Navbar } from "../organisms/Navbar";
+import { useKpiStatus } from "../../hooks/useDashboard";
 
 ChartJS.register(
   CategoryScale,
@@ -39,7 +38,78 @@ ChartJS.register(
   Filler
 );
 
+const STATUS_CONFIG = [
+  { name: "recusado", color: "#C62828", label: "Recusado" },
+  { name: "aprovado", color: "#34A853", label: "Aprovado" },
+  { name: "reembolsado", color: "#E0A800", label: "Reembolsado" },
+  { name: "processando", color: "#F63BDD", label: "Processando" },
+  { name: "processado", color: "#7C4DFF", label: "Processado" },
+];
+
+function transformarStatus(data: KpiStatusItem[]) {
+  const statusMap = new Map(data.map((item) => [item.status.toLowerCase(), item]));
+
+  const orderedData = STATUS_CONFIG.map((config) => {
+    const item = Array.from(statusMap.values()).find((d) =>
+      d.status.toLowerCase().includes(config.name)
+    );
+    return {
+      status: config.label,
+      total_pedidos: item?.total_pedidos || 0,
+      color: config.color,
+    };
+  }).filter((item) => item.total_pedidos > 0);
+
+  const labels = orderedData.map((item) => item.status);
+  const valores = orderedData.map((item) => item.total_pedidos);
+  const colors = orderedData.map((item) => item.color);
+
+  return {
+    labels,
+    valores,
+    colors,
+  };
+}
+
+function getStatusIcon(status: string) {
+  const normalized = status.toLowerCase();
+
+  if (normalized.includes("recus")) {
+    return <XCircle className="text-red-500" size={16} />;
+  }
+
+  if (normalized.includes("aprov")) {
+    return <CheckCircle2 className="text-green-500" size={16} />;
+  }
+
+  if (normalized.includes("reembols")) {
+    return <RotateCcw className="text-yellow-500" size={16} />;
+  }
+
+  if (normalized.includes("processando")) {
+    return <Clock3 className="text-pink-500" size={16} />;
+  }
+
+  if (normalized.includes("processado")) {
+    return <Package className="text-sky-500" size={16} />;
+  }
+
+  return <Package className="text-gray-500" size={16} />;
+}
+
+function getStatusLabel(status: string) {
+  const config = STATUS_CONFIG.find((c) => status.toLowerCase().includes(c.name));
+  return config?.label || status;
+}
+
 function Dashboard() {
+  const { kpiStatus, loading, error } = useKpiStatus({
+    page: 1,
+    limit: 10,
+    ano: 2026,
+    mes: 2,
+  });
+
   const revenueData = {
     labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
     datasets: [
@@ -54,103 +124,52 @@ function Dashboard() {
     ],
   };
 
+  const { labels, valores } = transformarStatus(kpiStatus);
+
+  const totalPedidos = valores.reduce((sum, value) => sum + value, 0);
+
   const statusData = {
-    labels: [
-      "Entregue",
-      "Em trânsito",
-      "Em processamento",
-      "Atrasado",
-      "Cancelado",
-      "Devolvido",
-    ],
+    labels,
     datasets: [
       {
-        data: [45, 25, 10, 8, 5, 7],
+        data: valores,
         backgroundColor: [
-          "#34A853",
-          "#3B6FF6",
-          "#7C4DFF",
-          "#F97316",
           "#C62828",
+          "#34A853",
           "#E0A800",
+          "#F63BDD",
+          "#7C4DFF",
         ],
-        borderWidth: 0,
+        borderColor: "#ffffff",
+        borderWidth: 1,
+        hoverOffset: 10,
       },
     ],
   };
-
-  const horizontalData = {
-    labels: ["Produto A", "Produto B", "Produto C", "Produto D", "Produto E"],
-    datasets: [
-      {
-        data: [38.63, 11.43, 25.69, 24.01, 47.7],
-        backgroundColor: "#9B8AFB",
-        borderRadius: 10,
-        barThickness: 8,
-      },
-    ],
-  };
-
-  const pedidos = [
-    {
-      id: "#4821",
-      cliente: "João Pedro",
-      status: "Entregue",
-      valor: "R$ 1.250,00",
-      data: "12/05/2026",
-    },
-    {
-      id: "#4822",
-      cliente: "Maria Clara",
-      status: "Em trânsito",
-      valor: "R$ 890,00",
-      data: "12/05/2026",
-    },
-    {
-      id: "#4823",
-      cliente: "Lucas Silva",
-      status: "Atrasado",
-      valor: "R$ 430,00",
-      data: "11/05/2026",
-    },
-    {
-      id: "#4824",
-      cliente: "Fernanda Lima",
-      status: "Cancelado",
-      valor: "R$ 210,00",
-      data: "11/05/2026",
-    },
-  ];
 
   const cardStyle =
     "bg-[#F8F8F9] border border-[#CFCFD4] rounded-2xl p-5";
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Entregue":
-        return "bg-green-100 text-green-700";
+  if (loading) {
+    return (
+      <div className="p-10 text-lg font-medium">
+        Carregando dashboard...
+      </div>
+    );
+  }
 
-      case "Em trânsito":
-        return "bg-blue-100 text-blue-700";
-
-      case "Atrasado":
-        return "bg-orange-100 text-orange-700";
-
-      case "Cancelado":
-        return "bg-red-100 text-red-700";
-
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
+  if (error) {
+    return (
+      <div className="p-10 text-red-500">
+        Erro ao carregar dashboard: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#EDEFF6] py-6">
-      {/* CONTAINER */}
       <div className="max-w-7xl mx-auto px-6">
-        <Navbar />
 
-        {/* HEADER */}
         <div className="mb-8">
           <h1 className="text-5xl font-black tracking-tight text-[#2B2B2B]">
             Dashboard Mensal
@@ -161,7 +180,6 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* TOP CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className={cardStyle}>
             <p className="text-sm text-[#333] font-medium mb-4">
@@ -209,7 +227,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* CHARTS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           <div className={`${cardStyle} lg:col-span-2`}>
             <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">
@@ -227,18 +244,6 @@ function Dashboard() {
                       display: false,
                     },
                   },
-                  scales: {
-                    x: {
-                      grid: {
-                        color: "#E7E7EC",
-                      },
-                    },
-                    y: {
-                      grid: {
-                        color: "#E7E7EC",
-                      },
-                    },
-                  },
                 }}
               />
             </div>
@@ -254,9 +259,21 @@ function Dashboard() {
                 <Pie
                   data={statusData}
                   options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                       legend: {
-                        display: false,
+                        display: false,},
+                      tooltip: {
+                        callbacks: {
+                          label: ({ label, parsed }) => {
+                            const value = Number(parsed || 0);
+                            const percentage = totalPedidos
+                              ? ((value / totalPedidos) * 100).toFixed(1)
+                              : "0.0";
+                            return `${label}: ${value} (${percentage}%)`;
+                          },
+                        },
                       },
                     },
                   }}
@@ -264,170 +281,26 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-y-5 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle2
-                  size={18}
-                  className="text-white fill-[#34A853]"
-                />
-                <span>Entregue</span>
-              </div>
+            <div className="space-y-3">
+              {kpiStatus.map((item) => (
+                <div
+                  key={item.status}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="flex items-center gap-2">
+                    {getStatusIcon(item.status)}
+                    {getStatusLabel(item.status)}
+                  </span>
 
-              <div className="flex items-center gap-2">
-                <Truck
-                  size={18}
-                  className="text-white fill-[#3B6FF6]"
-                />
-                <span>Em trânsito</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Package
-                  size={18}
-                  className="text-white fill-[#7C4DFF]"
-                />
-                <span>Em processamento</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Clock3
-                  size={18}
-                  className="text-white fill-[#F97316]"
-                />
-                <span>Atrasado</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <XCircle
-                  size={18}
-                  className="text-white fill-[#C62828]"
-                />
-                <span>Cancelado</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <RefreshCcw
-                  size={18}
-                  className="text-white fill-[#E0A800]"
-                />
-                <span>Devolvido</span>
-              </div>
+                  <span className="font-semibold">
+                    {item.total_pedidos}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* BOTTOM */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-          <div className={cardStyle}>
-            <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">
-              Produtos mais vendidos
-            </h2>
-
-            <div className="h-[220px]">
-              <Bar
-                data={horizontalData}
-                options={{
-                  indexAxis: "y",
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: false,
-                    },
-                  },
-                  scales: {
-                    x: {
-                      grid: {
-                        color: "#E7E7EC",
-                      },
-                    },
-                    y: {
-                      grid: {
-                        display: false,
-                      },
-                    },
-                  },
-                }}
-              />
-            </div>
-          </div>
-
-          {/* TABLE */}
-          <div className={`${cardStyle} lg:col-span-2 overflow-hidden`}>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-[#2B2B2B]">
-                Últimos pedidos
-              </h2>
-
-              <button className="text-sm text-blue-600 font-medium hover:underline">
-                Ver todos
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-[#E5E7EB]">
-                    <th className="text-left py-3 text-xs uppercase text-gray-500 tracking-wider">
-                      Pedido
-                    </th>
-
-                    <th className="text-left py-3 text-xs uppercase text-gray-500 tracking-wider">
-                      Cliente
-                    </th>
-
-                    <th className="text-left py-3 text-xs uppercase text-gray-500 tracking-wider">
-                      Status
-                    </th>
-
-                    <th className="text-left py-3 text-xs uppercase text-gray-500 tracking-wider">
-                      Valor
-                    </th>
-
-                    <th className="text-left py-3 text-xs uppercase text-gray-500 tracking-wider">
-                      Data
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {pedidos.map((pedido) => (
-                    <tr
-                      key={pedido.id}
-                      className="border-b border-[#ECECEC] hover:bg-white/60 transition-colors"
-                    >
-                      <td className="py-4 text-sm font-semibold text-gray-700">
-                        {pedido.id}
-                      </td>
-
-                      <td className="py-4 text-sm text-gray-600">
-                        {pedido.cliente}
-                      </td>
-
-                      <td className="py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(
-                            pedido.status
-                          )}`}
-                        >
-                          {pedido.status}
-                        </span>
-                      </td>
-
-                      <td className="py-4 text-sm font-medium text-gray-700">
-                        {pedido.valor}
-                      </td>
-
-                      <td className="py-4 text-sm text-gray-500">
-                        {pedido.data}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
