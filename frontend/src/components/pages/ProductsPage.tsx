@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react"; // Adicionado useMemo
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X } from "lucide-react";
-import { Navbar } from "../organisms/Navbar";
+
 import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
@@ -389,9 +389,7 @@ export default function ProductsPage() {
     : EMPTY_FORM;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
-
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="mx-auto w-full max-w-screen-xl px-8 pb-12">
 
         <div className="flex items-center justify-between mb-6">

@@ -4,7 +4,6 @@ import { FilterBar } from "../molecules/FilterBar";
 import { PageHeader } from "../molecules/TitleHeaeder";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
-import { Navbar } from "../organisms/Navbar";
 import { useOrders } from "../../hooks/useOrders";
 import type { Pedido } from "../types/pedido.types";
 
@@ -93,9 +92,7 @@ export const OrdersPage = () => {
 
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar/>
-
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="max-w-7xl mx-auto px-8 pb-12">
         <div className="flex items-center justify-between mb-6">
           <div>

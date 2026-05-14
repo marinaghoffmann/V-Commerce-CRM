@@ -51,7 +51,7 @@ function Clients() {
   const totalPages = Math.ceil(total / limit) || 1;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
+    <div className="min-h-screen bg-[#F4F7FE]">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-8 pb-12">

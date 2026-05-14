@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Navbar } from "../organisms/Navbar";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import { useClientes } from "../../hooks/useClientes";
@@ -51,9 +50,7 @@ function Clients() {
   const totalPages = Math.ceil(total / limit) || 1;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
-
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="max-w-7xl mx-auto px-8 pb-12">
         <div className="flex items-center justify-between mb-6">
         <div>

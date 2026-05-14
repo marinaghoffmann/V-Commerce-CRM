@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Navbar } from "../organisms/Navbar";
 import { useClienteDetalhe } from "../../hooks/useClienteDetalhe";
 
 interface Evento {
@@ -47,14 +46,12 @@ function ClientDetail(): React.ReactElement {
   const eventsPerPage = 4;
 
   if (loading) return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="flex items-center justify-center pt-32 text-gray-400 text-sm">Carregando...</div>
     </div>
   );
   if (!data) return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="flex items-center justify-center pt-32 text-gray-400 text-sm">Cliente não encontrado.</div>
     </div>
   );
@@ -70,9 +67,7 @@ function ClientDetail(): React.ReactElement {
   const produtos = [data.categoria_preferida, data.produto_mais_comprado].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
-
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="max-w-7xl mx-auto px-8 pb-12">
 
         {/* Breadcrumb */}

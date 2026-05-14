@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, TicketX, CheckCircle } from "lucide-react";
-import { Navbar } from "../organisms/Navbar";
 import { TicketRow } from "../molecules/TicketRow";
 import { useTickets } from "../../hooks/useTickets";
 
@@ -54,8 +53,6 @@ export default function SuportePage() {
 
   return (
     <div className="min-h-screen bg-[#F4F7FE] px-6 pb-6">
-      <Navbar />
-
       <div className="mx-auto w-full max-w-screen-xl px-8 pt-2 pb-8">
         {/* Card container principal */}
 

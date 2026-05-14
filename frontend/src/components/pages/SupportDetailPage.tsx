@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapPin, Calendar, Send, X, Loader2 } from "lucide-react";
-import { Navbar } from "../organisms/Navbar";
 import { useTicketDetalhe } from "../../hooks/useTicketDetalhe";
 
 export default function SuporteDetalhePage() {
@@ -49,8 +48,6 @@ export default function SuporteDetalhePage() {
 
   return (
     <div className="min-h-screen bg-[#F4F7FE] px-6 pb-6">
-      <Navbar />
-
       <div className="mx-auto w-full max-w-screen-lg px-8 pt-6 pb-8">
 
         {/* Cabeçalho */}
