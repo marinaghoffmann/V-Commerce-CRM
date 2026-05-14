@@ -43,13 +43,13 @@ export function ChatbotOverlay({ onClose }: ChatbotOverlayProps) {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col border border-gray-200 z-50">
+    <div className="fixed top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl h-[75vh] bg-white rounded-xl shadow-2xl flex flex-col z-50">
       <ChatbotHeader onClose={onClose} />
 
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 bg-gray-50"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 bg-white"
       >
         {!hasMessages ? (
           <EmptyState

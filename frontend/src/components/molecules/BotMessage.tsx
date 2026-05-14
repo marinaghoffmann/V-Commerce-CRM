@@ -1,6 +1,7 @@
 import { ChatBubble } from "../atoms/ChatBubble";
 import { SQLQueryBox } from "../atoms/SQLQueryBox";
 import { ResultsTable } from "./ResultsTable";
+import AssistenteIcon from "../../assets/navbar_icons/AssistenteIcon.svg?react";
 
 interface BotMessageProps {
   content: string;
@@ -12,7 +13,9 @@ interface BotMessageProps {
 export function BotMessage({ content, rows, sql, isValid }: BotMessageProps) {
   return (
     <div className="flex justify-start">
-      <div className="text-lg mr-2">✨</div>
+      <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex flex-shrink-0 items-center justify-center mr-2">
+        <AssistenteIcon className="w-[18px] h-[18px] text-current fill-current" />
+      </div>
       <ChatBubble type="bot">
         <div className="flex flex-col gap-2">
           {/* Seção 1: Mensagem */}
