@@ -103,8 +103,8 @@ function getStatusLabel(status: string) {
 }
 
 function Dashboard() {
-  const year = 2023;//new Date().getFullYear();
-  const month = 12;//new Date().getMonth() + 1;
+  const year = new Date().getFullYear();
+  const month = new Date().getMonth() + 1;
   const { kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
     page: 1,
     limit: 10,
@@ -172,7 +172,7 @@ function Dashboard() {
     ],
   };
 
-  const { labels, valores } = transformarStatus(kpiStatus);
+  const { labels, valores, colors } = transformarStatus(kpiStatus);
 
   const totalPedidos = valores.reduce((sum, value) => sum + value, 0);
 
@@ -181,13 +181,7 @@ function Dashboard() {
     datasets: [
       {
         data: valores,
-        backgroundColor: [
-          "#C62828",
-          "#34A853",
-          "#E0A800",
-          "#F63BDD",
-          "#7C4DFF",
-        ],
+        backgroundColor: colors,
         borderColor: "#ffffff",
         borderWidth: 1,
         hoverOffset: 10,
