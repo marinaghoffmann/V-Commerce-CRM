@@ -10,46 +10,61 @@ import type { Pedido } from "../types/pedido.types";
 
 type StatusKey = "entregue" | "processando" | "em trânsito" | "atrasado" | "aprovado" | "recusado" | "processado" | "reembolsado";
 
-const STATUS_STYLES: Record<StatusKey, { dot: string; pill: string }> = {
-  "entregue":    { dot: "bg-green-500",  pill: "border-green-300 text-green-700 bg-green-50"      },
-  "processando": { dot: "bg-purple-500", pill: "border-purple-300 text-purple-700 bg-purple-50"   },
-  "em trânsito": { dot: "bg-blue-500",   pill: "border-blue-300 text-blue-700 bg-blue-50"         },
-  "atrasado":    { dot: "bg-orange-400", pill: "border-orange-300 text-orange-600 bg-orange-50"   },
-  "aprovado":    { dot: "bg-green-500",  pill: "border-green-300 text-green-700 bg-green-50"      },
-  "recusado":    { dot: "bg-red-500",    pill: "border-red-300 text-red-700 bg-red-50"            },
-  "processado":  { dot: "bg-orange-400", pill: "border-yellow-300 text-yellow-700 bg-yellow-50"   },
-  "reembolsado": { dot: "bg-red-500",    pill: "border-red-900 text-red-700 bg-red-50"            },
+const STATUS_STYLES: Record<StatusKey, string> = {
+  "entregue":    "bg-emerald-100 text-emerald-700",
+  "processando": "bg-blue-100 text-blue-700",
+  "em trânsito": "bg-amber-100 text-amber-700",
+  "atrasado":    "bg-red-100 text-red-600",
+  "aprovado":    "bg-emerald-100 text-emerald-700",
+  "recusado":    "bg-red-100 text-red-600",
+  "processado":  "bg-blue-100 text-blue-700",
+  "reembolsado": "bg-gray-100 text-gray-600",
 };
 
 function getStatusStyle(value: string) {
   if (value in STATUS_STYLES) return STATUS_STYLES[value as StatusKey];
-  return { dot: "bg-gray-400", pill: "border-gray-300 text-gray-600 bg-gray-50" };
+  return "bg-gray-100 text-gray-600";
 }
 
 const FILTERS = ["Todos", "Entregue", "Em processamento", "Em trânsito", "Atrasado"];
 
 const columns = [
-  { key: "id_pedido",         label: "ID do Pedido"        },
+  { 
+    key: "id_pedido",         
+    label: "ID do Pedido",
+    render: (value: string) => (
+      <span title={value} className="block font-mono text-xs text-gray-500">
+        {value}
+      </span>
+    )
+  },
   { key: "nome_cliente",      label: "Cliente"             },
   { key: "nome_produto",      label: "Produto"             },
   { key: "categoria_produto", label: "Categoria"           },
-  { key: "metodo_pagamento",  label: "Método de Pagamento" },
-  { key: "valor_pedido",      label: "Valor"               },
-  { key: "quantidade",        label: "Quantidade"          },
+  { 
+    key: "metodo_pagamento",  
+    label: "Pagamento",
+    render: (value: string) => <span className="capitalize">{value}</span>
+  },
+  { 
+    key: "valor_pedido",      
+    label: "Valor",
+    render: (value: string | number) => `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  },
+  { key: "quantidade",        label: "Qtd."                },
   {
     key: "status",
     label: "Status",
     render: (value: string) => {
       const style = getStatusStyle(value);
       return (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1.5 border ${style.pill}`}>
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${style.dot}`} />
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${style}`}>
           {value}
         </span>
       );
     },
   },
-  { key: "data_pedido", label: "Data do Pedido" },
+  { key: "data_pedido", label: "Data" },
 ];
 
 export const OrdersPage = () => {
@@ -78,45 +93,44 @@ export const OrdersPage = () => {
 
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
       <Navbar/>
 
-      <div className="flex items-center justify-between mb-6 pl-24 pr-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pedidos</h1>
-          <p className="mt-1 text-sm text-gray-500">Acompanhe todos os pedidos e seus status</p>
+      <div className="max-w-7xl mx-auto px-8 pb-12">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1" style={{ letterSpacing: "-0.02em" }}>Pedidos</h1>
+            <p className="mt-1 text-sm text-gray-400">Acompanhe todos os pedidos e seus status</p>
+          </div>
+          <button
+            onClick={() => exportCSV(pedidos, "pedidos")}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
+          >
+            <Upload size={16} />
+            Exportar CSV
+          </button>
         </div>
-        <button
-        onClick={() => exportCSV(pedidos, "pedidos")}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
-        >
-        <Upload size={16} />
-        Exportar CSV
-        </button>
-      </div>
 
-      <div className="mb-4">
+        <div className="mb-6">
           <FilterBar
             search={searchInput}
             onSearchChange={setSearchInput}
             searchField={searchField}
             onSearchFieldChange={(field) => { setSearchField(field); setSearchInput(""); setSearch(""); setPage(1); }}
-            activeFilter={activeFilter}
-            onFilterChange={(filter) => { setActiveFilter(filter); setPage(1); }}
-            filters={FILTERS}
             />
-      </div>
+        </div>
 
-      <div className={`transition-opacity duration-200 ${isFetching ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
-        <DataTable
-          columns={columns}
-          data={pedidos}
-          maxHeight={550}
-          pageSize={pageSize}
-          setPageSize={(size) => { setPageSize(Number(size)); setPage(1); }}
-          page={page}
-          onPageChange={setPage}
-        />
+        <div className={`transition-opacity duration-200 ${isFetching ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
+          <DataTable
+            columns={columns}
+            data={pedidos}
+            maxHeight={550}
+            pageSize={pageSize}
+            setPageSize={(size) => { setPageSize(Number(size)); setPage(1); }}
+            page={page}
+            onPageChange={setPage}
+          />
+        </div>
       </div>
     </div>
   );
