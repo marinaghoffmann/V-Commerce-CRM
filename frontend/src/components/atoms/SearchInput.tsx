@@ -13,14 +13,14 @@ export const SearchInput = ({
   placeholder = "Buscar...",
 }: SearchInputProps) => {
   return (
-    <div className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
-      <Search size={16} className="text-gray-400 shrink-0" />
+    <div className="relative flex-1 max-w-lg">
+      <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none bg-transparent"
+        className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-full bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm transition-all"
       />
     </div>
   );

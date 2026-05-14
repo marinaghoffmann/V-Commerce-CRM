@@ -49,22 +49,22 @@ const goTo = (p: number) => {
 
   return (
 
-    <div className="rounded-xl border-2 border-gray-200 bg-white overflow-hidden w-[95vw] mx-auto">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
       <div style={{ maxHeight }} className="overflow-y-auto">
         <table className="w-full text-sm border-collapse">
-          <thead className="sticky top-0 z-10 bg-blue-300">
+          <thead className="sticky top-0 z-10 bg-blue-50 border-b border-gray-100">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                  className="px-2 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-tight whitespace-nowrap"
                 >
                   {col.label}
                 </th>
               ))}
-              <th> 
-                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="mr-2 p-1 border rounded"> 
+              <th className="px-2 py-3 text-right"> 
+                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="p-1 border rounded text-xs text-gray-600 bg-white"> 
                   <option value="5">5</option>
                   <option value="10">10</option>
                   <option value="20">20</option>
@@ -78,10 +78,10 @@ const goTo = (p: number) => {
             {rows.map((row, i) => (
               <tr
                 key={i}
-                className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-50 last:border-b-0 hover:bg-blue-50/40 transition-colors duration-150"
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-gray-700">
+                  <td key={col.key} className="px-2 py-3 text-sm text-gray-700">
                     {col.render
                       ? col.render((row as Record<string, never>)[col.key], row)
                       : String((row as Record<string, unknown>)[col.key] ?? "")}

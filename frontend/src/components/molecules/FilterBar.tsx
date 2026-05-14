@@ -5,9 +5,6 @@ interface FilterBarProps {
   onSearchChange: (value: string) => void;
   searchField: string;
   onSearchFieldChange: (field: string) => void;
-  activeFilter: string;
-  onFilterChange: (filter: string) => void;
-  filters: string[];
 }
 
 export const FilterBar = ({
@@ -15,16 +12,19 @@ export const FilterBar = ({
   onSearchChange,
   searchField,
   onSearchFieldChange,
-  activeFilter,
-  onFilterChange,
-  filters,
 }: FilterBarProps) => {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white w-[96vw] mx-auto">
+    <div className="flex gap-3">
+      <SearchInput
+        value={search}
+        onChange={onSearchChange}
+        placeholder={`Buscar por ${(searchField.replace('nome_', '')).replace('_', ' ')}...`}
+      />
+
       <select
         value={searchField}
         onChange={(e) => onSearchFieldChange(e.target.value)}
-        className="p-1.5 border rounded-lg text-sm text-gray-600 outline-none cursor-pointer"
+        className="border border-gray-200 rounded-full px-5 py-2.5 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm transition-all"
       >
         <option value="nome_cliente">Cliente</option>
         <option value="nome_produto">Produto</option>
@@ -32,12 +32,6 @@ export const FilterBar = ({
         <option value="status">Status</option>
         <option value="metodo_pagamento">Método de Pagamento</option>
       </select>
-
-      <SearchInput
-        value={search}
-        onChange={onSearchChange}
-        placeholder={`Buscar por ${searchField}...`}
-      />
     </div>
   );
 };
