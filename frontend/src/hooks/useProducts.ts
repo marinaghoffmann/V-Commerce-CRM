@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Product } from "../components/types/product.types";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import api from "../services/api";
 
 interface UseProductsArgs {
   page?: number;
@@ -30,9 +29,8 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
       if (args?.nome_produto) params.append("nome_produto", args.nome_produto);
       (args?.categorias ?? []).forEach((c) => params.append("categoria", c));
 
-      const res = await fetch(`${BASE_URL}/produto?${params.toString()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
+      const res = await api.get(`/produto?${params.toString()}`);
+      const json = res.data;
       const items: Product[] = Array.isArray(json) ? json : json.items ?? json.data ?? [];
       setData(items);
     } catch (err: any) {
@@ -51,5 +49,19 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
     [fetchProducts, page, limit]
   );
 
-  return { data, loading, error, page, setPage, limit, setLimit, refetch };
+  const addProduct = useCallback(async (productBody: Omit<Product, "id_produto"> & { id_produto?: string }) => {
+    const res = await api.post("/produto/", productBody);
+    return res.data;
+  }, []);
+
+  const editProduct = useCallback(async (id_produto: string, productBody: Partial<Product>) => {
+    const res = await api.put(`/produto/${id_produto}`, productBody);
+    return res.data;
+  }, []);
+
+  const deleteProduct = useCallback(async (id_produto: string) => {
+    await api.delete(`/produto/${id_produto}`);
+  }, []);
+
+  return { data, loading, error, page, setPage, limit, setLimit, refetch, addProduct, editProduct, deleteProduct };
 }

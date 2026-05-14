@@ -1,24 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Navbar } from "../organisms/Navbar";
-
-interface Cliente {
-  id_cliente?: number;
-  nome?: string;
-  sobrenome?: string;
-  email?: string;
-  segmento_cliente?: string;
-  total_compras?: number;
-  total_tickets?: number;
-  receita_total_cliente?: number;
-  ticket_medio?: number;
-  data_ultima_compra?: string;
-  data_primeira_compra?: string;
-  cidade?: string;
-  estado?: string;
-  categoria_preferida?: string;
-  produto_mais_comprado?: string;
-}
+import { useClienteDetalhe } from "../../hooks/useClienteDetalhe";
 
 interface Evento {
   tipo: "pedido" | "entrega" | "suporte";
@@ -50,38 +32,26 @@ function gerarEventosMock(): Evento[] {
 }
 
 function EventoBullet({ tipo }: { tipo: Evento["tipo"] }) {
-  if (tipo === "pedido")  return <span className="w-3 h-3 rounded-full flex-shrink-0 bg-blue-500" />;
-  if (tipo === "entrega") return <span className="w-3 h-3 rounded-full flex-shrink-0 bg-emerald-500" />;
-  if (tipo === "suporte") return <span className="w-3 h-3 rounded-full flex-shrink-0 bg-red-400" />;
+  if (tipo === "pedido") return <span className="w-3 h-3 rounded-full shrink-0 bg-blue-500" />;
+  if (tipo === "entrega") return <span className="w-3 h-3 rounded-full shrink-0 bg-emerald-500" />;
+  if (tipo === "suporte") return <span className="w-3 h-3 rounded-full shrink-0 bg-red-400" />;
   return null;
 }
 
-function ClienteDetalhe(): React.ReactElement {
+function ClientDetail(): React.ReactElement {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [data, setData] = useState<Cliente | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading } = useClienteDetalhe(id);
   const [eventPage, setEventPage] = useState(1);
   const eventsPerPage = 4;
 
-  useEffect(() => {
-    if (!id) return;
-    fetch(`http://localhost:8000/clientes/${id}`)
-      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((json: Cliente) => setData(json))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, [id]);
-
   if (loading) return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="flex items-center justify-center pt-32 text-gray-400 text-sm">Carregando...</div>
     </div>
   );
   if (!data) return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="flex items-center justify-center pt-32 text-gray-400 text-sm">Cliente não encontrado.</div>
     </div>
   );
@@ -97,9 +67,7 @@ function ClienteDetalhe(): React.ReactElement {
   const produtos = [data.categoria_preferida, data.produto_mais_comprado].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F7FE" }}>
-      <Navbar />
-
+    <div className="min-h-screen bg-[#F4F7FE]">
       <div className="max-w-7xl mx-auto px-8 pb-12">
 
         {/* Breadcrumb */}
@@ -120,7 +88,7 @@ function ClienteDetalhe(): React.ReactElement {
         {/* Card de Identificação */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-8 py-6 flex items-center justify-between mb-6">
           <div className="flex items-center gap-5">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0 ${getAvatarColor(data.nome)}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0 ${getAvatarColor(data.nome)}`}>
               {getInitials(data.nome, data.sobrenome)}
             </div>
             <div>
@@ -196,7 +164,7 @@ function ClienteDetalhe(): React.ReactElement {
           </div>
 
           {/* Card Atividade */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -204,7 +172,7 @@ function ClienteDetalhe(): React.ReactElement {
               <span className="text-base font-bold text-gray-800">Atividade</span>
             </div>
 
-            <div className="flex flex-col gap-0">
+            <div className="flex flex-col gap-0 flex-1">
               {eventosPagina.map((ev, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="flex flex-col items-center pt-1">
@@ -254,4 +222,4 @@ function ClienteDetalhe(): React.ReactElement {
   );
 }
 
-export default ClienteDetalhe;
+export default ClientDetail;

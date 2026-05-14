@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import api from "../services/api";
 
 interface Mensagem {
   id?: number;
@@ -28,15 +27,17 @@ export function useTicketDetalhe(id: string | undefined) {
     setLoading(true);
     setError(null);
 
-    fetch(`${BASE_URL}/ticket/${id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Falha ao carregar os detalhes do ticket.");
-        return r.json();
-      })
-      .then((data) => setTicket(data))
+    api.get(`/ticket/${id}`)
+      .then((res) => setTicket(res.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
 
-  return { ticket, loading, error };
+  const enviarMensagem = async (mensagem: string) => {
+    if (!id || !mensagem.trim()) return;
+    const response = await api.post(`/ticket/${id}/mensagem`, { mensagem });
+    return response.data;
+  };
+
+  return { ticket, loading, error, enviarMensagem };
 }

@@ -16,21 +16,21 @@ export function ChatbotInput({
   disabled = false,
 }: ChatbotInputProps) {
   return (
-    <div className="border-t border-gray-200 p-4 bg-white rounded-b-lg">
-      <div className="flex gap-2">
+    <div className="bg-white p-4">
+      <div className="flex border border-gray-300 rounded-xl overflow-hidden items-center pr-2 pl-4 py-2">
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyPress={onKeyPress}
-          placeholder="Faça uma pergunta..."
+          placeholder="Pergunte sobre vendas, clientes, suporte, etc..."
           disabled={disabled}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100"
+          className="flex-1 focus:outline-none text-gray-700 text-sm bg-transparent"
         />
         <button
           onClick={onSend}
           disabled={disabled || !value.trim()}
-          className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg transition flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+          className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white p-1.5 rounded-lg transition flex items-center justify-center cursor-pointer ml-3"
           aria-label="Enviar mensagem"
         >
           <Send size={18} />
