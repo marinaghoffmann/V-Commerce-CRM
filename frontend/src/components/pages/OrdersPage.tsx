@@ -52,7 +52,7 @@ const columns = [
   { key: "data_pedido", label: "Data do Pedido" },
 ];
 
-export const PedidosPage = () => {
+export const OrdersPage = () => {
   const [search, setSearch]           = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [searchField, setSearchField] = useState("nome_cliente");

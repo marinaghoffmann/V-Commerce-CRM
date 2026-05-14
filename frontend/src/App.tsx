@@ -1,16 +1,16 @@
 import { Routes, Route } from "react-router-dom";
-import ClienteDetalhe from "./components/pages/ClienteDetalhe";
-import Clientes from "./components/pages/Clientes";
-import { PedidosPage } from "./components/pages/ProductPage";
+import ClientDetail from "./components/pages/ClientDetailPage";
+import Clients from "./components/pages/ClientsPage";
+import { OrdersPage } from "./components/pages/OrdersPage";
 import ProductsPage from "./components/pages/ProductsPage";
-import SuportePage from "./components/pages/SuportePage";
+import SuportePage from "./components/pages/SupportPage";
 
 function App() {
   return (
       <Routes>
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/clientes/:id" element={<ClienteDetalhe />} />
-        <Route path="/pedidos" element={<PedidosPage />} />
+        <Route path="/clientes" element={<Clients />} />
+        <Route path="/clientes/:id" element={<ClientDetail />} />
+        <Route path="/pedidos" element={<OrdersPage />} />
         <Route path="/produtos" element={<ProductsPage />} />
         <Route path="/suporte" element={<SuportePage />} />
       </Routes>

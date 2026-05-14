@@ -28,7 +28,7 @@ function getAvatarColor(nome: string): string {
   return colors[(nome?.charCodeAt(0) ?? 0) % colors.length];
 }
 
-function Clientes() {
+function Clients() {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -130,7 +130,7 @@ function Clientes() {
                 >
                   <td className="px-6 py-4 text-sm text-gray-700">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${getAvatarColor(c.nome)}`}>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${getAvatarColor(c.nome)}`}>
                         {getInitials(c.nome, c.sobrenome)}
                       </div>
                       <div>
@@ -208,4 +208,4 @@ function Clientes() {
   );
 }
 
-export default Clientes;
+export default Clients;

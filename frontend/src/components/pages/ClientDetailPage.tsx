@@ -33,13 +33,13 @@ function gerarEventosMock(): Evento[] {
 }
 
 function EventoBullet({ tipo }: { tipo: Evento["tipo"] }) {
-  if (tipo === "pedido")  return <span className="w-3 h-3 rounded-full flex-shrink-0 bg-blue-500" />;
-  if (tipo === "entrega") return <span className="w-3 h-3 rounded-full flex-shrink-0 bg-emerald-500" />;
-  if (tipo === "suporte") return <span className="w-3 h-3 rounded-full flex-shrink-0 bg-red-400" />;
+  if (tipo === "pedido") return <span className="w-3 h-3 rounded-full shrink-0 bg-blue-500" />;
+  if (tipo === "entrega") return <span className="w-3 h-3 rounded-full shrink-0 bg-emerald-500" />;
+  if (tipo === "suporte") return <span className="w-3 h-3 rounded-full shrink-0 bg-red-400" />;
   return null;
 }
 
-function ClienteDetalhe(): React.ReactElement {
+function ClientDetail(): React.ReactElement {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading } = useClienteDetalhe(id);
@@ -93,7 +93,7 @@ function ClienteDetalhe(): React.ReactElement {
         {/* Card de Identificação */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-8 py-6 flex items-center justify-between mb-6">
           <div className="flex items-center gap-5">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0 ${getAvatarColor(data.nome)}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0 ${getAvatarColor(data.nome)}`}>
               {getInitials(data.nome, data.sobrenome)}
             </div>
             <div>
@@ -227,4 +227,4 @@ function ClienteDetalhe(): React.ReactElement {
   );
 }
 
-export default ClienteDetalhe;
+export default ClientDetail;
