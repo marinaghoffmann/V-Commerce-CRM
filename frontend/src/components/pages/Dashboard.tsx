@@ -24,7 +24,7 @@ import {
 import { Line, Pie } from "react-chartjs-2";
 import type { KpiStatusItem } from "../../components/types/dashboard.types";
 
-import { useKpiStatus } from "../../hooks/useDashboard";
+import { useKpiStatus, useMonthlyKpi } from "../../hooks/useDashboard";
 
 ChartJS.register(
   CategoryScale,
@@ -103,23 +103,71 @@ function getStatusLabel(status: string) {
 }
 
 function Dashboard() {
-  const { kpiStatus, loading, error } = useKpiStatus({
+  const year = 2023;//new Date().getFullYear();
+  const month = 12;//new Date().getMonth() + 1;
+  const { kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
     page: 1,
     limit: 10,
-    ano: 2026,
-    mes: 2,
+    ano: year,
+    mes: month,
   });
 
+  const {
+    data: monthlyData,
+    loading: loadingMonthly,
+    error: errorMonthly,
+  } = useMonthlyKpi(year, month);
+
+  const loading = loadingStatus || loadingMonthly;
+  const error = errorStatus || errorMonthly;
+
+  const monthLabels = monthlyData.map((item) =>
+    `${String(item.mes).padStart(2, "0")}/${String(item.ano).slice(-2)}`
+  );
+  const revenueValues = monthlyData.map((item) => item.receita_total);
+
+  const lastMonth = monthlyData[monthlyData.length - 1] ?? {
+    receita_total: 0,
+    total_pedidos: 0,
+    ticket_medio: 0,
+  };
+
+  const previousMonth = monthlyData[monthlyData.length - 2] ?? {
+    receita_total: 0,
+    total_pedidos: 0,
+    ticket_medio: 0,
+  };
+
+  const calculateVariation = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const revenueVariation = calculateVariation(
+    lastMonth.receita_total,
+    previousMonth.receita_total
+  );
+  const ordersVariation = calculateVariation(
+    lastMonth.total_pedidos,
+    previousMonth.total_pedidos
+  );
+  const ticketVariation = calculateVariation(
+    lastMonth.ticket_medio,
+    previousMonth.ticket_medio
+  );
+
   const revenueData = {
-    labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+    labels: monthLabels,
     datasets: [
       {
-        data: [38, 12, 35, 27, 48, 71, 67, 49, 98, 14, 30, 12],
+        data: revenueValues,
         borderColor: "#8B7CF8",
         backgroundColor: "rgba(139,124,248,0.18)",
         fill: true,
         tension: 0.45,
-        pointRadius: 2,
+        pointRadius: 3,
+        pointBackgroundColor: "#8B7CF8",
+        borderWidth: 1,
       },
     ],
   };
@@ -147,8 +195,8 @@ function Dashboard() {
     ],
   };
 
-  const cardStyle =
-    "bg-[#F8F8F9] border border-[#CFCFD4] rounded-2xl p-5";
+const cardStyle =
+  "bg-white border-2 border-black/25 rounded-2xl p-6";
 
   if (loading) {
     return (
@@ -167,7 +215,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EDEFF6] py-6">
+    <div className="min-h-screen py-6">
       <div className="max-w-7xl mx-auto px-6">
 
         <div className="mb-8">
@@ -187,12 +235,15 @@ function Dashboard() {
             </p>
 
             <h2 className="text-4xl font-black text-[#2E2E2E] mb-4">
-              R$ 461.251,68
+              {new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(lastMonth.receita_total)}
             </h2>
 
-            <div className="flex items-center gap-1 text-xs text-green-600">
-              <TrendingUp size={14} />
-              <span>8,1% vs. mês anterior</span>
+            <div className={`flex items-center gap-1 text-xs ${revenueVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {revenueVariation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <span>{Math.abs(revenueVariation).toFixed(1)}% vs. mês anterior</span>
             </div>
           </div>
 
@@ -202,12 +253,12 @@ function Dashboard() {
             </p>
 
             <h2 className="text-4xl font-black text-[#2E2E2E] mb-4">
-              18.340
+              {new Intl.NumberFormat("pt-BR").format(lastMonth.total_pedidos)}
             </h2>
 
-            <div className="flex items-center gap-1 text-xs text-red-500">
-              <TrendingDown size={14} />
-              <span>5,3% vs. mês anterior</span>
+            <div className={`flex items-center gap-1 text-xs ${ordersVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {ordersVariation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <span>{Math.abs(ordersVariation).toFixed(1)}% vs. mês anterior</span>
             </div>
           </div>
 
@@ -217,12 +268,15 @@ function Dashboard() {
             </p>
 
             <h2 className="text-4xl font-black text-[#2E2E2E] mb-4">
-              R$ 215,90
+              {new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(lastMonth.ticket_medio)}
             </h2>
 
-            <div className="flex items-center gap-1 text-xs text-gray-700">
-              <TrendingUp size={14} />
-              <span>8,1% vs. mês anterior</span>
+            <div className={`flex items-center gap-1 text-xs ${ticketVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {ticketVariation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <span>{Math.abs(ticketVariation).toFixed(1)}% vs. mês anterior</span>
             </div>
           </div>
         </div>
@@ -242,6 +296,11 @@ function Dashboard() {
                   plugins: {
                     legend: {
                       display: false,
+                    },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
                     },
                   },
                 }}
