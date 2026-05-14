@@ -169,7 +169,7 @@ function ClientDetail(): React.ReactElement {
           </div>
 
           {/* Card Atividade */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -177,7 +177,7 @@ function ClientDetail(): React.ReactElement {
               <span className="text-base font-bold text-gray-800">Atividade</span>
             </div>
 
-            <div className="flex flex-col gap-0">
+            <div className="flex flex-col gap-0 flex-1">
               {eventosPagina.map((ev, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="flex flex-col items-center pt-1">
