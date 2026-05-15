@@ -97,7 +97,7 @@ export default function SuportePage() {
         </div>
 
         {/* Lista de tickets */}
-        <div className="flex flex-col divide-y divide-[#E2E8F0]">
+        <div className="flex flex-col divide-y divide-[#E2E8F0] bg-white border border-gray-200 rounded-2xl px-2 mb-6">
           {loading && (
             <div className="py-10 text-center text-sm text-gray-400">Carregando tickets...</div>
           )}
