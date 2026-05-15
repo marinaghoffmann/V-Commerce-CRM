@@ -311,7 +311,7 @@ function Dashboard() {
   const cardStyle = "bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm";
 
   return (
-    <div className="min-h-screen py-6 bg-[#F8F9FB]">
+    <div className="min-h-screen py-6">
       <div className="max-w-7xl mx-auto px-6">
 
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
