@@ -64,7 +64,7 @@ const goTo = (p: number) => {
                 </th>
               ))}
               <th className="px-2 py-3 text-right"> 
-                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="p-1 border rounded text-xs text-gray-600 bg-white"> 
+                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="p-1 border rounded text-xs text-gray-600 bg-white cursor-pointer"> 
                   <option value="5">5</option>
                   <option value="10">10</option>
                   <option value="20">20</option>
@@ -115,7 +115,7 @@ const goTo = (p: number) => {
           <button
             onClick={() => goTo(safePage - 1)}
             disabled={safePage === 1}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
           >
           <ChevronLeft size={16} />
         </button>
@@ -127,7 +127,7 @@ const goTo = (p: number) => {
         <button
           onClick={() => goTo(safePage + 1)}
           disabled={isControlled ? data.length < pageSize : safePage === totalPages}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
         >
         <ChevronRight size={16} />
         </button>

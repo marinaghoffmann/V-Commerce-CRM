@@ -94,7 +94,7 @@ function ClientDetail(): React.ReactElement {
             <div>
               <div className="text-xl font-bold text-gray-900">{nomeCompleto}</div>
               <div className="text-sm text-gray-400 mb-3">{data.email}</div>
-              <button className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-full hover:bg-blue-600 transition-colors">
+              <button className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-full hover:bg-blue-600 transition-colors cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.57a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/>
                 </svg>
@@ -103,7 +103,7 @@ function ClientDetail(): React.ReactElement {
             </div>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-1.5 border border-blue-400 text-blue-500 text-xs font-semibold rounded-full hover:bg-blue-50 transition-colors">
+            <button className="inline-flex items-center gap-2 px-4 py-1.5 border border-blue-400 text-blue-500 text-xs font-semibold rounded-full hover:bg-blue-50 transition-colors cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
@@ -193,14 +193,14 @@ function ClientDetail(): React.ReactElement {
 
             <div className="flex items-center justify-center gap-1.5">
               <button
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 font-medium"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 font-medium"
                 onClick={() => setEventPage((p) => Math.max(p - 1, 1))}
                 disabled={eventPage === 1}
               >‹</button>
               {Array.from({ length: totalEventPages }, (_, i) => i + 1).map((p) => (
                 <button
                   key={p}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border font-medium transition-all duration-150 ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border font-medium transition-all duration-150 cursor-pointer ${
                     p === eventPage
                       ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
                       : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50"
@@ -209,7 +209,7 @@ function ClientDetail(): React.ReactElement {
                 >{p}</button>
               ))}
               <button
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 font-medium"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 font-medium"
                 onClick={() => setEventPage((p) => Math.min(p + 1, totalEventPages))}
                 disabled={eventPage === totalEventPages}
               >›</button>

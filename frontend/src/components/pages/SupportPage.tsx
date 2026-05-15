@@ -85,7 +85,7 @@ export default function SuportePage() {
               key={f}
               onClick={() => handleFilterChange(f)}
               className={[
-                "rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-150",
+                "rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-150 cursor-pointer",
                 activeFilter === f
                   ? "bg-blue-100 text-blue-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600",
@@ -126,7 +126,7 @@ export default function SuportePage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronLeft size={15} />
               </button>
@@ -139,7 +139,7 @@ export default function SuportePage() {
                   key={n}
                   onClick={() => setPage(n)}
                   className={[
-                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors",
+                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
                     page === n
                       ? "border-2 border-blue-500 text-blue-600 bg-white"
                       : "text-gray-400 hover:bg-gray-100",
@@ -152,7 +152,7 @@ export default function SuportePage() {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronRight size={15} />
               </button>

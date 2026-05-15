@@ -101,7 +101,7 @@ export const OrdersPage = () => {
           </div>
           <button
             onClick={() => exportCSV(pedidos, "pedidos")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
           >
             <Upload size={16} />
             Exportar CSV

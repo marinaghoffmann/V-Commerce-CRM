@@ -38,7 +38,7 @@ export default function SuporteDetalhePage() {
         <p className="text-red-500 font-bold">{error ?? "Ticket não encontrado."}</p>
         <button
           onClick={() => navigate("/suporte")}
-          className="bg-blue-500 text-white px-6 py-2 rounded-xl"
+          className="bg-blue-500 text-white px-6 py-2 rounded-xl cursor-pointer"
         >
           Voltar
         </button>
@@ -117,13 +117,13 @@ export default function SuporteDetalhePage() {
             />
             <button
               onClick={handleEnviar}
-              className="bg-blue-500 text-white p-1.5 rounded-lg hover:bg-blue-600 transition-colors"
+              className="bg-blue-500 text-white p-1.5 rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
             >
               <Send size={16} />
             </button>
             <button
               onClick={() => setMensagem("")}
-              className="text-gray-400 p-1 hover:text-gray-600 transition-colors"
+              className="text-gray-400 p-1 hover:text-gray-600 transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>

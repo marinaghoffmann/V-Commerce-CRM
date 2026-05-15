@@ -60,7 +60,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer
             ${hasActive
               ? "bg-blue-500 border-blue-500 text-white font-semibold"
               : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
@@ -75,7 +75,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-semibold text-gray-700">Categorias</span>
               {draft.length > 0 && (
-                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline">
+                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline cursor-pointer">
                   Limpar
                 </button>
               )}
@@ -107,7 +107,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             <div className="px-4 py-3 border-t border-gray-100">
               <button
                 onClick={handleApply}
-                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
               >
                 Aplicar filtro
               </button>
@@ -126,7 +126,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             {cat}
             <button
               onClick={() => onApply(selected.filter((c) => c !== cat))}
-              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors"
+              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
             >
               <X size={10} />
             </button>
@@ -242,7 +242,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
           <h2 className="text-lg font-bold text-gray-900">
             {isEdit ? "Editar produto" : "Novo produto"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
             <X size={18} />
           </button>
         </div>
@@ -286,10 +286,10 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
             Cancelar
           </button>
-          <button onClick={handleSubmit} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-blue-500 text-sm font-semibold text-white hover:bg-blue-600 transition-colors disabled:opacity-50">
+          <button onClick={handleSubmit} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-blue-500 text-sm font-semibold text-white hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer">
             {saving ? "Salvando..." : isEdit ? "Salvar alterações" : "Criar produto"}
           </button>
         </div>
@@ -337,10 +337,10 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
           Essa ação não pode ser desfeita.
         </p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
             Cancelar
           </button>
-          <button onClick={handleConfirm} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50">
+          <button onClick={handleConfirm} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50 cursor-pointer">
             {deleting ? "Removendo..." : "Sim, remover"}
           </button>
         </div>
@@ -401,7 +401,7 @@ export default function ProductsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm cursor-pointer"
           >
             <Plus size={16} />
             Novo produto
@@ -439,7 +439,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -449,7 +449,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={products.length < limit}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
                 >
                   <ChevronRight size={16} />
                 </button>

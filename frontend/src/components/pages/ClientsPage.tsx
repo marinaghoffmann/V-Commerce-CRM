@@ -63,7 +63,7 @@ function Clients() {
         </div>
         <button
           onClick={() => exportCSV(clientes, "clientes")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
         >
           <Upload size={16} />
           Exportar CSV
@@ -169,7 +169,7 @@ function Clients() {
               <button
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
                 disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronLeft size={15} />
               </button>
@@ -181,7 +181,7 @@ function Clients() {
                   key={n}
                   onClick={() => setPage(n)}
                   className={[
-                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors",
+                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
                     page === n
                       ? "border-2 border-blue-500 text-blue-600 bg-white"
                       : "text-gray-400 hover:bg-gray-100",
@@ -193,7 +193,7 @@ function Clients() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronRight size={15} />
               </button>
