@@ -104,7 +104,13 @@ function getStatusLabel(status: string) {
 }
 
 function Dashboard() {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from(
+    { length: Math.max(0, currentYear - 2022) },
+    (_, index) => 2023 + index
+  );
+
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
 
   const { kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
@@ -263,10 +269,11 @@ function Dashboard() {
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
             >
-              <option value={2023}>2023</option>
-              <option value={2024}>2024</option>
-              <option value={2025}>2025</option>
-              <option value={2026}>2026</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
             </select>
           </div>
         </div>
