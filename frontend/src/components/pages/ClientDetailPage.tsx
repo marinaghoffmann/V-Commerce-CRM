@@ -273,51 +273,67 @@ function ClientDetail(): React.ReactElement {
               <span className="text-base font-bold text-gray-800">Atividade</span>
             </div>
 
-            <div className="flex flex-col gap-0 flex-1">
-              {eventosPagina.map((ev, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="flex flex-col items-center pt-1">
-                    <EventoBullet tipo={ev.tipo} />
-                    {i < eventosPagina.length - 1 && (
-                      <span className="w-px flex-1 bg-gray-100 my-1" style={{ minHeight: "24px" }} />
-                    )}
-                  </div>
-                  <div className="flex flex-col pb-5">
-                    <span className="text-sm font-medium text-gray-800">{ev.titulo}</span>
-                    <span className="text-xs text-gray-400 mt-0.5">{ev.data}</span>
-                  </div>
+            {(data.total_compras ?? 0) === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10 text-center">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                  </svg>
                 </div>
-              ))}
-            </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500">Nenhuma atividade ainda</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Este cliente ainda não realizou nenhum pedido.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-0 flex-1">
+                  {eventosPagina.map((ev, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="flex flex-col items-center pt-1">
+                        <EventoBullet tipo={ev.tipo} />
+                        {i < eventosPagina.length - 1 && (
+                          <span className="w-px flex-1 bg-gray-100 my-1" style={{ minHeight: "24px" }} />
+                        )}
+                      </div>
+                      <div className="flex flex-col pb-5">
+                        <span className="text-sm font-medium text-gray-800">{ev.titulo}</span>
+                        <span className="text-xs text-gray-400 mt-0.5">{ev.data}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-            <div className="border-t border-gray-100 my-5" />
+                <div className="border-t border-gray-100 my-5" />
 
-            <div className="flex items-center justify-center gap-1.5">
-              <button
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 font-medium"
-                onClick={() => setEventPage((p) => Math.max(p - 1, 1))}
-                disabled={eventPage === 1}
-                type="button"
-              >‹</button>
-              {Array.from({ length: totalEventPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border font-medium transition-all duration-150 cursor-pointer ${
-                    p === eventPage
-                      ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
-                      : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50"
-                  }`}
-                  onClick={() => setEventPage(p)}
-                  type="button"
-                >{p}</button>
-              ))}
-              <button
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 font-medium"
-                onClick={() => setEventPage((p) => Math.min(p + 1, totalEventPages))}
-                disabled={eventPage === totalEventPages}
-                type="button"
-              >›</button>
-            </div>
+                <div className="flex items-center justify-center gap-1.5">
+                  <button
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 font-medium"
+                    onClick={() => setEventPage((p) => Math.max(p - 1, 1))}
+                    disabled={eventPage === 1}
+                    type="button"
+                  >‹</button>
+                  {Array.from({ length: totalEventPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border font-medium transition-all duration-150 cursor-pointer ${
+                        p === eventPage
+                          ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+                          : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50"
+                      }`}
+                      onClick={() => setEventPage(p)}
+                      type="button"
+                    >{p}</button>
+                  ))}
+                  <button
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-150 font-medium"
+                    onClick={() => setEventPage((p) => Math.min(p + 1, totalEventPages))}
+                    disabled={eventPage === totalEventPages}
+                    type="button"
+                  >›</button>
+                </div>
+              </>
+            )}
           </div>
 
         </div>
