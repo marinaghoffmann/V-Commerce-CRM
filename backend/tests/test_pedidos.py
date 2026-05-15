@@ -190,42 +190,29 @@ class TestPedido:
         response = client.post("/pedidos_cliente/", json=pedido)
         assert response.status_code == 422
 
-
-    def test_estado_minusculo_e_aceito(self, client: TestClient, mock_pedido, mock_cliente, mock_produto):
+    def test_estado_vira_capitalizado(self, client: TestClient, mock_pedido, mock_cliente, mock_produto):
         client.post("/clientes/", json=mock_cliente)
         produto_response = client.post("/produto/", json=mock_produto)
 
         pedido = mock_pedido.copy()
         pedido["id_produto"] = produto_response.json()["id_produto"]
-        pedido["estado"] = "pe"
+        pedido["estado"] = "pernambuco"
 
         response = client.post("/pedidos_cliente/", json=pedido)
         assert response.status_code == 201
+        assert response.json()['estado'] == "Pernambuco"
 
-    @pytest.mark.parametrize("estado_invalido", [
-        "S", "SPP", "1A", "S1", "SP-"
-    ], ids=["1 letra", "3 letras", "numero no inicio", "numero no fim", "com hifen"])
-    def test_estado_invalido(self, client: TestClient, mock_pedido, mock_cliente, mock_produto, estado_invalido):
+    def test_cidade_vira_capitalizada(self, client: TestClient, mock_pedido, mock_cliente, mock_produto):
         client.post("/clientes/", json=mock_cliente)
         produto_response = client.post("/produto/", json=mock_produto)
 
         pedido = mock_pedido.copy()
         pedido["id_produto"] = produto_response.json()["id_produto"]
-        pedido["estado"] = estado_invalido
-
-        response = client.post("/pedidos_cliente/", json=pedido)
-        assert response.status_code == 422
-
-    def test_cidade_vira_lowercase(self, client: TestClient, mock_pedido, mock_cliente, mock_produto):
-        client.post("/clientes/", json=mock_cliente)
-        produto_response = client.post("/produto/", json=mock_produto)
-
-        pedido = mock_pedido.copy()
-        pedido["id_produto"] = produto_response.json()["id_produto"]
-        pedido["cidade"] = "Recife"
+        pedido["cidade"] = "recife"
 
         response = client.post("/pedidos_cliente/", json=pedido)
         assert response.status_code == 201
+        assert response.json()['cidade'] == 'Recife'
 
     def test_data_valida_e_aceita(self, client: TestClient, mock_pedido, mock_cliente, mock_produto):
         client.post("/clientes/", json=mock_cliente)

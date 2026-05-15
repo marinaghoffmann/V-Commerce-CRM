@@ -10,6 +10,8 @@ class PedidoClienteSchemaRead(BaseModel):
     categoria_produto: str | None = Field(None, min_length=1, description="Categoria do produto")
     status: str | None = Field(None, description="Status do pedido")
     valor_pedido: float | None = Field(None, ge=0, description="Valor total do pedido")
+    cidade: str | None = Field(None, min_length=1, description="Cidade do cliente")
+    estado: str | None = Field(None, max_length=32, description="Estado do cliente")
     quantidade: int | None = Field(None, ge=0, description="Quantidade de produtos no pedido")
     metodo_pagamento: str | None = Field(None, min_length=1, description="Método de pagamento utilizado")
     data_pedido: date | None = Field(None, description="Data do pedido (AAAA-MM-DD)")
@@ -23,7 +25,7 @@ class PedidoClienteCreateSchema(BaseModel):
     nome_completo: str | None = Field(None, min_length=1, description="Nome completo do cliente")
     email: str | None = Field(None, description="Endereço de e-mail do cliente")
     cidade: str | None = Field(None, min_length=1, description="Cidade do cliente")
-    estado: str | None = Field(None, max_length=2, description="Sigla do estado com 2 letras")
+    estado: str | None = Field(None, max_length=32, description="Estado do cliente")
     id_produto: str = Field(..., min_length=1, description="Identificador do produto")
     data_pedido: str | None = Field(None, description="Data do pedido (AAAA-MM-DD)")
     valor_pedido: float = Field(0.0, ge=0, description="Valor total do pedido")
@@ -42,22 +44,12 @@ class PedidoClienteCreateSchema(BaseModel):
             raise ValueError("nome_completo não pode conter números ou caracteres especiais")
         return v.strip().title()
 
-    @field_validator("estado")
-    @classmethod
-    def validar_estado(cls, v):
-        if v is None:
-            return v
-        v = v.strip().upper()
-        if not re.fullmatch(r"[A-Z]{2}", v):
-            raise ValueError("estado deve ter exatamente 2 letras maiúsculas (ex: PE)")
-        return v
-
-    @field_validator("cidade")
+    @field_validator("cidade", "estado")
     @classmethod
     def validar_cidade(cls, v):
         if v is None:
             return v
-        return v.strip().lower()
+        return v.strip().capitalize()
 
     @field_validator("data_pedido")
     @classmethod
@@ -89,7 +81,7 @@ class PedidoClienteUpdateSchema(BaseModel):
     nome_completo: str | None = Field(None, min_length=1, description="Nome completo do cliente")
     email: str | None = Field(None, description="Endereço de e-mail do cliente")
     cidade: str | None = Field(None, min_length=1, description="Cidade do cliente")
-    estado: str | None = Field(None, max_length=2, description="Sigla do estado com 2 letras")
+    estado: str | None = Field(None, max_length=32, description="Estado do cliente")
     data_pedido: str | None = Field(None, description="Data do pedido (AAAA-MM-DD)")
     valor_pedido: float | None = Field(None, ge=0, description="Valor total do pedido")
     quantidade: int | None = Field(None, ge=0, description="Quantidade de produtos no pedido")
@@ -107,22 +99,12 @@ class PedidoClienteUpdateSchema(BaseModel):
             raise ValueError("nome_completo não pode conter números ou caracteres especiais")
         return v.strip().title()
 
-    @field_validator("estado")
-    @classmethod
-    def validar_estado(cls, v):
-        if v is None:
-            return v
-        v = v.strip().upper()
-        if not re.fullmatch(r"[A-Z]{2}", v):
-            raise ValueError("estado deve ter exatamente 2 letras maiúsculas (ex: PE)")
-        return v
-
-    @field_validator("cidade")
+    @field_validator("cidade", "estado")
     @classmethod
     def validar_cidade(cls, v):
         if v is None:
             return v
-        return v.strip().lower()
+        return v.strip().capitalize()
 
     @field_validator("data_pedido")
     @classmethod
