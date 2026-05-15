@@ -59,7 +59,7 @@ function transformarStatus(data: KpiStatusItem[]) {
       total_pedidos: item?.total_pedidos || 0,
       color: config.color,
     };
-  }); // Sem o filtro para permitir que os zeros apareçam
+  }); 
 
   const labels = orderedData.map((item) => item.status);
   const valores = orderedData.map((item) => item.total_pedidos);
@@ -179,7 +179,6 @@ function Dashboard() {
   const totalPedidos = valores.reduce((sum, value) => sum + value, 0);
   const porcentagens = valores.map((valor) => {
     if (totalPedidos > 0) {
-      // Arredonda para 2 casas decimais, mantendo como número
       return Number(((valor / totalPedidos) * 100).toFixed(2));
     }
     return 0;
@@ -195,7 +194,7 @@ function Dashboard() {
         borderWidth: 1,
         hoverOffset: 10,
         borderRadius: { topLeft: 4, topRight: 4 },
-        minBarLength: 5, // Garante que até o 0% tenha uma pequena barrinha colorida visível
+        minBarLength: 5, 
       },
     ],
   };
@@ -209,13 +208,11 @@ function Dashboard() {
         meta.data.forEach((bar: any, index: number) => {
           const valor = dataset.data[index];
           
-          // Desenha o texto independentemente do valor ser zero ou não
           ctx.fillStyle = '#4B5563';
           ctx.font = 'bold 12px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
           
-          // Transforma o float em texto com vírgula (ex: 95.43 -> "95,43%")
           const textoFormatado = Number(valor).toFixed(2).replace('.', ',') + '%';
           
           ctx.fillText(textoFormatado, bar.x, bar.y - 5);
@@ -241,7 +238,6 @@ function Dashboard() {
             </p>
           </div>
 
-          {/* Select Boxes para Mês e Ano */}
           <div className="flex items-center gap-3">
             <select
               value={selectedMonth}
@@ -275,7 +271,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Tratamento de Loading e Erro ajustado para não esconder o cabeçalho */}
         {loading ? (
           <div className="p-10 text-lg font-medium text-center text-gray-500 bg-white rounded-2xl border-2 border-black/10">
             Carregando dashboard...
@@ -286,7 +281,6 @@ function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Cards Superiores */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className={cardStyle}>
                 <p className="text-sm text-[#333] font-medium mb-4">
@@ -334,7 +328,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Gráfico de Linha */}
             <div className={`${cardStyle} mb-6`}>
               <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
                 Gráfico de receita mensal
@@ -361,7 +354,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Gráfico de Barras */}
             <div className={cardStyle}>
               <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
                 Distribuição de pedidos por status
@@ -369,7 +361,7 @@ function Dashboard() {
 
               <div className="h-[300px]">
                 <Bar
-                  key={`status-chart-${selectedYear}-${selectedMonth}`} // Força a atualização da animação ao mudar a data
+                  key={`status-chart-${selectedYear}-${selectedMonth}`} 
                   data={statusData}
                   plugins={[pluginPorcentagemNoTopo]}
                   options={{
@@ -380,7 +372,6 @@ function Dashboard() {
                       legend: { display: false },
                       tooltip: {
                         callbacks: {
-                          // Formata o número no tooltip (popup ao passar o mouse) para usar vírgula
                           label: (context) => {
                             const valorFormatado = Number(context.raw).toFixed(2).replace('.', ',');
                             return ` ${valorFormatado}% dos pedidos`;
@@ -407,9 +398,9 @@ function Dashboard() {
                 />
               </div>
 
-              <div className="flex justify-around items-center mt-4 border-t border-gray-100 pt-4">
+              <div className="flex mt-4 border-t border-gray-100 pt-4 pl-[35px]">
                 {labels.map((label) => (
-                  <div key={label} className="flex flex-col md:flex-row items-center gap-2 text-sm font-semibold text-gray-700">
+                  <div key={label} className="flex-1 flex flex-col md:flex-row items-center justify-center gap-2 text-sm font-semibold text-gray-700">
                     {getStatusIcon(label)}
                     <span>{getStatusLabel(label)}</span>
                   </div>
