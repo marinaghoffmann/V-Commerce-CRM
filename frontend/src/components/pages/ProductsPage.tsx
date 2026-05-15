@@ -1,10 +1,18 @@
-import { useEffect, useRef, useState, useMemo } from "react"; // Adicionado useMemo
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle } from "lucide-react";
 
 import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+
+function formatCurrency(value: number | null | undefined) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value ?? 0);
+}
+
+// ─── Category colors ────────────────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   "Automotivo": { bg: "bg-zinc-50", border: "border-zinc-200", text: "text-zinc-700" },
@@ -21,12 +29,34 @@ function getCategoryColor(cat: string) {
   return CATEGORY_COLORS[cat] ?? { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-600" };
 }
 
-// ─── Dropdown de Categoria (AGORA RECEBE CATEGORIAS DINÂMICAS) ──────────────────
+// ─── Shared Modal Shell ─────────────────────────────────────────────────────────
+
+function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-pointer"
+      onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
+    >
+      <div
+        className="relative w-full mx-4 rounded-[32px] shadow-2xl overflow-hidden"
+        style={{
+          maxWidth: "588px",
+          background: "#FBFBFB",
+          border: "1px solid #9CA3AF",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── CategoryFilter ─────────────────────────────────────────────────────────────
 
 interface CategoryFilterProps {
   selected: string[];
   onApply: (selected: string[]) => void;
-  availableCategories: string[]; // Nova prop para as categorias dinâmicas
+  availableCategories: string[];
 }
 
 function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilterProps) {
@@ -60,7 +90,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer
             ${hasActive
               ? "bg-blue-500 border-blue-500 text-white font-semibold"
               : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
@@ -75,7 +105,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-semibold text-gray-700">Categorias</span>
               {draft.length > 0 && (
-                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline">
+                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline cursor-pointer">
                   Limpar
                 </button>
               )}
@@ -107,7 +137,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             <div className="px-4 py-3 border-t border-gray-100">
               <button
                 onClick={handleApply}
-                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
               >
                 Aplicar filtro
               </button>
@@ -126,7 +156,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             {cat}
             <button
               onClick={() => onApply(selected.filter((c) => c !== cat))}
-              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors"
+              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
             >
               <X size={10} />
             </button>
@@ -146,28 +176,41 @@ interface FieldProps {
   type?: string;
   disabled?: boolean;
   error?: string;
+  prefix?: string;
 }
 
-function Field({ label, value, onChange, type = "text", disabled = false, error }: FieldProps) {
+function Field({ label, value, onChange, type = "text", disabled = false, error, prefix }: FieldProps) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</label>
-      <input
-        type={type}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full rounded-xl border px-3 py-2.5 text-sm text-gray-800 outline-none transition-colors
-          focus:ring-2 focus:ring-blue-400 focus:border-transparent
-          ${error ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"}
-          ${disabled ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
-      />
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-gray-500" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+        {label}
+      </label>
+      <div className="relative">
+        {prefix && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">
+            {prefix}
+          </span>
+        )}
+        <input
+          type={type}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full rounded-xl border px-3 py-2.5 text-sm text-gray-800 outline-none transition-all
+            focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400
+            ${prefix ? "pl-8" : ""}
+            ${error ? "border-red-300 bg-red-50/50" : "border-gray-200 bg-white"}
+            ${disabled ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100" : ""}
+          `}
+          style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}
+        />
+      </div>
       {error && <span className="text-xs text-red-500">{error}</span>}
     </div>
   );
 }
 
-// ─── Formulário ────────────────────────────────────────────────────────────────
+// ─── FormState ─────────────────────────────────────────────────────────────────
 
 interface FormState {
   id_produto: string;
@@ -185,6 +228,8 @@ const EMPTY_FORM: FormState = {
   estoque_disponivel: "",
 };
 
+// ─── Modal de Edição ────────────────────────────────────────────────────────────
+
 interface ProductFormModalProps {
   initial: FormState;
   isEdit: boolean;
@@ -198,6 +243,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
   const [form, setForm] = useState<FormState>(initial);
   const [errors, setErrors] = useState<Partial<FormState>>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   function validate(): boolean {
     const e: Partial<FormState> = {};
@@ -227,7 +273,8 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
       } else {
         await addProduct(body);
       }
-      onSave();
+      setSaved(true);
+      setTimeout(() => { onSave(); }, 1800);
     } catch (err) {
       console.error(err);
     } finally {
@@ -235,70 +282,150 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     }
   }
 
+  // Estado de sucesso
+  if (saved) {
+    return (
+      <ModalShell>
+        <div className="flex flex-col items-center justify-center py-14 px-8 gap-5">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #d1fae5, #a7f3d0)" }}
+          >
+            <Check size={40} strokeWidth={2.5} className="text-emerald-600" />
+          </div>
+          <div className="text-center">
+            <p className="text-base font-semibold text-gray-800" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+              Suas edições foram salvas com sucesso!
+            </p>
+          </div>
+        </div>
+      </ModalShell>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-gray-900">
+    <ModalShell onClose={onClose}>
+      {/* Cabeçalho */}
+      <div className="px-8 pt-7 pb-5 border-b border-gray-100 flex items-center gap-4">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ background: "#EFF6FF", border: "1px solid #DBEAFE" }}
+        >
+          <ImageIcon size={22} className="text-blue-500" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2
+            className="text-base font-bold"
+            style={{ color: "#1E3A5F", fontFamily: "'Inter', 'Roboto', sans-serif" }}
+          >
             {isEdit ? "Editar produto" : "Novo produto"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {/* Campo de ID só aparece na edição (somente leitura) */}
           {isEdit && (
+            <div className="flex flex-col gap-0.5 mt-0.5">
+              <span className="text-sm text-gray-500 truncate" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+                {form.nome_produto || "—"}
+              </span>
+              <span className="text-xs text-gray-400 font-mono">
+                SKU: {form.id_produto || "—"}
+              </span>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Formulário */}
+      <div className="px-8 py-6 flex flex-col gap-4">
+        {/* Nome do produto — full width */}
+        <Field
+          label="Nome do produto"
+          value={form.nome_produto}
+          onChange={(v) => setForm((f) => ({ ...f, nome_produto: v }))}
+          error={errors.nome_produto}
+        />
+
+        {/* SKU e Categoria — lado a lado */}
+        <div className="grid grid-cols-2 gap-4">
+          {isEdit ? (
             <Field
-              label="ID do produto"
+              label="SKU"
               value={form.id_produto}
               onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
               disabled={true}
             />
+          ) : (
+            <Field
+              label="SKU"
+              value={form.id_produto}
+              onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
+              disabled = {true}
+            />
           )}
-          <Field
-            label="Nome"
-            value={form.nome_produto}
-            onChange={(v) => setForm((f) => ({ ...f, nome_produto: v }))}
-            error={errors.nome_produto}
-          />
           <Field
             label="Categoria"
             value={form.categoria}
             onChange={(v) => setForm((f) => ({ ...f, categoria: v }))}
             error={errors.categoria}
           />
+        </div>
+
+        {/* Preço e Estoque — lado a lado */}
+        <div className="grid grid-cols-2 gap-4">
           <Field
             label="Preço (R$)"
             value={form.preco}
             onChange={(v) => setForm((f) => ({ ...f, preco: v }))}
             type="number"
             error={errors.preco}
+            prefix="R$"
           />
           <Field
-            label="Estoque disponível"
+            label="Estoque restante"
             value={form.estoque_disponivel}
             onChange={(v) => setForm((f) => ({ ...f, estoque_disponivel: v }))}
             type="number"
             error={errors.estoque_disponivel}
           />
         </div>
-
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-            Cancelar
-          </button>
-          <button onClick={handleSubmit} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-blue-500 text-sm font-semibold text-white hover:bg-blue-600 transition-colors disabled:opacity-50">
-            {saving ? "Salvando..." : isEdit ? "Salvar alterações" : "Criar produto"}
-          </button>
-        </div>
       </div>
-    </div>
+
+      {/* Rodapé */}
+      <div className="px-8 pb-7 flex gap-3">
+        <button
+          onClick={onClose}
+          className="flex-1 py-2.5 rounded-2xl border text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+          style={{ borderColor: "#9CA3AF", fontFamily: "'Inter', 'Roboto', sans-serif" }}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer"
+          style={{ background: "#2563EB", fontFamily: "'Inter', 'Roboto', sans-serif" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
+        >
+          {saving ? (
+            "Salvando..."
+          ) : (
+            <>
+              <Check size={15} strokeWidth={2.5} />
+              Salvar edições
+            </>
+          )}
+        </button>
+      </div>
+    </ModalShell>
   );
 }
 
-// ─── Modal de confirmação ───────────────────────────────────────────────────────
+// ─── Modal de Deleção ───────────────────────────────────────────────────────────
 
 interface ConfirmDeleteModalProps {
   product: Product;
@@ -309,12 +436,14 @@ interface ConfirmDeleteModalProps {
 
 function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: ConfirmDeleteModalProps) {
   const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
 
   async function handleConfirm() {
     setDeleting(true);
     try {
       await deleteProduct(product.id_produto);
-      onConfirm();
+      setDeleted(true);
+      setTimeout(() => { onConfirm(); }, 1800);
     } catch (err) {
       console.error(err);
     } finally {
@@ -322,30 +451,134 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
-        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
-          <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+  // Estado de sucesso (deletado)
+  if (deleted) {
+    return (
+      <ModalShell>
+        <div
+          className="flex flex-col items-center justify-center py-14 px-8 gap-5"
+          style={{ background: "#FFF5F5" }}
+        >
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ background: "#FEE2E2", border: "1px solid #FECACA" }}
+          >
+            <AlertTriangle size={38} strokeWidth={2} className="text-red-500" />
+          </div>
+          <div className="text-center">
+            <p className="text-base font-semibold text-red-700" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+              Produto deletado.
+            </p>
+          </div>
         </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-1">Remover produto</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          Tem certeza que deseja remover{" "}
-          <span className="font-semibold text-gray-800">{product.nome_produto}</span>?
-          Essa ação não pode ser desfeita.
-        </p>
-        <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-            Cancelar
-          </button>
-          <button onClick={handleConfirm} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50">
-            {deleting ? "Removendo..." : "Sim, remover"}
-          </button>
+      </ModalShell>
+    );
+  }
+
+  return (
+    <ModalShell onClose={onCancel}>
+      {/* Cabeçalho */}
+      <div className="px-8 pt-7 pb-5 border-b border-gray-100 flex items-center gap-4">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}
+        >
+          <AlertTriangle size={22} className="text-red-500" strokeWidth={2} />
+        </div>
+        <div className="flex-1">
+          <h2
+            className="text-base font-bold"
+            style={{ color: "#991B1B", fontFamily: "'Inter', 'Roboto', sans-serif" }}
+          >
+            Deseja deletar o produto?
+          </h2>
+          <p className="text-xs text-red-400 mt-0.5" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+            Essa ação não pode ser desfeita.
+          </p>
+        </div>
+        <button
+          onClick={onCancel}
+          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Card de resumo do produto */}
+      <div className="px-8 py-6">
+        <div
+          className="rounded-2xl p-4 flex items-center gap-4"
+          style={{ background: "#FFFFFF", border: "1px solid #E5E7EB" }}
+        >
+          {/* Placeholder de imagem */}
+          <div
+            className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+          >
+            <ImageIcon size={24} className="text-gray-300" />
+          </div>
+
+          {/* Infos */}
+          <div className="flex-1 min-w-0">
+            <p
+              className="text-sm font-bold text-gray-900 truncate"
+              style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}
+            >
+              {product.nome_produto}
+            </p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-xs font-mono text-gray-400">
+                SKU: {product.id_produto}
+              </span>
+              {product.categoria && (
+                <>
+                  <span className="text-gray-200">·</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium border
+                      ${getCategoryColor(product.categoria).bg}
+                      ${getCategoryColor(product.categoria).border}
+                      ${getCategoryColor(product.categoria).text}`}
+                  >
+                    {product.categoria}
+                  </span>
+                </>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-gray-700 mt-1.5" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+              {formatCurrency(product.preco)}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Rodapé */}
+      <div className="px-8 pb-7 flex gap-3">
+        <button
+          onClick={onCancel}
+          className="flex-1 py-2.5 rounded-2xl border text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+          style={{ borderColor: "#9CA3AF", fontFamily: "'Inter', 'Roboto', sans-serif" }}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleConfirm}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer"
+          style={{ background: "#DC2626", fontFamily: "'Inter', 'Roboto', sans-serif" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#B91C1C")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#DC2626")}
+        >
+          {deleting ? (
+            "Deletando..."
+          ) : (
+            <>
+              <Trash2 size={15} strokeWidth={2} />
+              Deletar
+            </>
+          )}
+        </button>
+      </div>
+    </ModalShell>
   );
 }
 
@@ -359,16 +592,11 @@ export default function ProductsPage() {
   const { data: products, loading, error, page, setPage, limit, setLimit, refetch, addProduct, editProduct, deleteProduct } =
     useProducts({ page: 1, limit: 12, categorias: categoriasSelecionadas });
 
-  // ─── LOGICA DE CATEGORIAS DINÂMICAS ───
   const availableCategories = useMemo(() => {
-    // 1. Pega as categorias padrão definidas no objeto de cores
     const predefined = Object.keys(CATEGORY_COLORS);
-    // 2. Extrai categorias únicas que existem no array de produtos vindo do banco
     const fromData = products
       .map((p) => p.categoria)
-      .filter((c): c is string => !!c); // Remove valores nulos ou vazios
-
-    // 3. Junta tudo num Set para remover duplicados e ordena alfabeticamente
+      .filter((c): c is string => !!c);
     return Array.from(new Set([...predefined, ...fromData])).sort();
   }, [products]);
 
@@ -401,7 +629,7 @@ export default function ProductsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm cursor-pointer"
           >
             <Plus size={16} />
             Novo produto
@@ -410,7 +638,7 @@ export default function ProductsPage() {
 
         <div className="mb-6">
           <CategoryFilter
-            availableCategories={availableCategories} // Passando a lista dinâmica aqui
+            availableCategories={availableCategories}
             selected={categoriasSelecionadas}
             onApply={(cats) => {
               setCategoriasSelecionadas(cats);
@@ -439,7 +667,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -449,7 +677,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={products.length < limit}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
                 >
                   <ChevronRight size={16} />
                 </button>

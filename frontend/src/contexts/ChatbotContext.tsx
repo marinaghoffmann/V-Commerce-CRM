@@ -22,7 +22,7 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
       {children}
       {isOpen && (
         <>
-          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40" onClick={closeOverlay} />
+          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40 cursor-pointer" onClick={closeOverlay} />
           <ChatbotOverlay onClose={closeOverlay} />
         </>
       )}
