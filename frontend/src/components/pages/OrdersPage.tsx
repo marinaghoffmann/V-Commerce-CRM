@@ -5,6 +5,7 @@ import { PageHeader } from "../molecules/TitleHeaeder";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
+import api from "../../services/api";
 import { useOrders } from "../../hooks/useOrders";
 import type { Pedido } from "../types/pedido.types";
 
@@ -91,6 +92,22 @@ export const OrdersPage = () => {
         return () => clearTimeout(timer);
       }, [searchInput]);
 
+  const handleExportCSV = async () => {
+    try {
+      const params = new URLSearchParams({ limit: "999999", offset: "0" });
+      if (search) params.append(searchField, search);
+      if (activeFilter !== "Todos") params.append("status", activeFilter);
+
+      const res = await api.get(`/pedidos_cliente?${params.toString()}`);
+      
+      const data = res.data;
+      const items = Array.isArray(data) ? data : data.items ?? data.data ?? [];
+      
+      exportCSV(items, "pedidos");
+    } catch (err) {
+      console.error("Erro ao exportar todos os pedidos:", err);
+    }
+  };
 
   return (
     <div className="bg-[#F4F7FE]">
@@ -101,7 +118,7 @@ export const OrdersPage = () => {
             <p className="mt-1 text-sm text-gray-400">Acompanhe todos os pedidos e seus status</p>
           </div>
           <button
-            onClick={() => exportCSV(pedidos, "pedidos")}
+            onClick={handleExportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
           >
             <Upload size={16} />

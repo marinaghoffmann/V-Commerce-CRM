@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Upload, Search, ChevronDown } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
+import api from "../../services/api";
 import { useClientes } from "../../hooks/useClientes";
 
 function getInitials(nome: string, sobrenome: string) {
@@ -44,6 +45,21 @@ function Clients() {
     setPage(1);
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (busca) params.append("busca", busca);
+      if (status) params.append("status", status);
+      params.append("limit", "999999");
+      params.append("page", "1");
+
+      const res = await api.get(`/clientes/?${params.toString()}`);
+      exportCSV(res.data, "clientes");
+    } catch (err) {
+      console.error("Erro ao exportar clientes:", err);
+    }
+  };
+
   const inicio = clientes.length === 0 ? 0 : (page - 1) * limit + 1;
   const fim = (page - 1) * limit + clientes.length;
   const totalPages = Math.ceil(total / limit) || 1;
@@ -61,7 +77,7 @@ function Clients() {
           </p>
         </div>
         <button
-          onClick={() => exportCSV(clientes, "clientes")}
+          onClick={handleExportCSV}
           className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
         >
           <Upload size={16} />
