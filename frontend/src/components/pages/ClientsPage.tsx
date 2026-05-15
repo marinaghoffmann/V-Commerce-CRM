@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Upload, Search, ChevronDown } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import { useClientes } from "../../hooks/useClientes";
 
@@ -11,11 +10,11 @@ function getInitials(nome: string, sobrenome: string) {
 
 function getSegmentStyle(segmento: string): string {
   switch (segmento?.toLowerCase()) {
-    case "premium":    return "bg-amber-100 text-amber-700";
-    case "inativo":    return "bg-red-100 text-red-600";
+    case "premium": return "bg-amber-100 text-amber-700";
+    case "inativo": return "bg-red-100 text-red-600";
     case "recorrente": return "bg-blue-100 text-blue-700";
-    case "novo":       return "bg-emerald-100 text-emerald-700";
-    default:           return "bg-gray-100 text-gray-600";
+    case "novo": return "bg-emerald-100 text-emerald-700";
+    default: return "bg-gray-100 text-gray-600";
   }
 }
 
@@ -70,40 +69,35 @@ function Clients() {
         </button>
         </div>
 
-        <div className="flex gap-3 mb-6">
-          <div className="relative flex-1 max-w-lg">
-            <svg
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+            />
             <input
-              className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-full bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm transition-all"
+              className="w-full pl-11 pr-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all"
+              style={{ borderRadius: "28px" }}
               type="text"
-              placeholder="Pesquisar por nome ou email..."
+              placeholder="Pesquisar por..."
               value={busca}
               onChange={handleBusca}
             />
           </div>
-          <select
-            className="border border-gray-200 rounded-full px-5 py-2.5 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm transition-all"
-            value={status}
-            onChange={handleStatus}
-          >
-            <option value="">Todos os Segmentos</option>
-            <option value="Premium">Premium</option>
-            <option value="Inativo">Inativo</option>
-            <option value="Recorrente">Recorrente</option>
-            <option value="Novo">Novo</option>
-          </select>
+          <div className="relative flex-none" style={{ width: "200px" }}>
+            <select
+              className="w-full border border-gray-200 px-5 py-2.5 bg-white text-sm text-gray-600 focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-sm transition-all appearance-none"
+              style={{ borderRadius: "28px" }}
+              value={status}
+              onChange={handleStatus}
+            >
+              <option value="">Segmento</option>
+              <option value="Premium">Premium</option>
+              <option value="Inativo">Inativo</option>
+              <option value="Recorrente">Recorrente</option>
+              <option value="Novo">Novo</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
