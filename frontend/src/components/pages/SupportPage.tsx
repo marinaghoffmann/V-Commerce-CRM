@@ -63,7 +63,7 @@ export default function SuportePage() {
         </div>
 
         {/* KPI Cards */}
-        <div className="flex gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <KpiCard
             iconBg="bg-red-100"
             icon={<TicketX className="text-red-500" size={22} />}
@@ -73,21 +73,21 @@ export default function SuportePage() {
           <KpiCard
             iconBg="bg-green-100"
             icon={<CheckCircle className="text-green-500" size={22} />}
-            label={`Fechados em ${kpis["fechado_mes_ref"] ?? "—"}`}
+            label={`Resolvidos no mês`}
             value={kpis["fechado_mes"] ?? 0}
           />
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-2 mb-6 bg-[#F4F7FE] rounded-xl p-1.5 w-fit">
+        <div className="flex items-center gap-2 mb-6 bg-white border border-gray-200 rounded-full p-1.5 w-fit">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => handleFilterChange(f)}
               className={[
-                "rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-150",
+                "rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150",
                 activeFilter === f
-                  ? "bg-blue-100 text-blue-600 shadow-sm"
+                  ? "bg-blue-500 text-white shadow-sm"
                   : "text-gray-400 hover:text-gray-600",
               ].join(" ")}
             >
