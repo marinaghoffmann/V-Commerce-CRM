@@ -471,7 +471,6 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
             </p>
           </div>
         </div>
-      // Aqui
       </ModalShell>
     );
   }
@@ -549,7 +548,6 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
               {formatCurrency(product.preco)}
             </p>
           </div>
-          // Até aqui
         </div>
       </div>
 
