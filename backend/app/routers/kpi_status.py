@@ -16,11 +16,19 @@ def get_kpi_status(
     db: Session = Depends(get_db),
     page: int = 1,
     limit: int = 10,
+    ano: int | None = None,
+    mes: int | None = None,
 ) -> List[KpiStatusSchema]:
     filters = []
-    
+
+    if ano is not None:
+        filters.append(KpiPorStatus.ano_venda == ano)
+
+    if mes is not None:
+        filters.append(KpiPorStatus.mes_venda == mes)
+
     offset = (page - 1) * limit
-    
+
     kpi_statuses = (
         db.query(KpiPorStatus)
         .filter(*filters)
@@ -29,6 +37,7 @@ def get_kpi_status(
         .limit(limit)
         .all()
     )
+
     return kpi_statuses
 
 @router.get("/{id}", response_model=KpiStatusSchema, status_code=status.HTTP_200_OK)
