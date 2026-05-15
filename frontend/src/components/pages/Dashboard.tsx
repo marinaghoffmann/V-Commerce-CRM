@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   TrendingUp,
   TrendingDown,
@@ -21,7 +22,7 @@ import {
   Filler,
 } from "chart.js";
 
-import { Line, Pie } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 import type { KpiStatusItem } from "../../components/types/dashboard.types";
 
 import { useKpiStatus, useMonthlyKpi } from "../../hooks/useDashboard";
@@ -75,26 +76,26 @@ function getStatusIcon(status: string) {
   const normalized = status.toLowerCase();
 
   if (normalized.includes("recus")) {
-    return <XCircle className="text-red-500" size={16} />;
+    return <XCircle className="text-[#C62828]" size={18} />;
   }
 
   if (normalized.includes("aprov")) {
-    return <CheckCircle2 className="text-green-500" size={16} />;
+    return <CheckCircle2 className="text-[#34A853]" size={18} />;
   }
 
   if (normalized.includes("reembols")) {
-    return <RotateCcw className="text-yellow-500" size={16} />;
+    return <RotateCcw className="text-[#E0A800]" size={18} />;
   }
 
   if (normalized.includes("processando")) {
-    return <Clock3 className="text-pink-500" size={16} />;
+    return <Clock3 className="text-[#F63BDD]" size={18} />;
   }
 
   if (normalized.includes("processado")) {
-    return <Package className="text-sky-500" size={16} />;
+    return <Package className="text-[#7C4DFF]" size={18} />;
   }
 
-  return <Package className="text-gray-500" size={16} />;
+  return <Package className="text-gray-500" size={18} />;
 }
 
 function getStatusLabel(status: string) {
@@ -103,36 +104,37 @@ function getStatusLabel(status: string) {
 }
 
 function Dashboard() {
-  const year = new Date().getFullYear();
-  const month = new Date().getMonth() + 1;
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+
   const { kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
     page: 1,
     limit: 10,
-    ano: year,
-    mes: month,
+    ano: selectedYear,
+    mes: selectedMonth,
   });
 
   const {
     data: monthlyData,
     loading: loadingMonthly,
     error: errorMonthly,
-  } = useMonthlyKpi(year, month);
+  } = useMonthlyKpi(selectedYear, selectedMonth);
 
   const loading = loadingStatus || loadingMonthly;
   const error = errorStatus || errorMonthly;
 
-  const monthLabels = monthlyData.map((item) =>
+  const monthLabels = monthlyData?.map((item) =>
     `${String(item.mes).padStart(2, "0")}/${String(item.ano).slice(-2)}`
-  );
-  const revenueValues = monthlyData.map((item) => item.receita_total);
+  ) || [];
+  const revenueValues = monthlyData?.map((item) => item.receita_total) || [];
 
-  const lastMonth = monthlyData[monthlyData.length - 1] ?? {
+  const lastMonth = monthlyData?.[monthlyData.length - 1] ?? {
     receita_total: 0,
     total_pedidos: 0,
     ticket_medio: 0,
   };
 
-  const previousMonth = monthlyData[monthlyData.length - 2] ?? {
+  const previousMonth = monthlyData?.[monthlyData.length - 2] ?? {
     receita_total: 0,
     total_pedidos: 0,
     ticket_medio: 0,
@@ -172,161 +174,180 @@ function Dashboard() {
     ],
   };
 
-  const { labels, valores, colors } = transformarStatus(kpiStatus);
+  const { labels, valores, colors } = transformarStatus(kpiStatus || []);
 
   const totalPedidos = valores.reduce((sum, value) => sum + value, 0);
+  const porcentagens = valores.map((valor) => {
+    if (totalPedidos > 0) {
+      return Math.round((valor / totalPedidos) * 100);
+    }
+    return 0;
+  });
 
   const statusData = {
     labels,
     datasets: [
       {
-        data: valores,
+        data: porcentagens,
         backgroundColor: colors,
         borderColor: "#ffffff",
         borderWidth: 1,
         hoverOffset: 10,
+        borderRadius: { topLeft: 4, topRight: 4 },
       },
     ],
   };
 
-const cardStyle =
-  "bg-white border-2 border-black/25 rounded-2xl p-6";
+  const pluginPorcentagemNoTopo = {
+    id: 'porcentagemNoTopo',
+    afterDatasetsDraw(chart: any) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((dataset: any, i: number) => {
+        const meta = chart.getDatasetMeta(i);
+        meta.data.forEach((bar: any, index: number) => {
+          const valor = dataset.data[index];
+          if (valor > 0) {
+            ctx.fillStyle = '#4B5563';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(valor + '%', bar.x, bar.y - 5);
+          }
+        });
+      });
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="p-10 text-lg font-medium">
-        Carregando dashboard...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-10 text-red-500">
-        Erro ao carregar dashboard: {error}
-      </div>
-    );
-  }
+  const cardStyle = "bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm";
 
   return (
-    <div className="min-h-screen py-6">
+    <div className="min-h-screen py-6 bg-[#F8F9FB]">
       <div className="max-w-7xl mx-auto px-6">
 
-        <div className="mb-8">
-          <h1 className="text-5xl font-black tracking-tight text-[#2B2B2B]">
-            Dashboard Mensal
-          </h1>
-
-          <p className="text-sm text-gray-500 mt-1">
-            CRM 360 visão geral mensal
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className={cardStyle}>
-            <p className="text-sm text-[#333] font-medium mb-4">
-              Receita mensal total
+        {/* Cabeçalho com Título e Filtros */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight text-[#2B2B2B]">
+              Dashboard Mensal
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              CRM 360 visão geral mensal
             </p>
-
-            <h2 className="text-4xl font-black text-[#2E2E2E] mb-4">
-              {new Intl.NumberFormat("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              }).format(lastMonth.receita_total)}
-            </h2>
-
-            <div className={`flex items-center gap-1 text-xs ${revenueVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-              {revenueVariation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              <span>{Math.abs(revenueVariation).toFixed(1)}% vs. mês anterior</span>
-            </div>
           </div>
 
-          <div className={cardStyle}>
-            <p className="text-sm text-[#333] font-medium mb-4">
-              Total de pedidos mensal
-            </p>
+          {/* Select Boxes para Mês e Ano */}
+          <div className="flex items-center gap-3">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
+            >
+              <option value={1}>Janeiro</option>
+              <option value={2}>Fevereiro</option>
+              <option value={3}>Março</option>
+              <option value={4}>Abril</option>
+              <option value={5}>Maio</option>
+              <option value={6}>Junho</option>
+              <option value={7}>Julho</option>
+              <option value={8}>Agosto</option>
+              <option value={9}>Setembro</option>
+              <option value={10}>Outubro</option>
+              <option value={11}>Novembro</option>
+              <option value={12}>Dezembro</option>
+            </select>
 
-            <h2 className="text-4xl font-black text-[#2E2E2E] mb-4">
-              {new Intl.NumberFormat("pt-BR").format(lastMonth.total_pedidos)}
-            </h2>
-
-            <div className={`flex items-center gap-1 text-xs ${ordersVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-              {ordersVariation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              <span>{Math.abs(ordersVariation).toFixed(1)}% vs. mês anterior</span>
-            </div>
-          </div>
-
-          <div className={cardStyle}>
-            <p className="text-sm text-[#333] font-medium mb-4">
-              Ticket médio
-            </p>
-
-            <h2 className="text-4xl font-black text-[#2E2E2E] mb-4">
-              {new Intl.NumberFormat("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              }).format(lastMonth.ticket_medio)}
-            </h2>
-
-            <div className={`flex items-center gap-1 text-xs ${ticketVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-              {ticketVariation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              <span>{Math.abs(ticketVariation).toFixed(1)}% vs. mês anterior</span>
-            </div>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
+            >
+              <option value={2023}>2023</option>
+              <option value={2024}>2024</option>
+              <option value={2025}>2025</option>
+              <option value={2026}>2026</option>
+            </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-          <div className={`${cardStyle} lg:col-span-2`}>
-            <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">
-              Gráfico de receita mensal
-            </h2>
-
-            <div className="h-[430px]">
-              <Line
-                data={revenueData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: false,
-                    },
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                    },
-                  },
-                }}
-              />
-            </div>
+        {/* Tratamento de Loading e Erro ajustado para não esconder o cabeçalho */}
+        {loading ? (
+          <div className="p-10 text-lg font-medium text-center text-gray-500 bg-white rounded-2xl border-2 border-black/10">
+            Carregando dashboard...
           </div>
+        ) : error ? (
+          <div className="p-10 text-red-500 bg-white rounded-2xl border-2 border-red-200">
+            Erro ao carregar dashboard: {error}
+          </div>
+        ) : (
+          <>
+            {/* Cards Superiores */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className={cardStyle}>
+                <p className="text-sm text-[#333] font-medium mb-4">
+                  Receita mensal total
+                </p>
+                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(lastMonth.receita_total)}
+                </h2>
+                <div className={`flex items-center gap-1 text-xs font-medium ${revenueVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {revenueVariation >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  <span>{Math.abs(revenueVariation).toFixed(1)}% vs. mês anterior</span>
+                </div>
+              </div>
 
-          <div className={cardStyle}>
-            <h2 className="text-xl font-semibold text-[#2B2B2B] mb-6">
-              Pedidos por status
-            </h2>
+              <div className={cardStyle}>
+                <p className="text-sm text-[#333] font-medium mb-4">
+                  Total de pedidos mensal
+                </p>
+                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
+                  {new Intl.NumberFormat("pt-BR").format(lastMonth.total_pedidos)}
+                </h2>
+                <div className={`flex items-center gap-1 text-xs font-medium ${ordersVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {ordersVariation >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  <span>{Math.abs(ordersVariation).toFixed(1)}% vs. mês anterior</span>
+                </div>
+              </div>
 
-            <div className="w-full flex justify-center mb-8">
-              <div className="w-64">
-                <Pie
-                  data={statusData}
+              <div className={cardStyle}>
+                <p className="text-sm text-[#333] font-medium mb-4">
+                  Ticket médio
+                </p>
+                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(lastMonth.ticket_medio)}
+                </h2>
+                <div className={`flex items-center gap-1 text-xs font-medium ${ticketVariation >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {ticketVariation >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  <span>{Math.abs(ticketVariation).toFixed(1)}% vs. mês anterior</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Gráfico de Linha */}
+            <div className={`${cardStyle} mb-6`}>
+              <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
+                Gráfico de receita mensal
+              </h2>
+              <div className="h-[350px]">
+                <Line
+                  data={revenueData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                      legend: {
-                        display: false,},
-                      tooltip: {
-                        callbacks: {
-                          label: ({ label, parsed }) => {
-                            const value = Number(parsed || 0);
-                            const percentage = totalPedidos
-                              ? ((value / totalPedidos) * 100).toFixed(1)
-                              : "0.0";
-                            return `${label}: ${value} (${percentage}%)`;
-                          },
-                        },
+                      legend: { display: false },
+                    },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: {
+                        beginAtZero: true,
+                        grid: { color: "#F3F4F6" },
+                        border: { display: false },
                       },
                     },
                   }}
@@ -334,26 +355,58 @@ const cardStyle =
               </div>
             </div>
 
-            <div className="space-y-3">
-              {kpiStatus.map((item) => (
-                <div
-                  key={item.status}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="flex items-center gap-2">
-                    {getStatusIcon(item.status)}
-                    {getStatusLabel(item.status)}
-                  </span>
+            {/* Gráfico de Barras */}
+            <div className={cardStyle}>
+              <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
+                Distribuição de pedidos por status
+              </h2>
 
-                  <span className="font-semibold">
-                    {item.total_pedidos}
-                  </span>
-                </div>
-              ))}
+              <div className="h-[300px]">
+                <Bar
+                  data={statusData}
+                  plugins={[pluginPorcentagemNoTopo]}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => ` ${context.raw}% dos pedidos`,
+                        },
+                      },
+                    },
+                    scales: {
+                      x: { 
+                        display: false,
+                      },
+                      y: { 
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                          callback: (value) => `${value}%`,
+                          stepSize: 20,
+                        },
+                        grid: { color: "#F3F4F6" },
+                        border: { display: false },
+                      },
+                    },
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-around items-center mt-4 border-t border-gray-100 pt-4">
+                {labels.map((label) => (
+                  <div key={label} className="flex flex-col md:flex-row items-center gap-2 text-sm font-semibold text-gray-700">
+                    {getStatusIcon(label)}
+                    <span>{getStatusLabel(label)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-
+          </>
+        )}
       </div>
     </div>
   );
