@@ -52,13 +52,13 @@ export default function SuportePage() {
   const to = Math.min(page * limit, total || tickets.length);
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] px-6 pb-6">
-      <div className="mx-auto w-full max-w-screen-xl px-8 pt-2 pb-8">
+    <div className="min-h-screen bg-[#F4F7FE]">
+      <div className="max-w-7xl mx-auto px-8 pb-12">
         {/* Card container principal */}
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-4xl font-bold text-black">Suporte</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Suporte</h1>
           <p className="text-sm text-gray-400 mt-1">Acompanhe o andamento do canal de suporte</p>
         </div>
 
@@ -85,7 +85,7 @@ export default function SuportePage() {
               key={f}
               onClick={() => handleFilterChange(f)}
               className={[
-                "rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150",
+                "rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150 cursor-pointer",
                 activeFilter === f
                   ? "bg-blue-500 text-white shadow-sm"
                   : "text-gray-400 hover:text-gray-600",
@@ -126,7 +126,7 @@ export default function SuportePage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronLeft size={15} />
               </button>
@@ -139,7 +139,7 @@ export default function SuportePage() {
                   key={n}
                   onClick={() => setPage(n)}
                   className={[
-                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors",
+                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
                     page === n
                       ? "border-2 border-blue-500 text-blue-600 bg-white"
                       : "text-gray-400 hover:bg-gray-100",
@@ -152,7 +152,7 @@ export default function SuportePage() {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronRight size={15} />
               </button>

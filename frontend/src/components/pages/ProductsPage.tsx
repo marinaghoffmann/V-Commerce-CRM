@@ -34,7 +34,7 @@ function getCategoryColor(cat: string) {
 function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-pointer"
       onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
     >
       <div
@@ -90,7 +90,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer
             ${hasActive
               ? "bg-blue-500 border-blue-500 text-white font-semibold"
               : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
@@ -105,7 +105,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-semibold text-gray-700">Categorias</span>
               {draft.length > 0 && (
-                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline">
+                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline cursor-pointer">
                   Limpar
                 </button>
               )}
@@ -137,7 +137,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             <div className="px-4 py-3 border-t border-gray-100">
               <button
                 onClick={handleApply}
-                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
               >
                 Aplicar filtro
               </button>
@@ -156,7 +156,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             {cat}
             <button
               onClick={() => onApply(selected.filter((c) => c !== cat))}
-              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors"
+              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
             >
               <X size={10} />
             </button>
@@ -333,7 +333,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
         </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
         >
           <X size={16} />
         </button>
@@ -398,7 +398,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
       <div className="px-8 pb-7 flex gap-3">
         <button
           onClick={onClose}
-          className="flex-1 py-2.5 rounded-2xl border text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          className="flex-1 py-2.5 rounded-2xl border text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
           style={{ borderColor: "#9CA3AF", fontFamily: "'Inter', 'Roboto', sans-serif" }}
         >
           Cancelar
@@ -406,7 +406,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
         <button
           onClick={handleSubmit}
           disabled={saving}
-          className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+          className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer"
           style={{ background: "#2563EB", fontFamily: "'Inter', 'Roboto', sans-serif" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
@@ -471,6 +471,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
             </p>
           </div>
         </div>
+      // Aqui
       </ModalShell>
     );
   }
@@ -498,7 +499,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
         </div>
         <button
           onClick={onCancel}
-          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
         >
           <X size={16} />
         </button>
@@ -548,6 +549,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
               {formatCurrency(product.preco)}
             </p>
           </div>
+          // Até aqui
         </div>
       </div>
 
@@ -555,7 +557,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
       <div className="px-8 pb-7 flex gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 py-2.5 rounded-2xl border text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          className="flex-1 py-2.5 rounded-2xl border text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
           style={{ borderColor: "#9CA3AF", fontFamily: "'Inter', 'Roboto', sans-serif" }}
         >
           Cancelar
@@ -563,7 +565,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
         <button
           onClick={handleConfirm}
           disabled={deleting}
-          className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+          className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer"
           style={{ background: "#DC2626", fontFamily: "'Inter', 'Roboto', sans-serif" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#B91C1C")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "#DC2626")}
@@ -629,7 +631,7 @@ export default function ProductsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm cursor-pointer"
           >
             <Plus size={16} />
             Novo produto
@@ -667,7 +669,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -677,7 +679,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={products.length < limit}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
                 >
                   <ChevronRight size={16} />
                 </button>
