@@ -59,7 +59,7 @@ function transformarStatus(data: KpiStatusItem[]) {
       total_pedidos: item?.total_pedidos || 0,
       color: config.color,
     };
-  }).filter((item) => item.total_pedidos > 0);
+  }); // Sem o filtro para permitir que os zeros apareçam
 
   const labels = orderedData.map((item) => item.status);
   const valores = orderedData.map((item) => item.total_pedidos);
@@ -179,7 +179,8 @@ function Dashboard() {
   const totalPedidos = valores.reduce((sum, value) => sum + value, 0);
   const porcentagens = valores.map((valor) => {
     if (totalPedidos > 0) {
-      return Math.round((valor / totalPedidos) * 100);
+      // Arredonda para 2 casas decimais, mantendo como número
+      return Number(((valor / totalPedidos) * 100).toFixed(2));
     }
     return 0;
   });
@@ -194,6 +195,7 @@ function Dashboard() {
         borderWidth: 1,
         hoverOffset: 10,
         borderRadius: { topLeft: 4, topRight: 4 },
+        minBarLength: 5, // Garante que até o 0% tenha uma pequena barrinha colorida visível
       },
     ],
   };
@@ -206,13 +208,17 @@ function Dashboard() {
         const meta = chart.getDatasetMeta(i);
         meta.data.forEach((bar: any, index: number) => {
           const valor = dataset.data[index];
-          if (valor > 0) {
-            ctx.fillStyle = '#4B5563';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(valor + '%', bar.x, bar.y - 5);
-          }
+          
+          // Desenha o texto independentemente do valor ser zero ou não
+          ctx.fillStyle = '#4B5563';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          
+          // Transforma o float em texto com vírgula (ex: 95.43 -> "95,43%")
+          const textoFormatado = Number(valor).toFixed(2).replace('.', ',') + '%';
+          
+          ctx.fillText(textoFormatado, bar.x, bar.y - 5);
         });
       });
     }
@@ -363,6 +369,7 @@ function Dashboard() {
 
               <div className="h-[300px]">
                 <Bar
+                  key={`status-chart-${selectedYear}-${selectedMonth}`} // Força a atualização da animação ao mudar a data
                   data={statusData}
                   plugins={[pluginPorcentagemNoTopo]}
                   options={{
@@ -373,7 +380,11 @@ function Dashboard() {
                       legend: { display: false },
                       tooltip: {
                         callbacks: {
-                          label: (context) => ` ${context.raw}% dos pedidos`,
+                          // Formata o número no tooltip (popup ao passar o mouse) para usar vírgula
+                          label: (context) => {
+                            const valorFormatado = Number(context.raw).toFixed(2).replace('.', ',');
+                            return ` ${valorFormatado}% dos pedidos`;
+                          },
                         },
                       },
                     },
