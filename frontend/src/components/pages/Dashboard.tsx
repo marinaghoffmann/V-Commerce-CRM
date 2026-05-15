@@ -4,6 +4,7 @@ import {
   TrendingDown,
   XCircle,
   CheckCircle2,
+  AlertCircle,
   RotateCcw,
   Clock3,
   Package,
@@ -22,7 +23,7 @@ import {
   Filler,
 } from "chart.js";
 
-import { Line, Bar } from "react-chartjs-2";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import type { KpiStatusItem } from "../../components/types/dashboard.types";
 
 import { useKpiStatus, useMonthlyKpi } from "../../hooks/useDashboard";
@@ -227,13 +228,92 @@ function Dashboard() {
     }
   };
 
+  
+  // MOCK: TAXA DE SATISFAÇÃO
+  const satisfacaoLabels = ["Positivo", "Neutro", "Negativo"];
+  const satisfacaoValores = [73, 17, 10]; 
+  const satisfacaoCores = ["#5CA860", "#8A8D93", "#C64C4B"];
+  
+  const satisfacaoFundoCinza = satisfacaoValores.map((valor) => 100 - valor);
+
+  const satisfacaoData = {
+    labels: satisfacaoLabels,
+    datasets: [
+      {
+        data: satisfacaoValores,
+        backgroundColor: satisfacaoCores,
+        barThickness: 45, 
+      },
+      {
+        data: satisfacaoFundoCinza,
+        backgroundColor: "#EBEDF0", 
+        barThickness: 45,
+      },
+    ],
+  };
+
+  const pluginTextoHorizontal = {
+    id: "textoHorizontal",
+    afterDatasetsDraw(chart: any) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(0);
+      
+      meta.data.forEach((bar: any, index: number) => {
+        const valor = chart.data.datasets[0].data[index];
+        ctx.fillStyle = "#4B5563";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${valor}%`, bar.x + 8, bar.y);
+      });
+    },
+  };
+
+  
+  // MOCK: INDICADOR DE ENTREGA
+  const entregaLabels = ["No prazo", "Atrasado"];
+  const entregaValores = [84, 16]; 
+  const entregaCores = ["#5CA860", "#F47B20"]; 
+  
+  const entregaData = {
+    labels: entregaLabels,
+    datasets: [
+      {
+        data: entregaValores,
+        backgroundColor: entregaCores,
+        borderColor: "#ffffff",
+        borderWidth: 2,
+        cutout: "70%", 
+      },
+    ],
+  };
+
+  const pluginTextoCentralRosca = {
+    id: "textoCentralRosca",
+    beforeDraw(chart: any) {
+      const { ctx, width, height } = chart;
+      const totalEntregas = "21.335"; 
+
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#2B2B2B";
+      ctx.font = "bold 24px sans-serif";
+      ctx.fillText(totalEntregas, width / 2, height / 2 - 12);
+      ctx.fillStyle = "#2B2B2B"; 
+      ctx.font = "medium 12px sans-serif";
+      ctx.fillText("entregas", width / 2, height / 2 + 16);
+      
+      ctx.restore();
+    },
+  };
+
   const cardStyle = "bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm";
 
   return (
     <div className="min-h-screen py-6 bg-[#F8F9FB]">
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* Cabeçalho com Título e Filtros */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[#2B2B2B]">
@@ -361,7 +441,7 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className={cardStyle}>
+            <div className={`${cardStyle} mb-6`}>
               <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
                 Distribuição de pedidos por status
               </h2>
@@ -414,6 +494,84 @@ function Dashboard() {
                 ))}
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div className={cardStyle}>
+                <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
+                  Taxa de satisfação
+                </h2>
+                
+                <div className="h-[300px]">
+                  <Bar
+                    data={satisfacaoData}
+                    plugins={[pluginTextoHorizontal]}
+                    options={{
+                      indexAxis: "y", 
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }, 
+                      },
+                      scales: {
+                        x: {
+                          stacked: true, 
+                          position: "top", 
+                          min: 0,
+                          max: 100,
+                          ticks: {
+                            callback: (value) => `${value}%`,
+                            stepSize: 20,
+                          },
+                          grid: { color: "#F3F4F6"},
+                          border: { display: false },
+                        },
+                        y: {
+                          stacked: true,
+                          grid: { display: false },
+                          border: { display: true, color: "#9CA3AF" }, 
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className={cardStyle}>
+                <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">
+                  Indicador de entrega
+                </h2>
+                
+                <div className="h-[250px]">
+                  <Doughnut
+                    data={entregaData}
+                    plugins={[pluginTextoCentralRosca]}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                      },
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-around items-center mt-4 border-t border-gray-100 pt-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="text-[#5CA860]" size={20} />
+                    <span className="text-base font-semibold text-gray-700">No prazo 84%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="text-[#F47B20]" size={20} />
+                    <span className="text-base font-semibold text-gray-700">Atrasado 16%</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </>
         )}
       </div>
