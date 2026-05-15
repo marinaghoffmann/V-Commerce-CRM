@@ -257,6 +257,12 @@ function ClientDetail(): React.ReactElement {
                   ))}
                 </div>
               </div>
+              {data.origem && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Origem</span>
+                  <span className="text-sm text-gray-700">{data.origem}</span>
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Região</span>
                 <span className="text-sm text-gray-700">{regiao}</span>
