@@ -57,7 +57,7 @@ function Clients() {
       <div className="max-w-7xl mx-auto px-6 pb-12">
         <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-black mb-1" style={{ letterSpacing: "-0.02em" }}>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1" style={{ letterSpacing: "-0.02em" }}>
             Clientes
           </h1>
           <p className="text-gray-400 text-sm">

@@ -52,13 +52,13 @@ export default function SuportePage() {
   const to = Math.min(page * limit, total || tickets.length);
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] px-6 pb-6">
-      <div className="mx-auto w-full max-w-screen-xl px-8 pt-2 pb-8">
+    <div className="min-h-screen bg-[#F4F7FE]">
+      <div className="max-w-7xl mx-auto px-8 pb-12">
         {/* Card container principal */}
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-4xl font-bold text-black">Suporte</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Suporte</h1>
           <p className="text-sm text-gray-400 mt-1">Acompanhe o andamento do canal de suporte</p>
         </div>
 

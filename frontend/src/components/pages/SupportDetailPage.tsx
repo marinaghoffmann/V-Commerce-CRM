@@ -47,8 +47,8 @@ export default function SuporteDetalhePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] px-6 pb-6">
-      <div className="mx-auto w-full max-w-screen-lg px-8 pt-6 pb-8">
+    <div className="min-h-screen bg-[#F4F7FE]">
+      <div className="max-w-7xl mx-auto px-8 pb-12">
 
         {/* Cabeçalho */}
         <div className="flex justify-between items-start mb-6">
