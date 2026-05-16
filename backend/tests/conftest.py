@@ -66,37 +66,18 @@ def client():
 
 @pytest.fixture
 def mock_cliente():
+    """Valid client fixture with properly formatted data."""
     return {
-  "id_cliente": "1231241335123123123",
-  "nome": "João",
-  "sobrenome": "Silva",
-  "email": "joao@silva.com",
-  "telefone_formatado": "string",
-  "telefone_ramal": "string",
-  "estado": "string",
-  "cidade": "string",
-  "data_nascimento": "2026-05-11",
-  "data_cadastro": "2026-05-11",
-  "genero": "string",
-  "total_compras": 0,
-  "receita_total_cliente": 0,
-  "ticket_medio": 0,
-  "data_primeira_compra": "2026-05-11",
-  "data_ultima_compra": "2026-05-11",
-  "metodo_pagamento_preferido": "string",
-  "categoria_preferida": "string",
-  "produto_mais_comprado": "string",
-  "total_avaliacoes": 0,
-  "media_nota_produto": 0,
-  "media_nota_nps": 0,
-  "total_tickets": 0,
-  "tickets_abertos": 0,
-  "tickets_fechados": 0,
-  "total_sessoes": 0,
-  "total_produtos_visitados": 0,
-  "tempo_medio_sessao_seg": 0,
-  "segmento_cliente": "string"
-}
+        "nome": "João",
+        "sobrenome": "Silva",
+        "email": "joao.silva@example.com",
+        "telefone_formatado": "(81) 98765-4321",
+        "estado": "PE",
+        "cidade": "Recife",
+        "data_nascimento": "1990-05-15",
+        "genero": "M",
+        "origem": "web"
+    }
 
 @pytest.fixture
 def mock_produto():

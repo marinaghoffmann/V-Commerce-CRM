@@ -1,4 +1,6 @@
 from typing import List
+from uuid import uuid4
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -6,7 +8,7 @@ from sqlalchemy import func
 
 from app.database import get_db
 from app.models.cliente import Cliente
-from app.schemas.cliente import ClienteSchema
+from app.schemas.cliente import ClienteSchema, ClienteCreateSchema, ClienteUpdateSchema
 from app.models.ticket import Ticket
 from app.models.pedido import Pedido
 
@@ -79,25 +81,110 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
     return resultado
 
 @router.post("/", response_model=ClienteSchema, status_code=status.HTTP_201_CREATED)
-def create_cliente(payload: ClienteSchema, db: Session = Depends(get_db)):
-    cliente = db.query(Cliente).filter(Cliente.email == payload.email).first()
-    if cliente:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email já cadastrado")
-
-    obj = Cliente(**payload.model_dump())
-    db.add(obj)
+def create_cliente(payload: ClienteCreateSchema, db: Session = Depends(get_db)):
+    """
+    Create a new client in the system.
+    
+    Generates a unique UUID for id_cliente, sets data_cadastro to today,
+    validates all input fields (name capitalization, email format, phone format),
+    and checks for email uniqueness.
+    
+    Args:
+        payload: ClienteCreateSchema with client data
+        db: Database session
+    
+    Returns:
+        ClienteSchema: Created client with auto-generated id_cliente
+    
+    Raises:
+        HTTPException 409: Email already registered
+        HTTPException 422: Invalid data format (handled by Pydantic)
+    """
+    # Check if email already exists
+    cliente_existente = db.query(Cliente).filter(Cliente.email == payload.email).first()
+    if cliente_existente:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email já cadastrado"
+        )
+    
+    # Generate UUID and set registration date
+    id_cliente = uuid4().hex
+    data_cadastro = datetime.now().date()
+    
+    # Create new client with formatted data from schema validators
+    novo_cliente = Cliente(
+        id_cliente=id_cliente,
+        data_cadastro=data_cadastro,
+        segmento_cliente="novo",
+        **payload.model_dump()
+    )
+    db.add(novo_cliente)
     db.commit()
-    db.refresh(obj)
-    return obj
+    db.refresh(novo_cliente)
+    return novo_cliente
 
 @router.put("/{id_cliente}", response_model=ClienteSchema)
-def update_cliente(id_cliente: str, payload: ClienteSchema, db: Session = Depends(get_db)):
+def update_cliente(id_cliente: str, payload: ClienteUpdateSchema, db: Session = Depends(get_db)):
+    """
+    Update an existing client's information.
+    
+    Validates and formats all provided fields (name, email, phone, date).
+    Prevents modification of immutable fields (id_cliente, data_cadastro).
+    Checks email uniqueness only if email is being updated.
+    
+    Args:
+        id_cliente: The client's unique identifier
+        payload: ClienteUpdateSchema with fields to update
+        db: Database session
+    
+    Returns:
+        ClienteSchema: Updated client
+    
+    Raises:
+        HTTPException 404: Client not found
+        HTTPException 400: Attempting to modify id_cliente or data_cadastro
+        HTTPException 409: New email already registered to another client
+        HTTPException 422: Invalid data format (handled by Pydantic)
+    """
+    # Retrieve existing client
     cliente = db.query(Cliente).filter(Cliente.id_cliente == id_cliente).first()
     if not cliente:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
-    data = payload.model_dump()
-    for key, value in data.items():
-        setattr(cliente, key, value)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cliente não encontrado"
+        )
+    
+    # Prevent modification of immutable fields
+    dados_atualizacao = payload.model_dump(exclude_unset=True)
+    if "id_cliente" in dados_atualizacao:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="id_cliente cannot be modified"
+        )
+    if "data_cadastro" in dados_atualizacao:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="data_cadastro cannot be modified"
+        )
+    
+    # Check email uniqueness if email is being updated
+    if "email" in dados_atualizacao and dados_atualizacao["email"] != cliente.email:
+        email_existente = db.query(Cliente).filter(
+            Cliente.email == dados_atualizacao["email"],
+            Cliente.id_cliente != id_cliente
+        ).first()
+        if email_existente:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email já cadastrado"
+            )
+    
+    # Update only provided fields with formatted values from schema validators
+    for chave, valor in dados_atualizacao.items():
+        if valor is not None:
+            setattr(cliente, chave, valor)
+    
     db.add(cliente)
     db.commit()
     db.refresh(cliente)
