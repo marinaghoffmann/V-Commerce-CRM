@@ -26,15 +26,16 @@ function formatRelative(dateStr: string | null): string {
 
 export function TicketRow({ ticket }: TicketRowProps) {
   return (
-    <div 
-      className="flex items-center justify-between py-4 px-2 gap-4 cursor-pointer hover:bg-blue-50/50 transition-colors rounded-xl"
+    <div
+      className="flex items-center justify-between py-4 px-4 gap-4 cursor-pointer hover:bg-blue-50/50 transition-colors rounded-xl"
     >
       {/* Coluna esquerda */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-400 mb-1">
-          #{ticket.id_ticket.slice(0, 8).toUpperCase()} · {ticket.nome_cliente ?? "Cliente"}
+        <p className="text-xs text-gray-400 mb-1 font-mono flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${ticket.status_ticket === "fechado" ? "bg-green-500" : "bg-red-500"}`} />
+          T-{ticket.id_ticket.slice(0, 4).toUpperCase()} · {ticket.nome_cliente ?? "Cliente"}
         </p>
-        <p className="text-sm font-semibold text-[#1B2559] truncate mb-1.5">
+        <p className="text-sm font-semibold text-[#1B2559] truncate mb-2">
           {ticket.tipo_problema ?? "Sem descrição"}
         </p>
         <StatusBadge status={ticket.status_ticket} />

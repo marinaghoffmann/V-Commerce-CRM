@@ -52,18 +52,18 @@ export default function SuportePage() {
   const to = Math.min(page * limit, total || tickets.length);
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] px-6 pb-6">
-      <div className="mx-auto w-full max-w-screen-xl px-8 pt-2 pb-8">
+    <div className="min-h-screen bg-[#F4F7FE]">
+      <div className="max-w-7xl mx-auto px-8 pb-12">
         {/* Card container principal */}
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-4xl font-bold text-black">Suporte</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Suporte</h1>
           <p className="text-sm text-gray-400 mt-1">Acompanhe o andamento do canal de suporte</p>
         </div>
 
         {/* KPI Cards */}
-        <div className="flex gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <KpiCard
             iconBg="bg-red-100"
             icon={<TicketX className="text-red-500" size={22} />}
@@ -73,21 +73,21 @@ export default function SuportePage() {
           <KpiCard
             iconBg="bg-green-100"
             icon={<CheckCircle className="text-green-500" size={22} />}
-            label={`Fechados em ${kpis["fechado_mes_ref"] ?? "—"}`}
+            label={`Resolvidos no mês`}
             value={kpis["fechado_mes"] ?? 0}
           />
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-2 mb-6 bg-[#F4F7FE] rounded-xl p-1.5 w-fit">
+        <div className="flex items-center gap-2 mb-6 bg-white border border-gray-200 rounded-full p-1.5 w-fit">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => handleFilterChange(f)}
               className={[
-                "rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-150",
+                "rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150 cursor-pointer",
                 activeFilter === f
-                  ? "bg-blue-100 text-blue-600 shadow-sm"
+                  ? "bg-blue-500 text-white shadow-sm"
                   : "text-gray-400 hover:text-gray-600",
               ].join(" ")}
             >
@@ -97,7 +97,7 @@ export default function SuportePage() {
         </div>
 
         {/* Lista de tickets */}
-        <div className="flex flex-col divide-y divide-[#E2E8F0]">
+        <div className="flex flex-col divide-y divide-[#E2E8F0] bg-white border border-gray-200 rounded-2xl px-2 mb-6">
           {loading && (
             <div className="py-10 text-center text-sm text-gray-400">Carregando tickets...</div>
           )}
@@ -126,7 +126,7 @@ export default function SuportePage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronLeft size={15} />
               </button>
@@ -139,7 +139,7 @@ export default function SuportePage() {
                   key={n}
                   onClick={() => setPage(n)}
                   className={[
-                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors",
+                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
                     page === n
                       ? "border-2 border-blue-500 text-blue-600 bg-white"
                       : "text-gray-400 hover:bg-gray-100",
@@ -152,7 +152,7 @@ export default function SuportePage() {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronRight size={15} />
               </button>
