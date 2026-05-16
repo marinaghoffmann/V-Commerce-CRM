@@ -30,7 +30,7 @@ export function ChatbotInput({
         <button
           onClick={onSend}
           disabled={disabled || !value.trim()}
-          className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white p-1.5 rounded-lg transition flex items-center justify-center cursor-pointer ml-3"
+          className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white p-1.5 rounded-lg transition flex items-center justify-center disabled:cursor-not-allowed cursor-pointer ml-3"
           aria-label="Enviar mensagem"
         >
           <Send size={18} />
