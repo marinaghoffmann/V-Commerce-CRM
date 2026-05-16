@@ -26,7 +26,7 @@ import {
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import type { KpiStatusItem } from "../../components/types/dashboard.types";
 
-import { useKpiStatus, useMonthlyKpi } from "../../hooks/useDashboard";
+import { useKpiStatus, useMonthlyKpi, useMonthlyReview } from "../../hooks/useDashboard";
 
 ChartJS.register(
   CategoryScale,
@@ -127,8 +127,15 @@ function Dashboard() {
     error: errorMonthly,
   } = useMonthlyKpi(selectedYear, selectedMonth);
 
-  const loading = loadingStatus || loadingMonthly;
-  const error = errorStatus || errorMonthly;
+  const {
+  data: reviewData,
+  loading: loadingReview,
+  error: errorReview,
+  } = useMonthlyReview(selectedYear, selectedMonth);
+
+
+  const loading = loadingStatus || loadingMonthly || loadingReview;
+  const error = errorStatus || errorMonthly || errorReview;
 
   const monthLabels = monthlyData?.map((item) =>
     `${String(item.mes).padStart(2, "0")}/${String(item.ano).slice(-2)}`
@@ -230,45 +237,44 @@ function Dashboard() {
 
   
   // MOCK: TAXA DE SATISFAÇÃO
-  const satisfacaoLabels = ["Positivo", "Neutro", "Negativo"];
-  const satisfacaoValores = [73, 17, 10]; 
-  const satisfacaoCores = ["#5CA860", "#8A8D93", "#C64C4B"];
-  
-  const satisfacaoFundoCinza = satisfacaoValores.map((valor) => 100 - valor);
+const mesAtual = reviewData.find((d) => d.ano === selectedYear && d.mes === selectedMonth);
 
-  const satisfacaoData = {
-    labels: satisfacaoLabels,
-    datasets: [
-      {
-        data: satisfacaoValores,
-        backgroundColor: satisfacaoCores,
-        barThickness: 45, 
-      },
-      {
-        data: satisfacaoFundoCinza,
-        backgroundColor: "#EBEDF0", 
-        barThickness: 45,
-      },
-    ],
-  };
+const satisfacaoLabels = ["Positivo", "Neutro", "Negativo"];
+const satisfacaoValores = [mesAtual?.bom ?? 0, mesAtual?.neutro ?? 0, mesAtual?.ruim ?? 0];
+const satisfacaoCores = ["#5CA860", "#8A8D93", "#C64C4B"];
+const satisfacaoFundoCinza = satisfacaoValores.map((valor) => 100 - valor);
 
-  const pluginTextoHorizontal = {
-    id: "textoHorizontal",
-    afterDatasetsDraw(chart: any) {
-      const { ctx } = chart;
-      const meta = chart.getDatasetMeta(0);
-      
-      meta.data.forEach((bar: any, index: number) => {
-        const valor = chart.data.datasets[0].data[index];
-        ctx.fillStyle = "#4B5563";
-        ctx.font = "bold 12px sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`${valor}%`, bar.x + 8, bar.y);
-      });
+const satisfacaoData = {
+  labels: satisfacaoLabels,
+  datasets: [
+    {
+      data: satisfacaoValores,
+      backgroundColor: satisfacaoCores,
+      barThickness: 45,
     },
-  };
+    {
+      data: satisfacaoFundoCinza,
+      backgroundColor: "#EBEDF0",
+      barThickness: 45,
+    },
+  ],
+};
 
+const pluginTextoHorizontal = {
+  id: "textoHorizontal",
+  afterDatasetsDraw(chart: any) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    meta.data.forEach((bar: any, index: number) => {
+      const valor = chart.data.datasets[0].data[index];
+      ctx.fillStyle = "#4B5563";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`${valor}%`, bar.x + 8, bar.y);
+    });
+  },
+};
   
   // MOCK: INDICADOR DE ENTREGA
   const entregaLabels = ["No prazo", "Atrasado"];

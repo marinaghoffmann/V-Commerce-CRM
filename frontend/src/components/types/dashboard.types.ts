@@ -16,3 +16,17 @@ export interface MonthlyKpiItem {
   total_pedidos: number;
   ticket_medio: number;
 }
+
+export interface MontlhyReviewItem {
+  ruim: number;
+  neutra: number;
+  positiva: number;
+}
+
+export interface MonthlyReviewProcessed {
+  ano: number;
+  mes: number;
+  bom: number;
+  neutro: number;
+  ruim: number;
+}
