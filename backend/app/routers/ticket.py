@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ticket import Ticket
 from app.models.cliente import Cliente
-from app.schemas.ticket import TicketSchema, TicketDetalheSchema
+from app.schemas.ticket import TicketCreateSchema, TicketSchemaRead, TicketUpdateSchema
 
 router = APIRouter(prefix="/ticket", tags=["Ticket"])
 
@@ -75,7 +75,7 @@ def count_tickets(
     return {"total": query.scalar()}
 
 
-@router.get("/", response_model=List[TicketSchema])
+@router.get("/", response_model=List[TicketSchemaRead])
 def list_ticket(
     db: Session = Depends(get_db),
     page: int = 1,
@@ -102,26 +102,21 @@ def list_ticket(
     return query.order_by(Ticket.data_abertura.desc()).offset(offset).limit(limit).all()
 
 
-@router.get("/{id_ticket}", response_model=TicketDetalheSchema)
+@router.get("/{id_ticket}", response_model=TicketSchemaRead)
 def get_ticket(id_ticket: str, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id_ticket == id_ticket).first()
     if not ticket:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket não encontrado")
-
-    cliente = db.query(Cliente).filter(Cliente.id_cliente == ticket.id_cliente).first()
-
-    return {
-        **{c.name: getattr(ticket, c.name) for c in ticket.__table__.columns},
-        "cidade": cliente.cidade if cliente else None,
-        "estado": cliente.estado if cliente else None,
-    }
+    return ticket
 
 
-@router.post("/", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)
-def create_ticket(payload: TicketSchema, db: Session = Depends(get_db)):
-    ticket_existente = db.query(Ticket).filter(Ticket.id_ticket == payload.id_ticket).first()
-    if ticket_existente:
+@router.post("/", response_model=TicketSchemaRead, status_code=status.HTTP_201_CREATED)
+def create_ticket(payload: TicketCreateSchema, db: Session = Depends(get_db)):
+    if db.query(Ticket).filter(Ticket.id_ticket == payload.id_ticket).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ticket com este ID já existe")
+
+    if not db.query(Cliente).filter(Cliente.id_cliente == payload.id_cliente).first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
 
     obj = Ticket(**payload.model_dump())
     db.add(obj)
@@ -130,13 +125,15 @@ def create_ticket(payload: TicketSchema, db: Session = Depends(get_db)):
     return obj
 
 
-@router.put("/{id_ticket}", response_model=TicketSchema)
-def update_ticket(id_ticket: str, payload: TicketSchema, db: Session = Depends(get_db)):
+@router.patch("/{id_ticket}", response_model=TicketSchemaRead)
+def update_ticket(id_ticket: str, payload: TicketUpdateSchema, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id_ticket == id_ticket).first()
     if not ticket:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket não encontrado")
-    for key, value in payload.model_dump().items():
+
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(ticket, key, value)
+
     db.commit()
     db.refresh(ticket)
     return ticket
