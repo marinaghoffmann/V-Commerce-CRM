@@ -372,7 +372,7 @@ const entregaData = {
                     plugins: { legend: { display: false } },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: true, grid: { color: "#F3F4F6" }, border: { display: false } },
+                      y: { beginAtZero: true, grid: { color: "#F3F4F6" }, border: { display: false }, suggestedMax: 35000000 },
                     },
                   }}
                 />
