@@ -134,3 +134,10 @@ class PedidoClienteUpdateSchema(BaseModel):
         if v < 0:
             raise ValueError("quantidade não pode ser negativa")
         return v
+    
+class TotalPedidosComTicketsSchema(BaseModel):
+    total_pedidos: int
+    entrega_atrasada: int
+    entrega_no_prazo: int
+    mes: int
+    ano: int
