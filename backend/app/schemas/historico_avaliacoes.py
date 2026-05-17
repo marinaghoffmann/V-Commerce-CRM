@@ -28,3 +28,5 @@ class AvaliacoesGrafico(BaseModel):
     ruim: int
     neutra: int
     positiva: int
+    mes: int
+    ano: int

@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -77,21 +79,24 @@ def get_pedido_cliente(
         for row in rows
     ]
 
-@router.get("/total-com-tickets", status_code=status.HTTP_200_OK)
+@router.get("/total-com-tickets", status_code=status.HTTP_200_OK, response_model=TotalPedidosComTicketsSchema)
 def get_total_pedidos_com_tickets(
     db: Session = Depends(get_db),
     ano: int | None = None,
     mes: int | None = None,
 ):
-    filtros_pedido = []
-    filtros_ticket = []
+    hoje = date.today()
+    ano = ano or hoje.year
+    mes = mes or hoje.month
 
-    if ano is not None:
-        filtros_pedido.append(extract("year", Pedidos.data_pedido) == ano)
-        filtros_ticket.append(extract("year", Ticket.data_abertura) == ano)
-    if mes is not None:
-        filtros_pedido.append(extract("month", Pedidos.data_pedido) == mes)
-        filtros_ticket.append(extract("month", Ticket.data_abertura) == mes)
+    filtros_pedido = [
+        extract("year", Pedidos.data_pedido) == ano,
+        extract("month", Pedidos.data_pedido) == mes,
+    ]
+    filtros_ticket = [
+        extract("year", Ticket.data_abertura) == ano,
+        extract("month", Ticket.data_abertura) == mes,
+    ]
 
     total_pedidos = (
         db.query(func.count(Pedidos.id_pedido))
@@ -107,9 +112,11 @@ def get_total_pedidos_com_tickets(
     )
 
     return {
+        "ano": ano,
+        "mes": mes,
         "total_pedidos": total_pedidos,
-        "tickets_entrega": tickets_entrega,
-        "no_prazo": total_pedidos - tickets_entrega,
+        "entrega_atrasada": tickets_entrega,
+        "entrega_no_prazo": total_pedidos - tickets_entrega,
     }
 
 @router.post("/", response_model=PedidoClienteSchemaRead, status_code=status.HTTP_201_CREATED)

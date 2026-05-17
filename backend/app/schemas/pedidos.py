@@ -40,3 +40,10 @@ class PedidoClienteUpdateSchema(BaseModel):
     status:                  str | None = None
     metodo_pagamento:         str | None = None
     categoria_produto:          str | None = None
+
+class TotalPedidosComTicketsSchema(BaseModel):
+    total_pedidos: int
+    entrega_atrasada: int
+    entrega_no_prazo: int
+    mes: int
+    ano: int

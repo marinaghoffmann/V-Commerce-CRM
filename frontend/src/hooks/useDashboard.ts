@@ -1,6 +1,6 @@
 import api from "../services/api";
 import { useEffect, useState } from "react";
-import type { KpiStatusItem, MontlhyReviewItem, MonthlyReviewProcessed } from "../components/types/dashboard.types";
+import type { KpiStatusItem, MonthlyReviewProcessed, MonthlyTicketsProcessed } from "../components/types/dashboard.types";
 
 interface UseKpiStatusArgs {
   page: number;
@@ -128,52 +128,68 @@ export function useMonthlyKpi(ano: number, mes: number) {
   return { data, loading, error };
 }
 
-export function useMonthlyReview(ano: number, mes: number) {
-  const [data, setData] = useState<MonthlyReviewProcessed[]>([]);
+export function useMonthlyTickets(ano: number, mes: number) {
+  const [data, setData] = useState<MonthlyTicketsProcessed | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const months = getLast12Months(ano, mes);
     setLoading(true);
     setError(null);
 
-    const promises = months.map(({ ano: y, mes: m }) =>
-      api
-        .get<MontlhyReviewItem[]>(`/avaliacoes?limit=100&ano=${y}&mes=${m}`)
-        .then((res) => ({
-          ano: y,
-          mes: m,
-          items: res.data,
-        }))
-    );
+    api
+      .get<MonthlyTicketsProcessed>(`pedidos_cliente/total-com-tickets?ano=${ano}&mes=${mes}`)
+      .then((res) => {
+        const item = res.data;
+        const total = item.entrega_atrasada + item.entrega_no_prazo;
+        const toPercent = (val: number) => total > 0 ? Math.round((val / total) * 100) : 0;
 
-    Promise.all(promises)
-      .then((results) => {
-        const processed = results.map(({ ano, mes, items }) => {
-          const bom = items.reduce((sum, i) => sum + i.positiva, 0);
-          const neutro = items.reduce((sum, i) => sum + i.neutra, 0);
-          const ruim = items.reduce((sum, i) => sum + i.ruim, 0);
-          const total = bom + neutro + ruim;
-          const toPercent = (val: number) => total > 0 ? Math.round((val / total) * 100) : 0;
-
-          return {
-            ano,
-            mes,
-            bom: toPercent(bom),
-            neutro: toPercent(neutro),
-            ruim: toPercent(ruim),
-          };
+        setData({
+          ano: item.ano,
+          mes: item.mes,
+          entrega_atrasada: item.entrega_atrasada,
+          entrega_no_prazo: item.entrega_no_prazo,
         });
-        setData(processed);
       })
       .catch((err) => {
-        setData([]);
+        setData(null);
         setError(err.message ?? String(err));
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
+  }, [ano, mes]);
+
+  return { data, loading, error };
+}
+
+export function useMonthlyReview(ano: number, mes: number) {
+  const [data, setData] = useState<MonthlyReviewProcessed | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    api
+      .get<MonthlyReviewProcessed>(`/avaliacoes?ano=${ano}&mes=${mes}`)
+      .then((res) => {
+        const item = res.data;
+        const total = item.positiva + item.neutra + item.ruim;
+        const toPercent = (val: number) => total > 0 ? Math.round((val / total) * 100) : 0;
+
+        setData({
+          ano: item.ano,
+          mes: item.mes,
+          ruim: toPercent(item.ruim),
+          neutra: toPercent(item.neutra),
+          positiva: toPercent(item.positiva),
+        });
+      })
+      .catch((err) => {
+        setData(null);
+        setError(err.message ?? String(err));
+      })
+      .finally(() => setLoading(false));
   }, [ano, mes]);
 
   return { data, loading, error };
