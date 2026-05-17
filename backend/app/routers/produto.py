@@ -2,11 +2,11 @@ import uuid
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import distinct
+from sqlalchemy import distinct, func
 
 from app.database import get_db
 from app.models.produto import Produto
-from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema
+from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema, ProdutoSchemaRead
 
 router = APIRouter(prefix="/produto", tags=["Produto"])
 
@@ -17,7 +17,7 @@ def list_categorias(db: Session = Depends(get_db)):
     return [r[0] for r in rows]
 
 
-@router.get("/", response_model=List[ProdutoSchema])
+@router.get("/", response_model=List[ProdutoSchemaRead])
 def list_produto(
     db: Session = Depends(get_db),
     page: int = 1,
@@ -59,8 +59,18 @@ def create_produto(payload: ProdutoCreateSchema, db: Session = Depends(get_db)):
     if produto_existente:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Produto com este nome já existe")
 
+    max_id = db.query(func.max(Produto.id_produto)).filter(Produto.id_produto.like("PROD-%")).scalar()
+    if max_id:
+        try:
+            current_num = int(max_id.split("-")[1])
+            new_id = f"PROD-{current_num + 1:04d}"
+        except ValueError:
+            new_id = "PROD-0001"
+    else:
+        new_id = "PROD-0001"
+
     obj = Produto(
-        id_produto=str(uuid.uuid4()),
+        id_produto=new_id,
         **payload.model_dump()
     )
     db.add(obj)
