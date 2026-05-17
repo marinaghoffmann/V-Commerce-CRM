@@ -49,7 +49,7 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
     [fetchProducts, page, limit]
   );
 
-  const addProduct = useCallback(async (productBody: Omit<Product, "id_produto"> & { id_produto?: string }) => {
+  const addProduct = useCallback(async (productBody: Omit<Product, "id_produto">) => {
     const res = await api.post("/produto/", productBody);
     return res.data;
   }, []);

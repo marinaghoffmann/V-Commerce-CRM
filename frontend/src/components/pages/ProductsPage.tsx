@@ -262,7 +262,6 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     setSaving(true);
     try {
       const body = {
-        id_produto: form.id_produto.trim(),
         nome_produto: form.nome_produto.trim(),
         categoria: form.categoria.trim(),
         preco: Number(form.preco),
@@ -295,7 +294,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
           </div>
           <div className="text-center">
             <p className="text-base font-semibold text-gray-800" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
-              Suas edições foram salvas com sucesso!
+              {isEdit ? "Suas edições foram salvas com sucesso!" : "Produto adicionado com sucesso!"}
             </p>
           </div>
         </div>
@@ -413,10 +412,15 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
         >
           {saving ? (
             "Salvando..."
-          ) : (
+          ) : isEdit ? (
             <>
               <Check size={15} strokeWidth={2.5} />
               Salvar edições
+            </>
+          ) : (
+            <>
+              <Plus size={15} strokeWidth={2.5} />
+              Adicionar
             </>
           )}
         </button>
