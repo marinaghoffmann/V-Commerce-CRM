@@ -23,7 +23,7 @@ Tabela desempenho_produtos: id_produto (String PK), nome_produto (String),
   media_nota_produto (Float), media_nota_nps (Float), pct_recomenda (Float),
   total_tickets (Integer), total_visualizacoes (Integer), flag_alto_ticket (Boolean)
 
-Tabela analise_tickets: id_ticket (String PK), id_cliente (String FK),
+Tabela analise_tickets: id_ticket (String PK), id_cliente (String FK), id_pedido (String, FK)
   nome_cliente (String), tipo_problema (String), status_ticket (String),
   data_abertura (String), data_resolucao (String), tempo_resolucao_horas (Float),
   agente_suporte (String), nome_produto (String), categoria_produto (String),
@@ -46,6 +46,13 @@ Tabela kpi_por_estado: id (Integer PK), ano_venda (Integer), mes_venda (Integer)
 Tabela kpi_por_status: id (Integer PK), ano_venda (Integer), mes_venda (Integer),
   status (String), receita_total (Float), ticket_medio (Float),
   total_pedidos (Integer), total_clientes_unicos (Integer)
+
+Tabela historico_avaliacoes: id_avaliacao(String PK), id_cliente(String FK), id_produto(String FK)
+   nota_produto(Integer), comentario(String), nota_nps(Interger), recomenda(String), data_avaliacao(date)
+
+Tabela desempenho_produtos: id_produto(String PK), nome_produto(String), categoria(String), preco(Float), total_pedidos(Integer)
+   unidades_vendidas(Interger), receita_total(Float), receita_media_por_pedido(float), estoque_disponivel(Integer), total_avaliacoes(Integer)
+   media_nota_produto(Float), media_nota_nps(Float), pct_recomenda(Float), total_tickets(Integer), total_visualizacoes(Integer), flag_alto_ticket(Boolean)
 """
 
 FEW_SHOT_EXAMPLES = """
