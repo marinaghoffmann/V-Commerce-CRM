@@ -1,13 +1,17 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 
-from app.schemas.pedidos import PedidoClienteSchemaRead, PedidoClienteCreateSchema, PedidoClienteUpdateSchema
+from app.schemas.pedidos import PedidoClienteSchemaRead, PedidoClienteCreateSchema, PedidoClienteUpdateSchema, TotalPedidosComTicketsSchema
 from app.models.pedido import Pedido as Pedidos
 from app.models.cliente import Cliente
 from app.models.produto import Produto
+from app.models.ticket import Ticket
+from sqlalchemy import func, extract
 
 router = APIRouter(
     prefix="/pedidos_cliente",
@@ -74,6 +78,46 @@ def get_pedido_cliente(
         )
         for row in rows
     ]
+
+@router.get("/total-com-tickets", status_code=status.HTTP_200_OK, response_model=TotalPedidosComTicketsSchema)
+def get_total_pedidos_com_tickets(
+    db: Session = Depends(get_db),
+    ano: int | None = None,
+    mes: int | None = None,
+):
+    hoje = date.today()
+    ano = ano or hoje.year
+    mes = mes or hoje.month
+
+    filtros_pedido = [
+        extract("year", Pedidos.data_pedido) == ano,
+        extract("month", Pedidos.data_pedido) == mes,
+    ]
+    filtros_ticket = [
+        extract("year", Ticket.data_abertura) == ano,
+        extract("month", Ticket.data_abertura) == mes,
+    ]
+
+    total_pedidos = (
+        db.query(func.count(Pedidos.id_pedido))
+        .filter(*filtros_pedido)
+        .scalar()
+    )
+
+    tickets_entrega = (
+        db.query(func.count(Ticket.id_ticket))
+        .join(Pedidos, Ticket.id_pedido == Pedidos.id_pedido)
+        .filter(Ticket.tipo_problema == "entrega", *filtros_ticket)
+        .scalar()
+    )
+
+    return {
+        "ano": ano,
+        "mes": mes,
+        "total_pedidos": total_pedidos,
+        "entrega_atrasada": tickets_entrega,
+        "entrega_no_prazo": total_pedidos - tickets_entrega,
+    }
 
 @router.post("/", response_model=PedidoClienteSchemaRead, status_code=status.HTTP_201_CREATED)
 def create_pedido_cliente(pedido: PedidoClienteCreateSchema, db: Session = Depends(get_db)):
