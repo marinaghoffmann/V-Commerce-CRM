@@ -6,7 +6,7 @@ from sqlalchemy import distinct
 
 from app.database import get_db
 from app.models.produto import Produto
-from app.schemas.produto import ProdutoSchema, ProdutoCreate
+from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema
 
 router = APIRouter(prefix="/produto", tags=["Produto"])
 
@@ -54,7 +54,7 @@ def get_produto(id_produto: str, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=ProdutoSchema, status_code=status.HTTP_201_CREATED)
-def create_produto(payload: ProdutoCreate, db: Session = Depends(get_db)):
+def create_produto(payload: ProdutoCreateSchema, db: Session = Depends(get_db)):
     produto_existente = db.query(Produto).filter(Produto.nome_produto == payload.nome_produto).first()
     if produto_existente:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Produto com este nome já existe")
