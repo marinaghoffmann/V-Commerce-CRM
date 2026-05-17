@@ -262,7 +262,6 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     setSaving(true);
     try {
       const body = {
-        id_produto: form.id_produto.trim(),
         nome_produto: form.nome_produto.trim(),
         categoria: form.categoria.trim(),
         preco: Number(form.preco),

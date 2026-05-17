@@ -6,7 +6,7 @@ from sqlalchemy import distinct, func
 
 from app.database import get_db
 from app.models.produto import Produto
-from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema
+from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema, ProdutoSchemaRead
 
 router = APIRouter(prefix="/produto", tags=["Produto"])
 
@@ -17,7 +17,7 @@ def list_categorias(db: Session = Depends(get_db)):
     return [r[0] for r in rows]
 
 
-@router.get("/", response_model=List[ProdutoSchema])
+@router.get("/", response_model=List[ProdutoSchemaRead])
 def list_produto(
     db: Session = Depends(get_db),
     page: int = 1,
