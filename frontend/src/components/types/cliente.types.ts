@@ -3,6 +3,7 @@ export interface Cliente {
   nome?: string;
   sobrenome?: string;
   email?: string;
+  telefone_formatado?: string;
   segmento_cliente?: string;
   total_compras?: number;
   total_tickets?: number;

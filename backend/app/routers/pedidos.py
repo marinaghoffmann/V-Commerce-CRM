@@ -35,63 +35,35 @@ def get_pedido_cliente(
             Pedidos.data_pedido,
             Produto.nome_produto,
             Produto.categoria,
-            Cliente.nome,
-            Cliente.sobrenome,
+            Pedidos.nome_completo,
         )
-        .join(
-            Cliente,
-            Pedidos.id_cliente == Cliente.id_cliente,
-        )
-        .join(
-            Produto,
-            Pedidos.id_produto == Produto.id_produto,
-        )
+        .join(Produto, Pedidos.id_produto == Produto.id_produto)
+        .join(Cliente, Pedidos.id_cliente == Cliente.id_cliente)
     )
 
-    filters = []
-
-    if nome_produto:
-        filters.append(
-            Produto.nome_produto.ilike(f"%{nome_produto}%")
-        )
-
-    if categoria_produto:
-        filters.append(
-            Produto.categoria.ilike(f"%{categoria_produto}%")
-        )
-
-    if status:
-        filters.append(
-            Pedidos.status.ilike(f"%{status}%")
-        )
-
-    if metodo_pagamento:
-        filters.append(
-            Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%")
-        )
-
     if nome_cliente:
-        filters.append(
-            or_(
-                Cliente.nome.ilike(f"%{nome_cliente}%"),
-                Cliente.sobrenome.ilike(f"%{nome_cliente}%"),
-            )
-        )
+        query = query.filter(Pedidos.nome_completo.ilike(f"%{nome_cliente}%"))
+    if nome_produto:
+        query = query.filter(Produto.nome_produto.ilike(f"%{nome_produto}%"))
+    if categoria_produto:
+        query = query.filter(Produto.categoria.ilike(f"%{categoria_produto}%"))
+    if status:
+        query = query.filter(Pedidos.status.ilike(f"%{status}%"))
+    if metodo_pagamento:
+        query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
 
-    query = (
+    rows = (
         query
-        .filter(*filters)
         .order_by(Pedidos.data_pedido.desc())
         .offset(offset)
         .limit(limit)
+        .all()
     )
-
-    rows = query.all()
 
     return [
         PedidoClienteSchemaRead(
             id_pedido=row.id_pedido,
-            nome_cliente=f"{row.nome} {row.sobrenome}",
+            nome_cliente=row.nome_completo,
             nome_produto=row.nome_produto,
             categoria_produto=row.categoria,
             status=row.status,

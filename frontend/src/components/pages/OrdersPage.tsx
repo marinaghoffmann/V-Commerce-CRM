@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "../organisms/DataTable";
 import { FilterBar } from "../molecules/FilterBar";
 import { PageHeader } from "../molecules/TitleHeaeder";
+import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import { useOrders } from "../../hooks/useOrders";
@@ -92,7 +93,7 @@ export const OrdersPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE]">
+    <div className="bg-[#F4F7FE]">
       <div className="max-w-7xl mx-auto px-8 pb-12">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -101,7 +102,7 @@ export const OrdersPage = () => {
           </div>
           <button
             onClick={() => exportCSV(pedidos, "pedidos")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
           >
             <Upload size={16} />
             Exportar CSV
@@ -117,16 +118,20 @@ export const OrdersPage = () => {
             />
         </div>
 
-        <div className={`transition-opacity duration-200 ${isFetching ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
-          <DataTable
-            columns={columns}
-            data={pedidos}
-            maxHeight={550}
-            pageSize={pageSize}
-            setPageSize={(size) => { setPageSize(Number(size)); setPage(1); }}
-            page={page}
-            onPageChange={setPage}
-          />
+        <div>
+          {isFetching ? (
+            <TableSkeletonLoader rowCount={pageSize} cellCount={9} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={pedidos}
+              maxHeight={550}
+              pageSize={pageSize}
+              setPageSize={(size) => { setPageSize(Number(size)); setPage(1); }}
+              page={page}
+              onPageChange={setPage}
+            />
+          )}
         </div>
       </div>
     </div>
