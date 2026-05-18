@@ -194,3 +194,53 @@ export function useMonthlyReview(ano: number, mes: number) {
 
   return { data, loading, error };
 }
+
+interface KpiCategoriaItem {
+  categoria: string;
+  total_pedidos: number;
+  receita_total: number;
+}
+
+interface KpiEstadoItem {
+  estado: string;
+  total_pedidos: number;
+  receita_total: number;
+}
+
+export function useKpiCategoria(ano: number, mes: number) {
+  const [data, setData] = useState<KpiCategoriaItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    api
+      .get(`/kpi-category?page=1&limit=100&ano=${ano}&mes=${mes}`)
+      .then((res) => setData(res.data))
+      .catch((err) => { setData([]); setError(err.message ?? String(err)); })
+      .finally(() => setLoading(false));
+  }, [ano, mes]);
+
+  return { data, loading, error };
+}
+
+export function useKpiEstado(ano: number, mes: number) {
+  const [data, setData] = useState<KpiEstadoItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    api
+      .get(`/kpi-state?page=1&limit=100&ano=${ano}&mes=${mes}`)
+      .then((res) => setData(res.data))
+      .catch((err) => { setData([]); setError(err.message ?? String(err)); })
+      .finally(() => setLoading(false));
+  }, [ano, mes]);
+
+  return { data, loading, error };
+}
