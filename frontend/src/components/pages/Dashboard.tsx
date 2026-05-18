@@ -24,7 +24,7 @@ import {
   from "chart.js";
 
 import { Line, Bar, Doughnut } from "react-chartjs-2";
-import type { KpiStatusItem } from "../../components/types/dashboard.types";
+import type { KpiStatusItem, KpiStateItem, KpiCategoryItem } from "../../components/types/dashboard.types";
 import { useKpiStatus, useMonthlyKpi, useMonthlyReview, useMonthlyTickets } from "../../hooks/useDashboard";
 
 ChartJS.register(
@@ -47,12 +47,13 @@ const STATUS_CONFIG = [
   { name: "processado", color: "#7C4DFF", label: "Processado" },
 ];
 
-function transformarStatus(data: KpiStatusItem[]) {
-  const statusMap = new Map(data.map((item) => [item.status.toLowerCase(), item]));
+function transformarStatus(data: (KpiStatusItem | KpiStateItem | KpiCategoryItem)[]) {
+  const statusMap = new Map(data.map((item) => {
+    const key = ('status' in item ? item.status : 'estado' in item ? item.estado : (item as any).categoria).toLowerCase();
+    return [key, item];
+  }));
   const orderedData = STATUS_CONFIG.map((config) => {
-    const item = Array.from(statusMap.values()).find((d) =>
-      d.status.toLowerCase().includes(config.name)
-    );
+    const item = statusMap.get(config.name);
     return {
       status: config.label,
       total_pedidos: item?.total_pedidos || 0,
@@ -100,11 +101,12 @@ function Dashboard() {
     return () => clearTimeout(timer);
   }, [selectedYear, selectedMonth]);
 
-  const { kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
+  const { kpiData, loading: loadingStatus, error: errorStatus } = useKpiStatus({
     page: 1,
     limit: 10,
     ano: debouncedYear,
     mes: debouncedMonth,
+    kpiType: "status",
   });
 
   const { data: monthlyData, loading: loadingMonthly, error: errorMonthly } =
@@ -161,7 +163,7 @@ function Dashboard() {
     ],
   };
 
-  const { labels, valores, colors } = transformarStatus(kpiStatus || []);
+  const { labels, valores, colors } = transformarStatus(kpiData || []);
   const totalPedidos = valores.reduce((sum, value) => sum + value, 0);
   const porcentagens = valores.map((valor) =>
     totalPedidos > 0 ? Number(((valor / totalPedidos) * 100).toFixed(2)) : 0
