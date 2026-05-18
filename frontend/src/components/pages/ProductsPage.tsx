@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle, Search } from "lucide-react";
 
 import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
+import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -362,7 +363,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
               label="SKU"
               value={form.id_produto}
               onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
-              disabled = {true}
+              disabled={true}
             />
           )}
           <Field
@@ -592,9 +593,27 @@ export default function ProductsPage() {
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<string[]>([]);
   const [formModal, setFormModal] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null });
   const [deleteModal, setDeleteModal] = useState<Product | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [searchCommitted, setSearchCommitted] = useState<string>("");
+
+  function handleSearch() {
+    setSearchCommitted(searchInput.trim());
+    setPage(1);
+  }
+
+  function handleClearSearch() {
+    setSearchInput("");
+    setSearchCommitted("");
+    setPage(1);
+  }
 
   const { data: products, loading, error, page, setPage, limit, setLimit, refetch, addProduct, editProduct, deleteProduct } =
-    useProducts({ page: 1, limit: 12, categorias: categoriasSelecionadas });
+    useProducts({
+      page: 1,
+      limit: 12,
+      categorias: categoriasSelecionadas,
+      nome_produto: searchCommitted || null,
+    });
 
   const availableCategories = useMemo(() => {
     const predefined = Object.keys(CATEGORY_COLORS);
@@ -640,7 +659,35 @@ export default function ProductsPage() {
           </button>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Barra de pesquisa */}
+          <div className="relative flex-1 max-w-sm">
+            <button
+              onClick={handleSearch}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+            >
+              <Search size={16} />
+            </button>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+              placeholder="Pesquisar por nome do produto"
+              className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm text-gray-800 outline-none transition-all focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 shadow-sm"
+              style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}
+            />
+            {searchInput && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Filtro de categorias */}
           <CategoryFilter
             availableCategories={availableCategories}
             selected={categoriasSelecionadas}
@@ -651,16 +698,34 @@ export default function ProductsPage() {
           />
         </div>
 
-        <div className={loading ? "opacity-50 pointer-events-none" : ""}>
-          {!loading && products.length === 0 && (
-            <div className="py-20 text-center text-sm text-gray-400">Nenhum produto encontrado.</div>
+        <div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {Array(limit).fill(null).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                  <div className="h-40 bg-gray-200 rounded-xl animate-pulse" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-5 w-1/2 bg-gray-300 rounded animate-pulse" />
+                  <div className="flex gap-2 mt-auto">
+                    <div className="flex-1 h-8 bg-gray-200 rounded-xl animate-pulse" />
+                    <div className="flex-1 h-8 bg-gray-200 rounded-xl animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {products.length === 0 && (
+                <div className="py-20 text-center text-sm text-gray-400">Nenhum produto encontrado.</div>
+              )}
+              <ProductGrid
+                products={products as Product[]}
+                onEdit={openEdit}
+                onDelete={setDeleteModal}
+              />
+            </>
           )}
-
-          <ProductGrid
-            products={products as Product[]}
-            onEdit={openEdit}
-            onDelete={setDeleteModal}
-          />
 
           {products.length > 0 && (
             <div className="mt-6 flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-sm">

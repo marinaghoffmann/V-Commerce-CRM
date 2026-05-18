@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class ProdutoSchema(BaseModel):
@@ -54,7 +54,23 @@ class ProdutoSchemaRead(BaseModel):
     total_visualizacoes: int | None = Field(None, ge=0, description="Quantidade total de visualizações")
     flag_alto_ticket: bool | None = Field(None, description="Indica se o produto possui alto volume de tickets")
 
-    model_config = ConfigDict(from_attributes=True, extra="forbid")
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def coerce_none_to_defaults(self):
+        self.preco = self.preco or 0.0
+        self.total_pedidos = self.total_pedidos or 0
+        self.unidades_vendidas = self.unidades_vendidas or 0
+        self.total_avaliacoes = self.total_avaliacoes or 0
+        self.total_tickets = self.total_tickets or 0
+        self.total_visualizacoes = self.total_visualizacoes or 0
+        self.receita_total = self.receita_total or 0.0
+        self.receita_media_por_pedido = self.receita_media_por_pedido or 0.0
+        self.media_nota_produto = self.media_nota_produto or 0.0
+        self.media_nota_nps = self.media_nota_nps or 0.0
+        self.pct_recomenda = self.pct_recomenda or 0.0
+        self.flag_alto_ticket = self.flag_alto_ticket or False
+        return self
 
     @field_validator("categoria")
     @classmethod
