@@ -183,8 +183,18 @@ function Dashboard() {
   );
 
   // Categoria chart
-  const categoriasLabels  = kpiCategoria.length > 0 ? kpiCategoria.map((k) => k.categoria) : STATUS_CONFIG.map((s) => s.label);
-  const categoriasValores = kpiCategoria.length > 0 ? kpiCategoria.map((k) => k.total_pedidos) : STATUS_CONFIG.map(() => 0);
+  let categoriasLabels: string[] = [];
+  let categoriasValores: number[] = [];
+  if (kpiCategoria && kpiCategoria.length > 0) {
+    const sortedCategorias = [...kpiCategoria].sort((a, b) =>
+      a.categoria.localeCompare(b.categoria, "pt-BR")
+    );
+    categoriasLabels = sortedCategorias.map((k) => k.categoria);
+    categoriasValores = sortedCategorias.map((k) => k.total_pedidos);
+  } else {
+    categoriasLabels = [];
+    categoriasValores = [];
+  }
   const totalPedidosCategoria = categoriasValores.reduce((sum, v) => sum + v, 0);
   const porcentagensCategoria = categoriasValores.map((v) =>
     totalPedidosCategoria > 0 ? Number(((v / totalPedidosCategoria) * 100).toFixed(2)) : 0
@@ -192,15 +202,87 @@ function Dashboard() {
   const categoriasColors = categoriasLabels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
   // Estado chart — fallback com todos os estados brasileiros zerados
-  const estadosLabels  = kpiEstado.length > 0 ? kpiEstado.map((k) => k.estado) : ESTADOS_FALLBACK;
-  const estadosValores = kpiEstado.length > 0 ? kpiEstado.map((k) => k.total_pedidos) : ESTADOS_FALLBACK.map(() => 0);
+  // Mapeamento de regiões para ordenar estados por região e depois por nome
+  const REGION_GROUPS: Record<number, string[]> = {
+    0: ["Acre", "Amapá", "Amazonas", "Pará", "Rondônia", "Roraima", "Tocantins"], // Norte
+    1: ["Alagoas", "Bahia", "Ceará", "Maranhão", "Paraíba", "Pernambuco", "Piauí", "Rio Grande do Norte", "Sergipe"], // Nordeste
+    2: ["Distrito Federal", "Goiás", "Mato Grosso", "Mato Grosso do Sul"], // Centro-Oeste
+    3: ["Espírito Santo", "Minas Gerais", "Rio de Janeiro", "São Paulo"], // Sudeste
+    4: ["Paraná", "Rio Grande do Sul", "Santa Catarina"], // Sul
+  };
+
+  // build a lookup with normalized lowercase keys
+  const REGION_MAP: Record<string, number> = Object.keys(REGION_GROUPS).reduce((acc, key) => {
+    const idx = Number(key);
+    REGION_GROUPS[idx].forEach((st) => {
+      acc[st.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()] = idx;
+    });
+    return acc;
+  }, {} as Record<string, number>);
+
+  const getRegionIndex = (estadoName: string) => {
+    const norm = estadoName ? estadoName.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase() : "";
+    return REGION_MAP[norm] ?? 99;
+  };
+
+  let estadosLabels: string[] = [];
+  let estadosValores: number[] = [];
+  if (kpiEstado && kpiEstado.length > 0) {
+    const sortedEstados = [...kpiEstado].sort((a, b) => {
+      const ra = getRegionIndex(a.estado || "");
+      const rb = getRegionIndex(b.estado || "");
+      if (ra !== rb) return ra - rb;
+      return (a.estado || "").localeCompare(b.estado || "", "pt-BR");
+    });
+    estadosLabels = sortedEstados.map((k) => k.estado);
+    estadosValores = sortedEstados.map((k) => k.total_pedidos);
+  } else {
+    const sortedFallback = [...ESTADOS_FALLBACK].sort((a, b) => {
+      const ra = getRegionIndex(a);
+      const rb = getRegionIndex(b);
+      if (ra !== rb) return ra - rb;
+      return a.localeCompare(b, "pt-BR");
+    });
+    estadosLabels = sortedFallback;
+    estadosValores = sortedFallback.map(() => 0);
+  }
   const totalPedidosEstado = estadosValores.reduce((sum, v) => sum + v, 0);
   const porcentagensEstado = estadosValores.map((v) =>
     totalPedidosEstado > 0 ? Number(((v / totalPedidosEstado) * 100).toFixed(2)) : 0
   );
-  const estadosColors = estadosLabels.map((_, i) =>
-    `hsl(${Math.round((i * 360) / estadosLabels.length)}, 65%, 50%)`
-  );
+  // Agrupa estados da mesma região com cores semelhantes
+  const REGION_BASE_HUES = [200, 20, 90, 260, 140]; // Norte, Nordeste, Centro-Oeste, Sudeste, Sul
+  const normalizeKey = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const estadosColors = estadosLabels.map((label, i) => {
+    const normLabel = normalizeKey(label);
+    let regionIdx = 99;
+    let idxInRegion = 0;
+    let regionCount = 1;
+    for (const [rIdx, group] of Object.entries(REGION_GROUPS)) {
+      const normalizedGroup = group.map((g) => normalizeKey(g));
+      const found = normalizedGroup.indexOf(normLabel);
+      if (found !== -1) {
+        regionIdx = Number(rIdx);
+        idxInRegion = found;
+        regionCount = normalizedGroup.length;
+        break;
+      }
+    }
+
+    if (regionIdx === 99) {
+      // estado não mapeado: espalha pelo círculo de matiz
+      const hue = Math.round((i * 360) / estadosLabels.length);
+      return `hsl(${hue}, 65%, 50%)`;
+    }
+
+    const baseHue = REGION_BASE_HUES[regionIdx] ?? Math.round((i * 360) / estadosLabels.length);
+    // ligeiro deslocamento por posição no grupo para variação sutil
+    const hueOffset = Math.round((idxInRegion / Math.max(1, regionCount)) * 18) - 9; // -9..+9
+    const hue = (baseHue + hueOffset + 360) % 360;
+    const saturation = 62;
+    const lightness = 48 + Math.round((idxInRegion / Math.max(1, regionCount)) * 6); // pequenas variações
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  });
 
   const activeConfig = {
     status:    { labels, porcentagens: porcentagensStatus, colors, legend: labels },
