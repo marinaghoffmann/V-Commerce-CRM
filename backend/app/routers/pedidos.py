@@ -18,7 +18,7 @@ router = APIRouter(
     tags=["pedidos_cliente"],
 )
 
-@router.get("/", response_model=list[PedidoClienteSchemaRead])
+@router.get("/", response_model=dict)
 def get_pedido_cliente(
     db: Session = Depends(get_db),
     limit: int = 10,
@@ -56,6 +56,8 @@ def get_pedido_cliente(
     if metodo_pagamento:
         query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
 
+    total = query.count()
+
     rows = (
         query
         .order_by(Pedidos.data_pedido.desc())
@@ -64,20 +66,23 @@ def get_pedido_cliente(
         .all()
     )
 
-    return [
-        PedidoClienteSchemaRead(
-            id_pedido=row.id_pedido,
-            nome_cliente=row.nome_completo,
-            nome_produto=row.nome_produto,
-            categoria_produto=row.categoria,
-            status=row.status,
-            valor_pedido=row.valor_pedido,
-            quantidade=row.quantidade,
-            metodo_pagamento=row.metodo_pagamento,
-            data_pedido=row.data_pedido,
-        )
-        for row in rows
-    ]
+    return {
+        "total": total,
+        "items": [
+            PedidoClienteSchemaRead(
+                id_pedido=row.id_pedido,
+                nome_cliente=row.nome_completo,
+                nome_produto=row.nome_produto,
+                categoria_produto=row.categoria,
+                status=row.status,
+                valor_pedido=row.valor_pedido,
+                quantidade=row.quantidade,
+                metodo_pagamento=row.metodo_pagamento,
+                data_pedido=row.data_pedido,
+            )
+            for row in rows
+        ]
+    }
 
 @router.get("/total-com-tickets", status_code=status.HTTP_200_OK, response_model=TotalPedidosComTicketsSchema)
 def get_total_pedidos_com_tickets(
