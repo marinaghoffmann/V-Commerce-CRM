@@ -40,7 +40,7 @@ class ProdutoSchemaRead(BaseModel):
     id_produto: str = Field(..., min_length=1, description="Identificador único do produto")
     nome_produto: str = Field(..., min_length=1, description="Nome do produto")
     categoria: str = Field(..., min_length=1, description="Categoria do produto")
-    preco: float = Field(..., gt=0, description="Preço do produto")
+    preco: float | None = Field(..., gt=0, description="Preço do produto")
     total_pedidos: int = Field(..., ge=0, description="Quantidade total de pedidos")
     unidades_vendidas: int = Field(..., ge=0, description="Quantidade total de unidades vendidas")
     receita_total: float = Field(..., ge=0, description="Receita total gerada pelo produto")
