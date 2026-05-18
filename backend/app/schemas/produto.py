@@ -1,45 +1,247 @@
-from pydantic import BaseModel
-
-class ProdutoCreate(BaseModel):
-    nome_produto:               str
-    categoria:                  str | None = None
-    preco:                      float | None = None
-
-    total_pedidos:              int     = 0
-    unidades_vendidas:          int     = 0
-    receita_total:              float   = 0.0
-    receita_media_por_pedido:   float   = 0.0
-
-    estoque_disponivel:         int | None = 0
-    total_avaliacoes:           int     = 0
-    media_nota_produto:         float   = 0.0
-    media_nota_nps:             float   = 0.0
-    pct_recomenda:              float   = 0.0
-
-    total_tickets:              int     = 0
-    total_visualizacoes:        int     = 0
-    flag_alto_ticket:           bool    = False
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class ProdutoSchema(BaseModel):
-    id_produto:                 str
-    nome_produto:               str | None = None
-    categoria:                  str | None = None
-    preco:                      float | None = None
+    nome_produto: str | None = Field(None, min_length=1, description="Nome do produto")
+    categoria: str | None = Field(None, min_length=1, description="Categoria do produto")
+    preco: float | None = Field(None, gt=0, description="Preço do produto")
+    total_pedidos: int = Field(0, ge=0, description="Quantidade total de pedidos")
+    unidades_vendidas: int = Field(0, ge=0, description="Quantidade total de unidades vendidas")
+    receita_total: float = Field(0.0, ge=0, description="Receita total gerada pelo produto")
+    receita_media_por_pedido: float = Field(0.0, ge=0, description="Receita média por pedido")
+    estoque_disponivel: int | None = Field(None, ge=0, description="Quantidade disponível em estoque")
+    total_avaliacoes: int = Field(0, ge=0, description="Quantidade total de avaliações")
+    media_nota_produto: float = Field(0.0, ge=0, description="Média das notas do produto")
+    media_nota_nps: float = Field(0.0, ge=0, description="Média da nota NPS")
+    pct_recomenda: float = Field(0.0, ge=0, le=100, description="Percentual de recomendação do produto")
+    total_tickets: int = Field(0, ge=0, description="Quantidade total de tickets relacionados")
+    total_visualizacoes: int = Field(0, ge=0, description="Quantidade total de visualizações")
+    flag_alto_ticket: bool = Field(False, description="Indica se o produto possui alto volume de tickets")
 
-    total_pedidos:              int     = 0
-    unidades_vendidas:          int     = 0
-    receita_total:              float   = 0.0
-    receita_media_por_pedido:   float   = 0.0
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
 
-    estoque_disponivel:         int | None = 0
-    total_avaliacoes:           int     = 0
-    media_nota_produto:         float   = 0.0
-    media_nota_nps:             float   = 0.0
-    pct_recomenda:              float   = 0.0
+    @field_validator("categoria")
+    @classmethod
+    def validar_categoria(cls, v):
+        if v is None:
+            return v
+        return v.strip().capitalize()
 
-    total_tickets:              int     = 0
-    total_visualizacoes:        int     = 0
-    flag_alto_ticket:           bool    = False
+    @field_validator("nome_produto")
+    @classmethod
+    def validar_nome(cls, v):
+        if v is None:
+            return v
+        return v.strip()
 
-    model_config = {"from_attributes": True}
+
+class ProdutoSchemaRead(BaseModel):
+    id_produto: str = Field(..., min_length=1, description="Identificador único do produto")
+    nome_produto: str = Field(..., min_length=1, description="Nome do produto")
+    categoria: str = Field(..., min_length=1, description="Categoria do produto")
+    preco: float | None = Field(None, description="Preço do produto")
+    total_pedidos: int | None = Field(None, description="Quantidade total de pedidos")
+    unidades_vendidas: int | None = Field(None, description="Quantidade total de unidades vendidas")
+    receita_total: float | None = Field(None, description="Receita total gerada pelo produto")
+    receita_media_por_pedido: float | None = Field(None, description="Receita média por pedido")
+    estoque_disponivel: int | None = Field(None, description="Quantidade disponível em estoque")
+    total_avaliacoes: int | None = Field(None, description="Quantidade total de avaliações")
+    media_nota_produto: float | None = Field(None, description="Média das notas do produto")
+    media_nota_nps: float | None = Field(None, description="Média da nota NPS")
+    pct_recomenda: float | None = Field(None, description="Percentual de recomendação do produto")
+    total_tickets: int | None = Field(None, description="Quantidade total de tickets relacionados")
+    total_visualizacoes: int | None = Field(None, description="Quantidade total de visualizações")
+    flag_alto_ticket: bool | None = Field(None, description="Indica se o produto possui alto volume de tickets")
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def coerce_none_to_defaults(self):
+        self.preco = self.preco or 0.0
+        self.total_pedidos = self.total_pedidos or 0
+        self.unidades_vendidas = self.unidades_vendidas or 0
+        self.total_avaliacoes = self.total_avaliacoes or 0
+        self.total_tickets = self.total_tickets or 0
+        self.total_visualizacoes = self.total_visualizacoes or 0
+        self.receita_total = self.receita_total or 0.0
+        self.receita_media_por_pedido = self.receita_media_por_pedido or 0.0
+        self.media_nota_produto = self.media_nota_produto or 0.0
+        self.media_nota_nps = self.media_nota_nps or 0.0
+        self.pct_recomenda = self.pct_recomenda or 0.0
+        self.flag_alto_ticket = self.flag_alto_ticket or False
+        return self
+
+    @field_validator("categoria")
+    @classmethod
+    def validar_categoria(cls, v):
+        return v.strip().capitalize()
+
+    @field_validator("nome_produto")
+    @classmethod
+    def validar_nome(cls, v):
+        return v.strip()
+
+
+class ProdutoCreateSchema(BaseModel):
+    nome_produto: str = Field(..., min_length=1, description="Nome do produto")
+    categoria: str = Field(..., min_length=1, description="Categoria do produto")
+    preco: float = Field(..., gt=0, description="Preço do produto")
+    total_pedidos: int = Field(0, ge=0, description="Quantidade total de pedidos")
+    unidades_vendidas: int = Field(0, ge=0, description="Quantidade total de unidades vendidas")
+    receita_total: float = Field(0.0, ge=0, description="Receita total gerada pelo produto")
+    receita_media_por_pedido: float = Field(0.0, ge=0, description="Receita média por pedido")
+    estoque_disponivel: int | None = Field(None, ge=0, description="Quantidade disponível em estoque")
+    total_avaliacoes: int = Field(0, ge=0, description="Quantidade total de avaliações")
+    media_nota_produto: float = Field(0.0, ge=0, description="Média das notas do produto")
+    media_nota_nps: float = Field(0.0, ge=0, description="Média da nota NPS")
+    pct_recomenda: float = Field(0.0, ge=0, le=100, description="Percentual de recomendação do produto")
+    total_tickets: int = Field(0, ge=0, description="Quantidade total de tickets relacionados")
+    total_visualizacoes: int = Field(0, ge=0, description="Quantidade total de visualizações")
+    flag_alto_ticket: bool = Field(False, description="Indica se o produto possui alto volume de tickets")
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("categoria")
+    @classmethod
+    def validar_categoria(cls, v):
+        return v.strip().capitalize()
+
+    @field_validator("nome_produto")
+    @classmethod
+    def validar_nome(cls, v):
+        return v.strip()
+
+    @field_validator("preco")
+    @classmethod
+    def validar_preco(cls, v):
+        if v <= 0:
+            raise ValueError("preco deve ser maior que zero")
+        return v
+
+    @field_validator(
+        "total_pedidos",
+        "unidades_vendidas",
+        "total_avaliacoes",
+        "total_tickets",
+        "total_visualizacoes",
+    )
+    @classmethod
+    def validar_inteiros_nao_negativos(cls, v):
+        if v < 0:
+            raise ValueError("o campo não pode ser negativo")
+        return v
+
+    @field_validator("estoque_disponivel")
+    @classmethod
+    def validar_estoque(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("estoque_disponivel não pode ser negativo")
+        return v
+
+    @field_validator(
+        "receita_total",
+        "receita_media_por_pedido",
+        "media_nota_produto",
+        "media_nota_nps",
+    )
+    @classmethod
+    def validar_floats_nao_negativos(cls, v):
+        if v < 0:
+            raise ValueError("o campo não pode ser negativo")
+        return v
+
+    @field_validator("pct_recomenda")
+    @classmethod
+    def validar_pct_recomenda(cls, v):
+        if not (0 <= v <= 100):
+            raise ValueError("pct_recomenda deve estar entre 0 e 100")
+        return v
+
+
+class ProdutoUpdateSchema(BaseModel):
+    nome_produto: str | None = Field(None, min_length=1, description="Nome do produto")
+    categoria: str | None = Field(None, min_length=1, description="Categoria do produto")
+    preco: float | None = Field(None, gt=0, description="Preço do produto")
+    total_pedidos: int | None = Field(None, ge=0, description="Quantidade total de pedidos")
+    unidades_vendidas: int | None = Field(None, ge=0, description="Quantidade total de unidades vendidas")
+    receita_total: float | None = Field(None, ge=0, description="Receita total gerada pelo produto")
+    receita_media_por_pedido: float | None = Field(None, ge=0, description="Receita média por pedido")
+    estoque_disponivel: int | None = Field(None, ge=0, description="Quantidade disponível em estoque")
+    total_avaliacoes: int | None = Field(None, ge=0, description="Quantidade total de avaliações")
+    media_nota_produto: float | None = Field(None, ge=0, description="Média das notas do produto")
+    media_nota_nps: float | None = Field(None, ge=0, description="Média da nota NPS")
+    pct_recomenda: float | None = Field(None, ge=0, le=100, description="Percentual de recomendação do produto")
+    total_tickets: int | None = Field(None, ge=0, description="Quantidade total de tickets relacionados")
+    total_visualizacoes: int | None = Field(None, ge=0, description="Quantidade total de visualizações")
+    flag_alto_ticket: bool | None = Field(None, description="Indica se o produto possui alto volume de tickets")
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("categoria")
+    @classmethod
+    def validar_categoria(cls, v):
+        if v is None:
+            return v
+        return v.strip().capitalize()
+
+    @field_validator("nome_produto")
+    @classmethod
+    def validar_nome(cls, v):
+        if v is None:
+            return v
+        return v.strip()
+
+    @field_validator("preco")
+    @classmethod
+    def validar_preco(cls, v):
+        if v is None:
+            return v
+        if v <= 0:
+            raise ValueError("preco deve ser maior que zero")
+        return v
+
+    @field_validator(
+        "total_pedidos",
+        "unidades_vendidas",
+        "total_avaliacoes",
+        "total_tickets",
+        "total_visualizacoes",
+    )
+    @classmethod
+    def validar_inteiros_nao_negativos(cls, v):
+        if v is None:
+            return v
+        if v < 0:
+            raise ValueError("o campo não pode ser negativo")
+        return v
+
+    @field_validator("estoque_disponivel")
+    @classmethod
+    def validar_estoque(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("estoque_disponivel não pode ser negativo")
+        return v
+
+    @field_validator(
+        "receita_total",
+        "receita_media_por_pedido",
+        "media_nota_produto",
+        "media_nota_nps",
+    )
+    @classmethod
+    def validar_floats_nao_negativos(cls, v):
+        if v is None:
+            return v
+        if v < 0:
+            raise ValueError("o campo não pode ser negativo")
+        return v
+
+    @field_validator("pct_recomenda")
+    @classmethod
+    def validar_pct_recomenda(cls, v):
+        if v is None:
+            return v
+        if not (0 <= v <= 100):
+            raise ValueError("pct_recomenda deve estar entre 0 e 100")
+        return v

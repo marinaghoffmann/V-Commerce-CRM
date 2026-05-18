@@ -66,89 +66,69 @@ def client():
 
 @pytest.fixture
 def mock_cliente():
+    """Valid client fixture with properly formatted data."""
     return {
-  "id_cliente": "1231241335123123123",
-  "nome": "João",
-  "sobrenome": "Silva",
-  "email": "joao@silva.com",
-  "telefone_formatado": "string",
-  "telefone_ramal": "string",
-  "estado": "string",
-  "cidade": "string",
-  "data_nascimento": "2026-05-11",
-  "data_cadastro": "2026-05-11",
-  "genero": "string",
-  "total_compras": 0,
-  "receita_total_cliente": 0,
-  "ticket_medio": 0,
-  "data_primeira_compra": "2026-05-11",
-  "data_ultima_compra": "2026-05-11",
-  "metodo_pagamento_preferido": "string",
-  "categoria_preferida": "string",
-  "produto_mais_comprado": "string",
-  "total_avaliacoes": 0,
-  "media_nota_produto": 0,
-  "media_nota_nps": 0,
-  "total_tickets": 0,
-  "tickets_abertos": 0,
-  "tickets_fechados": 0,
-  "total_sessoes": 0,
-  "total_produtos_visitados": 0,
-  "tempo_medio_sessao_seg": 0,
-  "segmento_cliente": "string"
-}
+        "nome": "João",
+        "sobrenome": "Silva",
+        "email": "joao.silva@example.com",
+        "telefone_formatado": "(81) 98765-4321",
+        "estado": "PE",
+        "cidade": "Recife",
+        "data_nascimento": "1990-05-15",
+        "genero": "M",
+        "origem": "web"
+    }
 
 @pytest.fixture
 def mock_produto():
     return {
-  "id_produto": "1111111",
-  "nome_produto": "Telefone Celular",
-  "categoria": "Eletronicos",
-  "preco": 1200,
-  "total_pedidos": 0,
-  "unidades_vendidas": 0,
-  "receita_total": 0,
-  "receita_media_por_pedido": 0,
-  "estoque_disponivel": 0,
-  "total_avaliacoes": 0,
-  "media_nota_produto": 0,
-  "media_nota_nps": 0,
-  "pct_recomenda": 0,
-  "total_tickets": 0,
-  "total_visualizacoes": 0,
-  "flag_alto_ticket": False
+    "nome_produto": "Telefone Celular",
+    "categoria": "Eletrônicos",
+    "preco": 1200.0,
+    "total_pedidos": 2,
+    "unidades_vendidas": 3,
+    "receita_total": 3600.0,
+    "receita_media_por_pedido": 1800.0,
+    "estoque_disponivel": 100,
+    "total_avaliacoes": 8,
+    "media_nota_produto": 5.0,
+    "media_nota_nps": 9.0,
+    "pct_recomenda": 92.0,
+    "total_tickets": 1,
+    "total_visualizacoes": 1,
+    "flag_alto_ticket": False,
 }
 
 @pytest.fixture
 def mock_pedido():
     return {
-  "id_pedido": "123-213-123",
-  "id_cliente": "1231241335123123123",
-  "id_produto": "1111111",
-  "nome_completo": "João Silva",
-  "email": "joao@silva.com",
-  "cidade": "string",
-  "estado": "string",
-  "data_pedido": "2026-05-11",
-  "valor_pedido": 0,
-  "quantidade": 0,
-  "status": "string",
-  "metodo_pagamento": "string"
-    }
+        "id_pedido": "123-213-123",
+        "id_cliente": "1231241335123123123",
+        "id_produto": "1111111",
+        "nome_completo": "João Silva",
+        "email": "joao@silva.com",
+        "cidade": "Recife",
+        "estado": "PE",
+        "data_pedido": "2026-05-11",
+        "valor_pedido": 1200,
+        "quantidade": 3,
+        "status": "criado",
+        "metodo_pagamento": "pix",
+}
 
 @pytest.fixture
 def mock_ticket():
     return {
-  "id_ticket": "111-222-333",
-  "id_cliente": "1231241335123123123",
-  "nome_cliente": "João Silva",
-  "tipo_problema": "Técnico",
-  "status_ticket": "aberto",
-  "data_abertura": "2026-05-11",
-  "agente_suporte": "string",
-  "nome_produto": "Celular",
-  "categoria_produto": "Eletronico",
-  "valor_pedido": 1200,
-  "total_pedidos_cliente": 2,
-  "receita_total_cliente": 1800
-}
+        "id_ticket": "111-222-333",
+        "id_cliente": "1231241335123123123",
+        "nome_cliente": "João Silva",
+        "tipo_problema": "produto",
+        "status_ticket": "aberto",
+        "data_abertura": "2026-05-11",
+        "agente_suporte": "Carlos Souza",
+        "nome_produto": "Celular",
+        "categoria_produto": "Eletronico",
+        "valor_pedido": 1200,
+        "total_pedidos_cliente": 2,
+        "receita_total_cliente": 1800
+    }

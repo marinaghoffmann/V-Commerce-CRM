@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle, Search } from "lucide-react";
 
 import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
@@ -262,7 +262,6 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     setSaving(true);
     try {
       const body = {
-        id_produto: form.id_produto.trim(),
         nome_produto: form.nome_produto.trim(),
         categoria: form.categoria.trim(),
         preco: Number(form.preco),
@@ -295,7 +294,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
           </div>
           <div className="text-center">
             <p className="text-base font-semibold text-gray-800" style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}>
-              Suas edições foram salvas com sucesso!
+              {isEdit ? "Suas edições foram salvas com sucesso!" : "Produto adicionado com sucesso!"}
             </p>
           </div>
         </div>
@@ -413,10 +412,15 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
         >
           {saving ? (
             "Salvando..."
-          ) : (
+          ) : isEdit ? (
             <>
               <Check size={15} strokeWidth={2.5} />
               Salvar edições
+            </>
+          ) : (
+            <>
+              <Plus size={15} strokeWidth={2.5} />
+              Adicionar
             </>
           )}
         </button>
@@ -588,9 +592,27 @@ export default function ProductsPage() {
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<string[]>([]);
   const [formModal, setFormModal] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null });
   const [deleteModal, setDeleteModal] = useState<Product | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [searchCommitted, setSearchCommitted] = useState<string>("");
+
+  function handleSearch() {
+    setSearchCommitted(searchInput.trim());
+    setPage(1);
+  }
+
+  function handleClearSearch() {
+    setSearchInput("");
+    setSearchCommitted("");
+    setPage(1);
+  }
 
   const { data: products, loading, error, page, setPage, limit, setLimit, refetch, addProduct, editProduct, deleteProduct } =
-    useProducts({ page: 1, limit: 12, categorias: categoriasSelecionadas });
+    useProducts({
+      page: 1,
+      limit: 12,
+      categorias: categoriasSelecionadas,
+      nome_produto: searchCommitted || null,
+    });
 
   const availableCategories = useMemo(() => {
     const predefined = Object.keys(CATEGORY_COLORS);
@@ -636,7 +658,35 @@ export default function ProductsPage() {
           </button>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Barra de pesquisa */}
+          <div className="relative flex-1 max-w-sm">
+            <button
+              onClick={handleSearch}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+            >
+              <Search size={16} />
+            </button>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+              placeholder="Pesquisar por nome do produto"
+              className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm text-gray-800 outline-none transition-all focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 shadow-sm"
+              style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}
+            />
+            {searchInput && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Filtro de categorias */}
           <CategoryFilter
             availableCategories={availableCategories}
             selected={categoriasSelecionadas}

@@ -1,13 +1,17 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 
-from app.schemas.pedidos import PedidoClienteSchemaRead, PedidoClienteCreateSchema, PedidoClienteUpdateSchema
+from app.schemas.pedidos import PedidoClienteSchemaRead, PedidoClienteCreateSchema, PedidoClienteUpdateSchema, TotalPedidosComTicketsSchema
 from app.models.pedido import Pedido as Pedidos
 from app.models.cliente import Cliente
 from app.models.produto import Produto
+from app.models.ticket import Ticket
+from sqlalchemy import func, extract
 
 router = APIRouter(
     prefix="/pedidos_cliente",
@@ -35,63 +39,35 @@ def get_pedido_cliente(
             Pedidos.data_pedido,
             Produto.nome_produto,
             Produto.categoria,
-            Cliente.nome,
-            Cliente.sobrenome,
+            Pedidos.nome_completo,
         )
-        .join(
-            Cliente,
-            Pedidos.id_cliente == Cliente.id_cliente,
-        )
-        .join(
-            Produto,
-            Pedidos.id_produto == Produto.id_produto,
-        )
+        .join(Produto, Pedidos.id_produto == Produto.id_produto)
+        .join(Cliente, Pedidos.id_cliente == Cliente.id_cliente)
     )
 
-    filters = []
-
-    if nome_produto:
-        filters.append(
-            Produto.nome_produto.ilike(f"%{nome_produto}%")
-        )
-
-    if categoria_produto:
-        filters.append(
-            Produto.categoria.ilike(f"%{categoria_produto}%")
-        )
-
-    if status:
-        filters.append(
-            Pedidos.status.ilike(f"%{status}%")
-        )
-
-    if metodo_pagamento:
-        filters.append(
-            Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%")
-        )
-
     if nome_cliente:
-        filters.append(
-            or_(
-                Cliente.nome.ilike(f"%{nome_cliente}%"),
-                Cliente.sobrenome.ilike(f"%{nome_cliente}%"),
-            )
-        )
+        query = query.filter(Pedidos.nome_completo.ilike(f"%{nome_cliente}%"))
+    if nome_produto:
+        query = query.filter(Produto.nome_produto.ilike(f"%{nome_produto}%"))
+    if categoria_produto:
+        query = query.filter(Produto.categoria.ilike(f"%{categoria_produto}%"))
+    if status:
+        query = query.filter(Pedidos.status.ilike(f"%{status}%"))
+    if metodo_pagamento:
+        query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
 
-    query = (
+    rows = (
         query
-        .filter(*filters)
         .order_by(Pedidos.data_pedido.desc())
         .offset(offset)
         .limit(limit)
+        .all()
     )
-
-    rows = query.all()
 
     return [
         PedidoClienteSchemaRead(
             id_pedido=row.id_pedido,
-            nome_cliente=f"{row.nome} {row.sobrenome}",
+            nome_cliente=row.nome_completo,
             nome_produto=row.nome_produto,
             categoria_produto=row.categoria,
             status=row.status,
@@ -102,6 +78,46 @@ def get_pedido_cliente(
         )
         for row in rows
     ]
+
+@router.get("/total-com-tickets", status_code=status.HTTP_200_OK, response_model=TotalPedidosComTicketsSchema)
+def get_total_pedidos_com_tickets(
+    db: Session = Depends(get_db),
+    ano: int | None = None,
+    mes: int | None = None,
+):
+    hoje = date.today()
+    ano = ano or hoje.year
+    mes = mes or hoje.month
+
+    filtros_pedido = [
+        extract("year", Pedidos.data_pedido) == ano,
+        extract("month", Pedidos.data_pedido) == mes,
+    ]
+    filtros_ticket = [
+        extract("year", Ticket.data_abertura) == ano,
+        extract("month", Ticket.data_abertura) == mes,
+    ]
+
+    total_pedidos = (
+        db.query(func.count(Pedidos.id_pedido))
+        .filter(*filtros_pedido)
+        .scalar()
+    )
+
+    tickets_entrega = (
+        db.query(func.count(Ticket.id_ticket))
+        .join(Pedidos, Ticket.id_pedido == Pedidos.id_pedido)
+        .filter(Ticket.tipo_problema == "entrega", *filtros_ticket)
+        .scalar()
+    )
+
+    return {
+        "ano": ano,
+        "mes": mes,
+        "total_pedidos": total_pedidos,
+        "entrega_atrasada": tickets_entrega,
+        "entrega_no_prazo": total_pedidos - tickets_entrega,
+    }
 
 @router.post("/", response_model=PedidoClienteSchemaRead, status_code=status.HTTP_201_CREATED)
 def create_pedido_cliente(pedido: PedidoClienteCreateSchema, db: Session = Depends(get_db)):
