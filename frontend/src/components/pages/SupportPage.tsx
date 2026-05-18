@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, TicketX, CheckCircle } from "lucide-react";
 import { TicketRow } from "../molecules/TicketRow";
 import { useTickets } from "../../hooks/useTickets";
+import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 
 const STATUS_FILTERS = ["Todos", "aberto", "fechado"];
 
@@ -97,22 +98,25 @@ export default function SuportePage() {
         </div>
 
         {/* Lista de tickets */}
-        <div className="flex flex-col divide-y divide-[#E2E8F0] bg-white border border-gray-200 rounded-2xl px-2 mb-6">
-          {loading && (
-            <div className="py-10 text-center text-sm text-gray-400">Carregando tickets...</div>
-          )}
-          {error && (
-            <div className="py-10 text-center text-sm text-red-400">
-              Erro ao carregar tickets: {error}
-            </div>
-          )}
-          {!loading && !error && tickets.length === 0 && (
-            <div className="py-10 text-center text-sm text-gray-400">Nenhum ticket encontrado.</div>
-          )}
-          {!loading && tickets.map((ticket) => (
-            <TicketRow key={ticket.id_ticket} ticket={ticket} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="mb-6">
+            <TableSkeletonLoader rowCount={limit} cellCount={5} />
+          </div>
+        ) : (
+          <div className="flex flex-col divide-y divide-[#E2E8F0] bg-white border border-gray-200 rounded-2xl px-2 mb-6">
+            {error && (
+              <div className="py-10 text-center text-sm text-red-400">
+                Erro ao carregar tickets: {error}
+              </div>
+            )}
+            {!error && tickets.length === 0 && (
+              <div className="py-10 text-center text-sm text-gray-400">Nenhum ticket encontrado.</div>
+            )}
+            {!error && tickets.map((ticket) => (
+              <TicketRow key={ticket.id_ticket} ticket={ticket} />
+            ))}
+          </div>
+        )}
 
         {/* Paginação */}
         {!loading && tickets.length > 0 && (
