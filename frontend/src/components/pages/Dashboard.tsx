@@ -8,20 +8,20 @@ import {
   RotateCcw,
   Clock3,
   Package,
-} 
-from "lucide-react"; import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  BarElement,
-  Tooltip,
-  Legend,
-  Filler,
-} 
-from "chart.js";
+}
+  from "lucide-react"; import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    ArcElement,
+    BarElement,
+    Tooltip,
+    Legend,
+    Filler,
+  }
+  from "chart.js";
 
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import type { KpiStatusItem } from "../../components/types/dashboard.types";
@@ -234,27 +234,27 @@ function Dashboard() {
   const noPrazoPercent = totalEntregas > 0 ? Math.round(((mesAtualTicket?.entrega_no_prazo ?? 0) / totalEntregas) * 100) : 0;
   const atrasadoPercent = totalEntregas > 0 ? Math.round(((mesAtualTicket?.entrega_atrasada ?? 0) / totalEntregas) * 100) : 0;
 
-const noPrazo = mesAtualTicket?.entrega_no_prazo ?? 0;
-const atrasado = mesAtualTicket?.entrega_atrasada ?? 0;
+  const noPrazo = mesAtualTicket?.entrega_no_prazo ?? 0;
+  const atrasado = mesAtualTicket?.entrega_atrasada ?? 0;
 
-const semDados = noPrazo + atrasado === 0;
+  const semDados = noPrazo + atrasado === 0;
 
-const entregaData = {
-  labels: ["No prazo", "Atrasado"],
-  datasets: [
-    {
-      data:
-      semDados? [1] 
-      : [noPrazo, atrasado],
-      backgroundColor: semDados
-        ? ["#95959543", "#95959543"]
-        : ["#5CA860", "#F47B20"],
-      borderColor: "#ffffff",
-      borderWidth: 2,
-      cutout: "70%",
-    },
-  ],
-};
+  const entregaData = {
+    labels: ["No prazo", "Atrasado"],
+    datasets: [
+      {
+        data:
+          semDados ? [1]
+            : [noPrazo, atrasado],
+        backgroundColor: semDados
+          ? ["#95959543", "#95959543"]
+          : ["#5CA860", "#F47B20"],
+        borderColor: "#ffffff",
+        borderWidth: 2,
+        cutout: "70%",
+      },
+    ],
+  };
 
   const pluginTextoCentralRosca = {
     id: "textoCentralRosca",
@@ -319,8 +319,36 @@ const entregaData = {
         </div>
 
         {loading ? (
-          <div className="p-10 text-lg font-medium text-center text-gray-500 bg-white rounded-2xl border-2 border-black/10">
-            Carregando dashboard...
+          <div className="flex flex-col gap-6">
+            {/* KPI cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array(3).fill(null).map((_, i) => (
+                <div key={i} className="bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+                  <div className="h-4 w-2/5 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-8 w-3/5 bg-gray-300 rounded animate-pulse" />
+                  <div className="h-3 w-2/5 bg-gray-200 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+            {/* Line chart skeleton */}
+            <div className="bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <div className="h-5 w-1/3 bg-gray-200 rounded animate-pulse" />
+              <div className="h-[350px] bg-gray-100 rounded-xl animate-pulse" />
+            </div>
+            {/* Bar chart skeleton */}
+            <div className="bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+              <div className="h-5 w-1/2 bg-gray-200 rounded animate-pulse" />
+              <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
+            </div>
+            {/* Bottom charts skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array(2).fill(null).map((_, i) => (
+                <div key={i} className="bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+                  <div className="h-5 w-2/5 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : error ? (
           <div className="p-10 text-red-500 bg-white rounded-2xl border-2 border-red-200">
@@ -372,7 +400,7 @@ const entregaData = {
                     plugins: { legend: { display: false } },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: true, grid: { color: "#F3F4F6" }, border: { display: false } },
+                      y: { beginAtZero: true, grid: { color: "#F3F4F6" }, border: { display: false }, suggestedMax: 35000000 },
                     },
                   }}
                 />
