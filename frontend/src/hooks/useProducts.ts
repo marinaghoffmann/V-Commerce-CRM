@@ -16,8 +16,10 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
   const [page, setPage] = useState<number>(initArgs.page ?? 1);
   const [limit, setLimit] = useState<number>(initArgs.limit ?? 12);
   const categoriasRef = useRef<string[]>(initArgs.categorias ?? []);
+  const nomeProdutoRef = useRef<string | null | undefined>(initArgs.nome_produto);
 
   categoriasRef.current = initArgs.categorias ?? [];
+  nomeProdutoRef.current = initArgs.nome_produto;
 
   const fetchProducts = useCallback(async (args?: UseProductsArgs) => {
     setLoading(true);
@@ -41,11 +43,16 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
   }, [page, limit]);
 
   useEffect(() => {
-    fetchProducts({ page, limit, categorias: categoriasRef.current });
-  }, [fetchProducts, page, limit, initArgs.categorias?.join(",")]);
+    fetchProducts({
+      page,
+      limit,
+      categorias: categoriasRef.current,
+      nome_produto: nomeProdutoRef.current,
+    });
+  }, [fetchProducts, page, limit, initArgs.categorias?.join(","), initArgs.nome_produto]);
 
   const refetch = useCallback(
-    () => fetchProducts({ page, limit, categorias: categoriasRef.current }),
+    () => fetchProducts({ page, limit, categorias: categoriasRef.current, nome_produto: nomeProdutoRef.current }),
     [fetchProducts, page, limit]
   );
 
