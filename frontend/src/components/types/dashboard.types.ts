@@ -8,7 +8,26 @@ export interface KpiStatusItem {
   total_pedidos: number;
   total_clientes_unicos: number;
 }
-
+export interface KpiStateItem{
+  id: string;
+  ano_venda: number;
+  mes_venda: number;
+  estado: string;
+  receita_total: number;
+  ticket_medio: number;
+  total_pedidos: number;
+  total_clientes_unicos: number;
+}
+export interface KpiCategoryItem{
+  id: string;
+  ano_venda: number;
+  mes_venda: number;
+  categoria: string;
+  receita_total: number;
+  ticket_medio: number;
+  total_pedidos: number;
+  total_clientes_unicos: number;
+}
 export interface MonthlyKpiItem {
   ano: number;
   mes: number;
