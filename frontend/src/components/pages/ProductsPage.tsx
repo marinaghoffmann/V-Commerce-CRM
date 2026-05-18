@@ -5,6 +5,7 @@ import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
+import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -362,7 +363,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
               label="SKU"
               value={form.id_produto}
               onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
-              disabled = {true}
+              disabled={true}
             />
           )}
           <Field
@@ -697,16 +698,34 @@ export default function ProductsPage() {
           />
         </div>
 
-        <div className={loading ? "opacity-50 pointer-events-none" : ""}>
-          {!loading && products.length === 0 && (
-            <div className="py-20 text-center text-sm text-gray-400">Nenhum produto encontrado.</div>
+        <div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {Array(limit).fill(null).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                  <div className="h-40 bg-gray-200 rounded-xl animate-pulse" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-5 w-1/2 bg-gray-300 rounded animate-pulse" />
+                  <div className="flex gap-2 mt-auto">
+                    <div className="flex-1 h-8 bg-gray-200 rounded-xl animate-pulse" />
+                    <div className="flex-1 h-8 bg-gray-200 rounded-xl animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {products.length === 0 && (
+                <div className="py-20 text-center text-sm text-gray-400">Nenhum produto encontrado.</div>
+              )}
+              <ProductGrid
+                products={products as Product[]}
+                onEdit={openEdit}
+                onDelete={setDeleteModal}
+              />
+            </>
           )}
-
-          <ProductGrid
-            products={products as Product[]}
-            onEdit={openEdit}
-            onDelete={setDeleteModal}
-          />
 
           {products.length > 0 && (
             <div className="mt-6 flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-sm">
