@@ -126,8 +126,12 @@ function Dashboard() {
     return () => clearTimeout(timer);
   }, [selectedYear, selectedMonth]);
 
-  const { kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
-    page: 1, limit: 10, ano: debouncedYear, mes: debouncedMonth,
+  const { kpiData: kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
+    page: 1,
+    limit: 10,
+    ano: debouncedYear,
+    mes: debouncedMonth,
+    kpiType: "status",
   });
   const { data: monthlyData, loading: loadingMonthly, error: errorMonthly } =
     useMonthlyKpi(debouncedYear, debouncedMonth);
@@ -171,7 +175,8 @@ function Dashboard() {
   };
 
   // Status chart
-  const { labels, valores, colors } = transformarStatus(kpiStatus || []);
+  const statusData = (kpiStatus || []) as KpiStatusItem[];
+  const { labels, valores, colors } = transformarStatus(statusData);
   const totalPedidosStatus = valores.reduce((sum, v) => sum + v, 0);
   const porcentagensStatus = valores.map((v) =>
     totalPedidosStatus > 0 ? Number(((v / totalPedidosStatus) * 100).toFixed(2)) : 0
