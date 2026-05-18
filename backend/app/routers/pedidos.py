@@ -54,6 +54,7 @@ def get_pedido_cliente(
     if status:
         query = query.filter(Pedidos.status.ilike(f"%{status}%"))
     if metodo_pagamento:
+        metodo_pagamento = metodo_pagamento if metodo_pagamento != "Cartão" else "cartao"
         query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
 
     rows = (
