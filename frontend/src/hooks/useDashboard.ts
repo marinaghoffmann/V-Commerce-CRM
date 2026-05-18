@@ -1,12 +1,13 @@
 import api from "../services/api";
 import { useEffect, useState } from "react";
-import type { KpiStatusItem, MonthlyReviewProcessed, MonthlyTicketsProcessed } from "../components/types/dashboard.types";
+import type { KpiStatusItem, KpiStateItem, KpiCategoryItem, MonthlyReviewProcessed, MonthlyTicketsProcessed } from "../components/types/dashboard.types";
 
 interface UseKpiStatusArgs {
   page: number;
   limit: number;
   ano?: number;
   mes?: number;
+  kpiType: "status" | "state" | "category";
 }
 
 export function useKpiStatus({
@@ -14,8 +15,9 @@ export function useKpiStatus({
   limit,
   ano,
   mes,
+  kpiType,
 }: UseKpiStatusArgs) {
-  const [kpiStatus, setKpiStatus] = useState<KpiStatusItem[]>([]);
+  const [kpiData, setKpiData] = useState<KpiCategoryItem[] | KpiStateItem[] | KpiStatusItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,12 +39,12 @@ export function useKpiStatus({
     }
 
     api
-      .get(`/kpi-status?${params.toString()}`)
+      .get(`/kpi-${kpiType}?${params.toString()}`)
       .then((response) => {
-        setKpiStatus(response.data);
+        setKpiData(response.data);
       })
       .catch((err) => {
-        setKpiStatus([]);
+        setKpiData([]);
         setError(err.message ?? String(err));
       })
       .finally(() => {
@@ -51,7 +53,7 @@ export function useKpiStatus({
   }, [page, limit, ano, mes]);
 
   return {
-    kpiStatus,
+    kpiData,
     loading,
     error,
   };
