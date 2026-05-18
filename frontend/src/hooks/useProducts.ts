@@ -62,7 +62,7 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
   }, []);
 
   const editProduct = useCallback(async (id_produto: string, productBody: Partial<Product>) => {
-    const res = await api.put(`/produto/${id_produto}`, productBody);
+    const res = await api.patch(`/produto/${id_produto}`, productBody);
     return res.data;
   }, []);
 
