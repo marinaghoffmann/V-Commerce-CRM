@@ -6,7 +6,7 @@ from sqlalchemy import distinct, func
 
 from app.database import get_db
 from app.models.produto import Produto
-from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema, ProdutoSchemaRead
+from app.schemas.produto import ProdutoSchema, ProdutoCreateSchema, ProdutoSchemaRead, ProdutoUpdateSchema
 
 router = APIRouter(prefix="/produto", tags=["Produto"])
 
@@ -45,7 +45,7 @@ def list_produto(
     return query.all()
 
 
-@router.get("/{id_produto}", response_model=ProdutoSchema)
+@router.get("/{id_produto}", response_model=ProdutoSchemaRead)
 def get_produto(id_produto: str, db: Session = Depends(get_db)):
     produto = db.query(Produto).filter(Produto.id_produto == id_produto).first()
     if not produto:
@@ -78,20 +78,33 @@ def create_produto(payload: ProdutoCreateSchema, db: Session = Depends(get_db)):
     db.refresh(obj)
     return obj
 
+@router.patch("/{id_produto}", response_model=ProdutoSchema)
+def update_produto(
+    id_produto: str,
+    payload: ProdutoUpdateSchema,
+    db: Session = Depends(get_db)
+):
+    produto = (
+        db.query(Produto)
+        .filter(Produto.id_produto == id_produto)
+        .first()
+    )
 
-@router.put("/{id_produto}", response_model=ProdutoSchema)
-def update_produto(id_produto: str, payload: ProdutoSchema, db: Session = Depends(get_db)):
-    produto = db.query(Produto).filter(Produto.id_produto == id_produto).first()
     if not produto:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
-    data = payload.model_dump()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produto não encontrado"
+        )
+
+    data = payload.model_dump(exclude_unset=True)
+
     for key, value in data.items():
         setattr(produto, key, value)
-    db.add(produto)
+
     db.commit()
     db.refresh(produto)
-    return produto
 
+    return produto
 
 @router.delete("/{id_produto}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_produto(id_produto: str, db: Session = Depends(get_db)):
