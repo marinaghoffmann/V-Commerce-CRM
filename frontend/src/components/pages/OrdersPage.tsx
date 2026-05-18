@@ -45,7 +45,7 @@ const columns = [
   { 
     key: "metodo_pagamento",  
     label: "Pagamento",
-    render: (value: string) => <span className="capitalize">{value}</span>
+    render: (value: string) => <span className="capitalize">{value?.toLowerCase() === "cartao" ? "cartão" : value}</span>
   },
   { 
     key: "valor_pedido",      
@@ -84,13 +84,17 @@ export const OrdersPage = () => {
     activeFilter
   });
 
-      useEffect(() => {
-        const timer = setTimeout(() => {
-          setSearch(searchInput);
-          setPage(1);
-        }, 500);
-        return () => clearTimeout(timer);
-      }, [searchInput]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      let finalSearch = searchInput;
+      if (searchField === "metodo_pagamento" && finalSearch.toLowerCase().includes("cartão")) {
+        finalSearch = finalSearch.replace(/cartão/gi, "cartao");
+      }
+      setSearch(finalSearch);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput, searchField]);
 
   const handleExportCSV = async () => {
     try {
