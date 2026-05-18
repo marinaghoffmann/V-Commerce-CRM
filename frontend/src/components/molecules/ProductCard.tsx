@@ -63,7 +63,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
 
       {/* Preço e avaliação */}
       <div>
-        <div className="text-xl font-bold text-gray-900">{formatCurrency(product.preco)}</div>
+        <div className="text-xl font-bold text-gray-900">{product.preco != null ? formatCurrency(product.preco) : "Não informado"}</div>
         <div className="flex items-center gap-2 mt-1">
           <StarRating value={product.media_nota_produto ?? 0} />
           <span className="text-xs text-gray-400">
