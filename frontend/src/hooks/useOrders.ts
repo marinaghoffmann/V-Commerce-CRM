@@ -31,16 +31,25 @@ export function useOrders({ page, pageSize, search, searchField, activeFilter }:
         const res = await api.get(`/pedidos_cliente?${params.toString()}`);
         const data = res.data;
         const items = Array.isArray(data) ? data : data.items ?? data.data ?? [];
-        
+
         setPedidos(items);
-        if (data.total) setTotal(data.total);
+        if (Array.isArray(data)) {
+          // API não retorna total — estimamos pelo resultado
+          if (items.length < pageSize) {
+            setTotal((page - 1) * pageSize + items.length);
+          } else {
+            setTotal((page - 1) * pageSize + items.length + 1);
+          }
+        } else if (data.total) {
+          setTotal(data.total);
+        }
       } catch (err) {
         console.error("Erro ao buscar pedidos:", err);
       } finally {
         setIsFetching(false);
       }
     };
-    
+
     fetchPedidos();
   }, [page, pageSize, search, searchField, activeFilter]);
 
