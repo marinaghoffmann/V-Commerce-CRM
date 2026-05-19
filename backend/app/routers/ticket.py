@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ticket import Ticket
 from app.models.cliente import Cliente
+from app.models.pedido import Pedido
 from app.schemas.ticket import TicketCreateSchema, TicketSchemaRead, TicketUpdateSchema
 
 router = APIRouter(prefix="/ticket", tags=["Ticket"])
@@ -18,20 +19,12 @@ def get_kpis(
     mes: int | None = None,
     ano: int | None = None,
 ):
-    rows = (
-        db.query(Ticket.status_ticket, func.count(Ticket.id_ticket))
-        .group_by(Ticket.status_ticket)
-        .all()
-    )
-    kpis = {s: c for s, c in rows}
-
     if mes and ano:
         m = str(mes).zfill(2)
         a = str(ano)
     else:
         ultima_data = (
-            db.query(func.max(Ticket.data_resolucao))
-            .filter(Ticket.status_ticket == "fechado")
+            db.query(func.max(Ticket.data_abertura))
             .scalar()
         )
         if ultima_data:
@@ -39,6 +32,19 @@ def get_kpis(
             a = ultima_data[:4]
         else:
             m, a = "01", "1970"
+
+    filtro_periodo = [
+        func.strftime("%m", Ticket.data_abertura) == m,
+        func.strftime("%Y", Ticket.data_abertura) == a,
+    ]
+
+    rows = (
+        db.query(Ticket.status_ticket, func.count(Ticket.id_ticket))
+        .filter(*filtro_periodo)
+        .group_by(Ticket.status_ticket)
+        .all()
+    )
+    kpis = {s: c for s, c in rows}
 
     fechados_mes = (
         db.query(func.count(Ticket.id_ticket))
@@ -117,6 +123,9 @@ def create_ticket(payload: TicketCreateSchema, db: Session = Depends(get_db)):
 
     if not db.query(Cliente).filter(Cliente.id_cliente == payload.id_cliente).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
+    
+    if not db.query(Pedido).filter(Pedido.id_pedido == payload.id_pedido).first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
 
     obj = Ticket(**payload.model_dump())
     db.add(obj)
@@ -130,6 +139,13 @@ def update_ticket(id_ticket: str, payload: TicketUpdateSchema, db: Session = Dep
     ticket = db.query(Ticket).filter(Ticket.id_ticket == id_ticket).first()
     if not ticket:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket não encontrado")
+
+    if not db.query(Cliente).filter(Cliente.id_cliente == ticket.id_cliente).first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
+    
+    if not db.query(Pedido).filter(Pedido.id_pedido == ticket.id_pedido).first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
+
 
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(ticket, key, value)

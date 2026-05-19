@@ -8,6 +8,8 @@ export interface Product {
   receita_total: number | null;
   media_nota_produto: number | null;
   total_avaliacoes: number | null;
+  indicador_crescimento: number | 0;
+  flag_alto_ticket: boolean | false;
 }
 
 export type ProductListResponse = Product[];

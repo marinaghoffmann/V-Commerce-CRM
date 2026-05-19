@@ -5,6 +5,7 @@ import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
+import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,8 @@ function getCategoryColor(cat: string) {
 }
 
 // ─── Shared Modal Shell ─────────────────────────────────────────────────────────
+
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
   return (
@@ -72,10 +75,12 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => { setDraft(selected); }, [selected]);
+  useEffect(() => {
+    setDraft(selected);
+  }, [selected]);
 
   function toggle(cat: string) {
-    setDraft((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
+    setDraft((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
   }
 
   function handleApply() {
@@ -86,83 +91,152 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
   const hasActive = selected.length > 0;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <div ref={ref} className="relative">
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer
-            ${hasActive
-              ? "bg-blue-500 border-blue-500 text-white font-semibold"
-              : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`flex items-center justify-between gap-2 px-5 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
+            ${
+              open || hasActive
+                ? "bg-white border-blue-500 text-gray-800"
+                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
             }`}
-        >
-          Categoria
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
+      >
+        <span className="font-medium">Categoria</span>
+        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
 
-        {open && (
-          <div className="absolute top-full left-0 mt-2 w-60 bg-white rounded-2xl border border-gray-100 shadow-xl z-40 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-700">Categorias</span>
-              {draft.length > 0 && (
-                <button onClick={() => setDraft([])} className="text-xs text-blue-500 hover:underline cursor-pointer">
-                  Limpar
-                </button>
-              )}
-            </div>
-
-            <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
-              {availableCategories.map((cat) => {
-                const color = getCategoryColor(cat);
-                const checked = draft.includes(cat);
-                return (
-                  <label
-                    key={cat}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+      {open && (
+        <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-2xl border border-gray-100 shadow-xl z-40 overflow-hidden py-3">
+          <div className="flex flex-col gap-1 max-h-64 overflow-y-auto px-1">
+            {availableCategories.map((cat) => {
+              const checked = draft.includes(cat);
+              return (
+                <label
+                  key={cat}
+                  className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors rounded-xl"
+                >
+                  <div
+                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                      checked ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300 bg-white"
+                    }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggle(cat)}
-                      className="w-4 h-4 rounded accent-blue-500"
-                    />
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${color.bg} ${color.border} ${color.text}`}>
-                      {cat}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-
-            <div className="px-4 py-3 border-t border-gray-100">
-              <button
-                onClick={handleApply}
-                className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
-              >
-                Aplicar filtro
-              </button>
-            </div>
+                    {checked && <Check size={12} strokeWidth={3} />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(cat)}
+                    className="hidden"
+                  />
+                  <span
+                    className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${getCategoryColor(cat).bg} ${
+                      getCategoryColor(cat).border
+                    } ${getCategoryColor(cat).text}`}
+                  >
+                    {cat}
+                  </span>
+                </label>
+              );
+            })}
           </div>
-        )}
-      </div>
 
-      {selected.map((cat) => {
-        const color = getCategoryColor(cat);
-        return (
-          <span
-            key={cat}
-            className={`flex items-center gap-1.5 pl-2.5 pr-2 py-1.5 rounded-full text-xs font-medium border ${color.bg} ${color.border} ${color.text}`}
-          >
-            {cat}
+          <div className="px-3 pt-3 mt-2 border-t border-gray-100">
             <button
-              onClick={() => onApply(selected.filter((c) => c !== cat))}
-              className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
+              onClick={handleApply}
+              className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
-              <X size={10} />
+              Aplicar filtro
             </button>
-          </span>
-        );
-      })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── OrderFilter ─────────────────────────────────────────────────────────────
+
+interface OrderOption {
+  label: string;
+  value: string; // "coluna:direcao"
+  icon: typeof ArrowUp;
+}
+
+const ORDER_OPTIONS: OrderOption[] = [
+  { label: "Mais vendido", value: "unidades_vendidas:desc", icon: ArrowUp },
+  { label: "Menos vendido", value: "unidades_vendidas:asc", icon: ArrowDown },
+  { label: "Maior preço", value: "preco:desc", icon: ArrowUp },
+  { label: "Menor preço", value: "preco:asc", icon: ArrowDown },
+  { label: "Maior avaliação", value: "media_nota_produto:desc", icon: ArrowUp },
+  { label: "Menor avaliação", value: "media_nota_produto:asc", icon: ArrowDown },
+  { label: "Maior receita", value: "receita_total:desc", icon: ArrowUp },
+  { label: "Menor receita", value: "receita_total:asc", icon: ArrowDown },
+  { label: "Maior estoque", value: "estoque_disponivel:desc", icon: ArrowUp },
+  { label: "Menor estoque", value: "estoque_disponivel:asc", icon: ArrowDown },
+];
+
+function OrderFilter({ selected, onSelect }: { selected: string | null; onSelect: (val: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selectedOption = ORDER_OPTIONS.find((o) => o.value === selected);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`flex items-center justify-between gap-2 px-5 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
+            ${
+              open || selected
+                ? "bg-white border-blue-500 text-gray-800"
+                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+      >
+        <span className="font-medium truncate">{selectedOption ? selectedOption.label : "Ordenar por"}</span>
+        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
+
+      {open && (
+        <div className="absolute top-full right-0 mt-2 w-[480px] bg-white rounded-2xl border border-gray-100 shadow-xl z-40 overflow-hidden py-3">
+          <div className="grid grid-cols-2 divide-x divide-gray-100 max-h-[400px] overflow-y-auto">
+            {ORDER_OPTIONS.map((opt) => {
+              const isSelected = selected === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    onSelect(opt.value);
+                    setOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                      isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center text-gray-400">
+                      <opt.icon size={12} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{opt.label}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -251,8 +325,8 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     if (!form.categoria.trim()) e.categoria = "Categoria obrigatória";
     if (!form.preco || isNaN(Number(form.preco)) || Number(form.preco) < 0)
       e.preco = "Preço inválido";
-    if (form.estoque_disponivel && isNaN(Number(form.estoque_disponivel)))
-      e.estoque_disponivel = "Estoque inválido";
+    if (form.estoque_disponivel && isNaN(Number(form.estoque_disponivel)) || Number(form.estoque_disponivel) < 0)
+        e.estoque_disponivel = "Estoque inválido";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -362,7 +436,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
               label="SKU"
               value={form.id_produto}
               onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
-              disabled = {true}
+              disabled={true}
             />
           )}
           <Field
@@ -590,6 +664,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
 
 export default function ProductsPage() {
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<string[]>([]);
+  const [ordemSelecionada, setOrdemSelecionada] = useState<string | null>(null);
   const [formModal, setFormModal] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null });
   const [deleteModal, setDeleteModal] = useState<Product | null>(null);
   const [searchInput, setSearchInput] = useState<string>("");
@@ -612,6 +687,7 @@ export default function ProductsPage() {
       limit: 12,
       categorias: categoriasSelecionadas,
       nome_produto: searchCommitted || null,
+      ordem: ordemSelecionada,
     });
 
   const availableCategories = useMemo(() => {
@@ -654,13 +730,13 @@ export default function ProductsPage() {
             className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm cursor-pointer"
           >
             <Plus size={16} />
-            Novo produto
+            Adicionar produto
           </button>
         </div>
 
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           {/* Barra de pesquisa */}
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1">
             <button
               onClick={handleSearch}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
@@ -670,10 +746,17 @@ export default function ProductsPage() {
             <input
               type="text"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSearchInput(v);
+                setSearchCommitted(v.trim());
+                setPage(1);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
               placeholder="Pesquisar por nome do produto"
-              className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm text-gray-800 outline-none transition-all focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 shadow-sm"
+              className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm text-gray-800 outline-none transition-all focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 shadow-sm"
               style={{ fontFamily: "'Inter', 'Roboto', sans-serif" }}
             />
             {searchInput && (
@@ -686,6 +769,15 @@ export default function ProductsPage() {
             )}
           </div>
 
+          {/* Ordenação */}
+          <OrderFilter
+            selected={ordemSelecionada}
+            onSelect={(val) => {
+              setOrdemSelecionada(val);
+              setPage(1);
+            }}
+          />
+
           {/* Filtro de categorias */}
           <CategoryFilter
             availableCategories={availableCategories}
@@ -697,40 +789,75 @@ export default function ProductsPage() {
           />
         </div>
 
-        <div className={loading ? "opacity-50 pointer-events-none" : ""}>
-          {!loading && products.length === 0 && (
-            <div className="py-20 text-center text-sm text-gray-400">Nenhum produto encontrado.</div>
+        <div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {Array(limit).fill(null).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                  <div className="h-40 bg-gray-200 rounded-xl animate-pulse" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-5 w-1/2 bg-gray-300 rounded animate-pulse" />
+                  <div className="flex gap-2 mt-auto">
+                    <div className="flex-1 h-8 bg-gray-200 rounded-xl animate-pulse" />
+                    <div className="flex-1 h-8 bg-gray-200 rounded-xl animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {products.length === 0 && (
+                <div className="py-20 text-center text-sm text-gray-400">Nenhum produto encontrado.</div>
+              )}
+              <ProductGrid
+                products={products as Product[]}
+                onEdit={openEdit}
+                onDelete={setDeleteModal}
+              />
+            </>
           )}
-
-          <ProductGrid
-            products={products as Product[]}
-            onEdit={openEdit}
-            onDelete={setDeleteModal}
-          />
 
           {products.length > 0 && (
             <div className="mt-6 flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-sm">
               <span className="text-xs text-gray-400">
-                {`${(page - 1) * limit + 1}–${(page - 1) * limit + products.length}`}
+                {`Mostrando ${String((page - 1) * limit + 1).padStart(2, "0")} a ${String((page - 1) * limit + products.length).padStart(2, "0")} resultados`}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={15} />
                 </button>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500 text-xs font-semibold text-white">
-                  {page}
-                </span>
+
+                {Array.from({ length: 5 }, (_, i) => {
+                  const start = Math.max(1, page - 2);
+                  return start + i;
+                }).filter((n) => products.length === limit || n <= page).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setPage(n)}
+                    className={[
+                      "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
+                      page === n
+                        ? "border-2 border-blue-500 text-blue-600 bg-white"
+                        : "text-gray-400 hover:bg-gray-100",
+                    ].join(" ")}
+                  >
+                    {n}
+                  </button>
+                ))}
+
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={products.length < limit}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={15} />
                 </button>
+
                 <div className="ml-2">
                   <PageSizeSelect
                     value={limit}

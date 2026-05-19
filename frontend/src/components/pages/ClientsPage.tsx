@@ -4,6 +4,9 @@ import { ChevronLeft, ChevronRight, Upload, Search, ChevronDown } from "lucide-r
 import { exportCSV } from "../../utils/exportCSV";
 import api from "../../services/api";
 import { useClientes } from "../../hooks/useClientes";
+import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
+import { PageSizeSelect } from "../atoms/PageSizeSelect";
+import { ExportCSVModal } from "../molecules/ExportCSVModal";
 
 function getInitials(nome: string, sobrenome: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -31,7 +34,8 @@ function Clients() {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+  const [showExportModal, setShowExportModal] = useState(false);
   const navigate = useNavigate();
 
   const { clientes, total, loading } = useClientes({ busca, status, page, limit });
@@ -57,6 +61,8 @@ function Clients() {
       exportCSV(res.data, "clientes");
     } catch (err) {
       console.error("Erro ao exportar clientes:", err);
+    } finally {
+      setShowExportModal(false);
     }
   };
 
@@ -77,13 +83,19 @@ function Clients() {
           </p>
         </div>
         <button
-          onClick={handleExportCSV}
+          onClick={() => setShowExportModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
         >
           <Upload size={16} />
           Exportar CSV
         </button>
         </div>
+
+        <ExportCSVModal
+          isOpen={showExportModal}
+          onCancel={() => setShowExportModal(false)}
+          onConfirm={handleExportCSV}
+        />
 
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1">
@@ -116,100 +128,114 @@ function Clients() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full" style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr className="border-b border-gray-100 bg-blue-50">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Cliente</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Segmento</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Pedidos</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">LTV</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Ticket Médio</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Último Pedido</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((c) => (
-                <tr
-                  key={c.id_cliente}
-                  onClick={() => navigate(`/clientes/${c.id_cliente}`)}
-                  className="border-b border-gray-50 last:border-b-0 cursor-pointer transition-colors duration-150 hover:bg-blue-50/40"
-                >
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${getAvatarColor(c.nome)}`}>
-                        {getInitials(c.nome, c.sobrenome)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-800 text-sm">{c.nome} {c.sobrenome}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">{c.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getSegmentStyle(c.segmento_cliente)}`}>
-                      {c.segmento_cliente}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 text-center">{c.total_compras}</td>
-                  <td className="px-6 py-4 text-sm text-center font-semibold text-blue-600">
-                    R$ {c.receita_total_cliente?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 text-center">
-                    R$ {c.ticket_medio?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-400 text-xs">{c.data_ultima_compra}</td>
+        {loading ? (
+          <TableSkeletonLoader rowCount={limit} cellCount={6} />
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div style={{ maxHeight: 550 }} className="overflow-y-auto">
+              <table className="w-full" style={{ borderCollapse: "collapse" }}>
+                <thead className="sticky top-0 z-10 bg-blue-50">
+                  <tr className="border-b border-gray-100">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Cliente</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Segmento</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Pedidos</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">LTV</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Ticket Médio</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Último Pedido</th>
                 </tr>
-              ))}
-              {clientes.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="text-center py-16 text-gray-400 text-sm">
-                    Nenhum cliente encontrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {clientes.map((c) => (
+                  <tr
+                    key={c.id_cliente}
+                    onClick={() => navigate(`/clientes/${c.id_cliente}`)}
+                    className="border-b border-gray-50 last:border-b-0 cursor-pointer transition-colors duration-150 hover:bg-blue-50/40"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${getAvatarColor(c.nome)}`}>
+                          {getInitials(c.nome, c.sobrenome)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-800 text-sm">{c.nome} {c.sobrenome}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">{c.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getSegmentStyle(c.segmento_cliente)}`}>
+                        {c.segmento_cliente}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 text-center">{c.total_compras}</td>
+                    <td className="px-6 py-4 text-sm text-center font-semibold text-blue-600">
+                      R$ {c.receita_total_cliente?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 text-center">
+                      R$ {c.ticket_medio?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 text-center text-gray-400 text-xs">
+                      {c.data_ultima_compra || "Indisponível"}
+                    </td>
+                  </tr>
+                ))}
+                {clientes.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-16 text-gray-400 text-sm">
+                      Nenhum cliente encontrado.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            </div>
 
-          <div className="mt-6 flex items-center justify-between px-6 pb-4">
-            <span className="text-xs text-gray-400">
-              Mostrando {String(inicio).padStart(2, "0")} a {String(fim).padStart(2, "0")} de {String(total).padStart(2, "0")} resultados
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-              >
-                <ChevronLeft size={15} />
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const start = Math.max(1, Math.min(page - 2, totalPages - 4));
-                return start + i;
-              }).map((n) => (
+            <div className="mt-6 flex items-center justify-between px-6 pb-4 border-t border-gray-100 pt-4">
+              <span className="text-xs text-gray-400">
+                Mostrando {String(inicio).padStart(2, "0")} a {String(fim).padStart(2, "0")} de {String(total).padStart(2, "0")} resultados
+              </span>
+              <div className="flex items-center gap-1.5">
                 <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={[
-                    "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
-                    page === n
-                      ? "border-2 border-blue-500 text-blue-600 bg-white"
-                      : "text-gray-400 hover:bg-gray-100",
-                  ].join(" ")}
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  {n}
+                  <ChevronLeft size={15} />
                 </button>
-              ))}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-              >
-                <ChevronRight size={15} />
-              </button>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                  return start + i;
+                }).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setPage(n)}
+                    className={[
+                      "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
+                      page === n
+                        ? "border-2 border-blue-500 text-blue-600 bg-white"
+                        : "text-gray-400 hover:bg-gray-100",
+                    ].join(" ")}
+                  >
+                    {n}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={15} />
+                </button>
+                <div className="ml-2">
+                  <PageSizeSelect
+                    value={limit}
+                    onChange={(size) => { setLimit(size); setPage(1); }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+          )}
       </div>
     </div>
   );

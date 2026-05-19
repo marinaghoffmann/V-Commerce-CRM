@@ -13,7 +13,7 @@ export const SearchInput = ({
   placeholder = "Buscar...",
 }: SearchInputProps) => {
   return (
-    <div className="relative flex-1 max-w-lg">
+    <div className="relative w-full">
       <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
       <input
         type="text"

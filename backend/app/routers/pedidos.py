@@ -18,7 +18,7 @@ router = APIRouter(
     tags=["pedidos_cliente"],
 )
 
-@router.get("/", response_model=list[PedidoClienteSchemaRead])
+@router.get("/", response_model=dict)
 def get_pedido_cliente(
     db: Session = Depends(get_db),
     limit: int = 10,
@@ -28,6 +28,8 @@ def get_pedido_cliente(
     categoria_produto: str | None = None,
     status: str | None = None,
     metodo_pagamento: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
 ):
     query = (
         db.query(
@@ -54,7 +56,16 @@ def get_pedido_cliente(
     if status:
         query = query.filter(Pedidos.status.ilike(f"%{status}%"))
     if metodo_pagamento:
+        metodo_pagamento = metodo_pagamento if metodo_pagamento != "Cartão" else "cartao"
         query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
+    
+    # Filtro de intervalo de datas
+    if data_inicio:
+        query = query.filter(Pedidos.data_pedido >= data_inicio)
+    if data_fim:
+        query = query.filter(Pedidos.data_pedido <= data_fim)
+
+    total = query.count()
 
     rows = (
         query
@@ -64,20 +75,23 @@ def get_pedido_cliente(
         .all()
     )
 
-    return [
-        PedidoClienteSchemaRead(
-            id_pedido=row.id_pedido,
-            nome_cliente=row.nome_completo,
-            nome_produto=row.nome_produto,
-            categoria_produto=row.categoria,
-            status=row.status,
-            valor_pedido=row.valor_pedido,
-            quantidade=row.quantidade,
-            metodo_pagamento=row.metodo_pagamento,
-            data_pedido=row.data_pedido,
-        )
-        for row in rows
-    ]
+    return {
+        "total": total,
+        "items": [
+            PedidoClienteSchemaRead(
+                id_pedido=row.id_pedido,
+                nome_cliente=row.nome_completo,
+                nome_produto=row.nome_produto,
+                categoria_produto=row.categoria,
+                status=row.status,
+                valor_pedido=row.valor_pedido,
+                quantidade=row.quantidade,
+                metodo_pagamento=row.metodo_pagamento,
+                data_pedido=row.data_pedido,
+            )
+            for row in rows
+        ]
+    }
 
 @router.get("/total-com-tickets", status_code=status.HTTP_200_OK, response_model=TotalPedidosComTicketsSchema)
 def get_total_pedidos_com_tickets(
@@ -119,11 +133,54 @@ def get_total_pedidos_com_tickets(
         "entrega_no_prazo": total_pedidos - tickets_entrega,
     }
 
+@router.get("/{id_pedido}", response_model=PedidoClienteSchemaRead, status_code=status.HTTP_200_OK)
+def get_pedido_by_id(id_pedido, db: Session = Depends(get_db)):
+    if not db.query(Pedidos).filter(id_pedido == Pedidos.id_pedido).first():
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    
+    query = (
+        db.query(
+        Pedidos.id_pedido,
+        Pedidos.status,
+        Pedidos.valor_pedido,
+        Pedidos.quantidade,
+        Pedidos.metodo_pagamento,
+        Pedidos.data_pedido,
+        Produto.nome_produto,
+        Produto.categoria,
+        Pedidos.nome_completo,
+    )
+    .join(Produto, Pedidos.id_produto == Produto.id_produto)
+    .join(Cliente, Pedidos.id_cliente == Cliente.id_cliente)
+    ).filter(id_pedido == Pedidos.id_pedido).first()
+    
+    return PedidoClienteSchemaRead(
+            id_pedido=query.id_pedido,
+            nome_cliente=query.nome_completo,
+            nome_produto=query.nome_produto,
+            categoria_produto=query.categoria,
+            status=query.status,
+            valor_pedido=query.valor_pedido,
+            quantidade=query.quantidade,
+            metodo_pagamento=query.metodo_pagamento,
+            data_pedido=query.data_pedido,
+        )
+
+
 @router.post("/", response_model=PedidoClienteSchemaRead, status_code=status.HTTP_201_CREATED)
 def create_pedido_cliente(pedido: PedidoClienteCreateSchema, db: Session = Depends(get_db)):
     pedido_existente = db.query(Pedidos).filter(Pedidos.id_pedido == pedido.id_pedido).first()
+    cliente = db.query(Cliente).filter(Cliente.id_cliente == pedido.id_cliente).first()
+    produto = db.query(Produto).filter(Produto.id_produto == pedido.id_produto).first()
+
     if pedido_existente:
         raise HTTPException(status_code=400, detail="Pedido com este ID já existe")
+
+    if not cliente:
+        raise HTTPException(status_code=404 , detail="Pedido não pode ser cadastrado para um cliente não existente no sistema")
+    
+    if not produto:
+        raise HTTPException(status_code=404, detail="Pedido não pode ser cadastrado para um produto não existente no sistema")
 
     db_pedido = Pedidos(**pedido.model_dump())
     db.add(db_pedido)
@@ -134,8 +191,19 @@ def create_pedido_cliente(pedido: PedidoClienteCreateSchema, db: Session = Depen
 @router.patch("/{id_pedido}", response_model=PedidoClienteSchemaRead)
 def update_pedido_cliente(id_pedido: str, pedido: PedidoClienteUpdateSchema, db: Session = Depends(get_db)):
     db_pedido = db.query(Pedidos).filter(Pedidos.id_pedido == id_pedido).first()
+
     if not db_pedido:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
+
+    cliente = db.query(Cliente).filter(Cliente.id_cliente == db_pedido.id_cliente).first()
+    produto = db.query(Produto).filter(Produto.id_produto == db_pedido.id_produto).first()
+
+
+    if not cliente:
+        raise HTTPException(status_code=404 , detail="Pedido não pode ser cadastrado para um cliente não existente no sistema")
+    
+    if not produto:
+        raise HTTPException(status_code=404, detail="Pedido não pode ser cadastrado para um produto não existente no sistema")
 
     for key, value in pedido.model_dump(exclude_unset=True).items():
         setattr(db_pedido, key, value)

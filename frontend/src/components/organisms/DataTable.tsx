@@ -1,6 +1,7 @@
 // components/organisms/DataTable.tsx
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PageSizeSelect } from "../atoms/PageSizeSelect";
 
 interface Column<T> {
   key: string;
@@ -32,20 +33,20 @@ export const DataTable = <T extends object>({
   const [internalPage, setInternalPage] = useState(1);
 
   const isControlled = externalPage !== undefined && onPageChange !== undefined;
-  const page       = isControlled ? externalPage : internalPage;
-  const total      = totalItems ?? data.length;
+  const page = isControlled ? externalPage : internalPage;
+  const total = totalItems ?? data.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const safePage   = isControlled ? externalPage : Math.min(page, totalPages);
-  const rows       = isControlled ? data : data.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const safePage = isControlled ? externalPage : Math.min(page, totalPages);
+  const rows = isControlled ? data : data.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-const goTo = (p: number) => {
-  const next = Math.max(1, p);
-  if (isControlled) {
-    onPageChange(next);
-  } else {
-    setInternalPage(Math.min(next, totalPages));
-  }
-};
+  const goTo = (p: number) => {
+    const next = Math.max(1, p);
+    if (isControlled) {
+      onPageChange(next);
+    } else {
+      setInternalPage(Math.min(next, totalPages));
+    }
+  };
 
   return (
 
@@ -63,14 +64,6 @@ const goTo = (p: number) => {
                   {col.label}
                 </th>
               ))}
-              <th className="px-2 py-3 text-right"> 
-                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="p-1 border rounded text-xs text-gray-600 bg-white cursor-pointer"> 
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                </select>
-              </th>
             </tr>
           </thead>
 
@@ -105,32 +98,53 @@ const goTo = (p: number) => {
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-      <span className="text-xs text-gray-400">
-        {total === 0
-        ? "0 resultados"
-        : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, total)} de ${total}`}
-      </span>
+        <span className="text-xs text-gray-400">
+          {total === 0
+            ? "0 resultados"
+            : `Mostrando ${String((safePage - 1) * pageSize + 1).padStart(2, "0")} a ${String(Math.min(safePage * pageSize, total)).padStart(2, "0")} de ${String(total).padStart(2, "0")} resultados`}
+        </span>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => goTo(safePage - 1)}
             disabled={safePage === 1}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
           >
-          <ChevronLeft size={16} />
-        </button>
+            <ChevronLeft size={15} />
+          </button>
 
-        <span className="w-7 h-7 rounded-lg text-xs font-medium bg-blue-600 text-white flex items-center justify-center">
-        {safePage}
-        </span>
+          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+            const start = Math.max(1, Math.min(safePage - 2, totalPages - 4));
+            return start + i;
+          }).map((n) => (
+            <button
+              key={n}
+              onClick={() => goTo(n)}
+              className={[
+                "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
+                safePage === n
+                  ? "border-2 border-blue-500 text-blue-600 bg-white"
+                  : "text-gray-400 hover:bg-gray-100",
+              ].join(" ")}
+            >
+              {n}
+            </button>
+          ))}
 
-        <button
-          onClick={() => goTo(safePage + 1)}
-          disabled={isControlled ? data.length < pageSize : safePage === totalPages}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-        >
-        <ChevronRight size={16} />
-        </button>
+          <button
+            onClick={() => goTo(safePage + 1)}
+            disabled={isControlled ? data.length < pageSize : safePage >= totalPages}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+          >
+            <ChevronRight size={15} />
+          </button>
+          
+          <div className="ml-2">
+            <PageSizeSelect
+              value={pageSize}
+              onChange={(size) => { setPageSize(size); if (!isControlled) setInternalPage(1); }}
+            />
+          </div>
         </div>
       </div>
     </div>
