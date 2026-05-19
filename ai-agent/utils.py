@@ -24,26 +24,34 @@ def extrair_tabelas(sql: str) -> set[str]:
 
 
 def validar_sql(sql: str, TABELAS_VALIDAS: set) -> str:
-    """Guardrail para validar a consulta SQL antes de executá-la."""
+    """Guardrail para validar a consulta SQL antes de executá-la.
+    
+    POLÍTICA: Apenas SELECT e WITH (read-only CTEs) são permitidos.
+    Qualquer operação de escrita (INSERT, UPDATE, DELETE, DROP, ALTER, etc) será rejeitada.
+    """
 
     sql = sql.strip()
     sql_upper = sql.upper()
 
-    # Apenas SELECT
+    # Apenas SELECT ou WITH (read-only)
     if not sql_upper.startswith("SELECT") and not sql_upper.startswith("WITH"):
-        raise ValueError("Apenas SELECT permitido")
+        raise ValueError("Apenas operações SELECT são permitidas. Nenhuma operação de escrita, exclusão ou alteração de esquema é permitida.")
 
-    # Operações proibidas
+    # Operações proibidas: qualquer tentativa de escrita, exclusão ou modificação
     proibidos = [
-        "DELETE", "UPDATE", "INSERT", "DROP", "ALTER", "PRAGMA", "TRUNCATE", "CREATE", "ATTACH",
+        "DELETE", "UPDATE", "INSERT", "DROP", "ALTER", "PRAGMA", "TRUNCATE", 
+        "CREATE", "ATTACH", "DETACH", "REPLACE", "UPSERT"
     ]
 
-    if any(p in sql_upper for p in proibidos):
-        raise ValueError("Operação não permitida")
+    # Checa rigorosamente se há palavras-chave perigosas
+    for palavra in proibidos:
+        # Usa word boundary para evitar falsos positivos como "DELETE" em "DELETED"
+        if re.search(r'\b' + palavra + r'\b', sql_upper):
+            raise ValueError(f"Operação proibida: {palavra}. Apenas SELECT é permitido.")
 
     # Bloqueia múltiplas queries
     if ";" in sql[:-1]:
-        raise ValueError("Múltiplas queries não permitidas")
+        raise ValueError("Múltiplas queries não permitidas. Uma única consulta SELECT por solicitação.")
 
     # Extrai tabelas reais
     tabelas_encontradas = extrair_tabelas(sql)
@@ -106,6 +114,10 @@ def is_refused(response: str) -> bool:
         "cannot",
         "not allowed",
         "out of scope",
+        "operação não permitida",
+        "apenas select",
+        "apenas consultas select",
+        "apenas operações select",
     ]
     lower = response.lower()
     return any(p in lower for p in phrases)

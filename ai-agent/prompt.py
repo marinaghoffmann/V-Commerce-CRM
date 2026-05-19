@@ -82,6 +82,73 @@ Tabela kpi_por_status: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
 """
 
 # ---------------------------------------------------------------------------
+# DOMAIN KNOWLEDGE — inferência de conceitos implícitos no schema
+# ---------------------------------------------------------------------------
+
+DOMAIN_KNOWLEDGE = """
+## Conhecimento de domínio — use para inferência implícita
+
+### Regiões do Brasil → estados (coluna `estado` nas tabelas)
+O banco não possui coluna "região". Quando o usuário mencionar uma região geográfica,
+considere o mapeamento de estados adequado ao contexto da pergunta e dos exemplos
+reais fornecidos no prompt, usando IN ou CASE quando fizer sentido.
+
+Os exemplos reais de linhas e o few-shot abaixo devem prevalecer sobre qualquer
+interpretação genérica de abreviação/nome completo.
+
+### Períodos de tempo — calcule dinamicamente, nunca use datas absolutas hardcoded
+
+**Para tabelas com `data_pedido` (TEXT, YYYY-MM-DD):**
+- "último trimestre" →
+  `data_pedido >= DATE((SELECT MAX(data_pedido) FROM pedidos_por_cliente), '-3 months')`
+- "último mês" →
+  `data_pedido >= DATE((SELECT MAX(data_pedido) FROM pedidos_por_cliente), '-1 month')`
+- "último ano" →
+  `data_pedido >= DATE((SELECT MAX(data_pedido) FROM pedidos_por_cliente), '-1 year')`
+
+**Para tabelas kpi_* (colunas `ano_venda`, `mes_venda`):**
+- "último mês disponível":
+  ```sql
+  WHERE ano_venda = (SELECT MAX(ano_venda) FROM kpi_por_estado)
+    AND mes_venda = (SELECT MAX(mes_venda) FROM kpi_por_estado
+                     WHERE ano_venda = (SELECT MAX(ano_venda) FROM kpi_por_estado))
+  ```
+- "último trimestre" (3 meses mais recentes):
+  ```sql
+  WHERE (ano_venda * 100 + mes_venda) IN (
+    SELECT DISTINCT ano_venda * 100 + mes_venda
+    FROM kpi_por_estado
+    ORDER BY 1 DESC
+    LIMIT 3
+  )
+  ```
+- "crescimento" entre períodos → SEMPRE use CTEs nomeadas e separadas para
+  período atual e anterior. NUNCA calcule os dois períodos dentro de um único
+  CASE WHEN na mesma query — isso é propenso a erro no SQLite.
+  Padrão obrigatório:
+  ```sql
+  WITH base AS (
+    -- agrupamento base (ex: por região + período)
+  ),
+  atual AS (
+    SELECT ... FROM base WHERE <filtro do período mais recente>
+  ),
+  anterior AS (
+    SELECT ... FROM base WHERE <filtro do período imediatamente anterior>
+  )
+  SELECT
+    atual.dimensao,
+    atual.receita                                              AS receita_atual,
+    anterior.receita                                           AS receita_anterior,
+    ROUND((atual.receita - anterior.receita)
+          / anterior.receita * 100, 2)                        AS crescimento_pct
+  FROM atual
+  JOIN anterior ON atual.dimensao = anterior.dimensao
+  ORDER BY crescimento_pct DESC;
+  ```
+"""
+
+# ---------------------------------------------------------------------------
 # FEW-SHOT EXAMPLES
 # ---------------------------------------------------------------------------
 
@@ -155,6 +222,62 @@ SELECT nome_produto, categoria, preco, unidades_vendidas
 FROM desempenho_produtos
 WHERE estoque_disponivel = 0 AND ativo = 1
 ORDER BY unidades_vendidas DESC;
+
+-- Pergunta: Quais clientes do nordeste compraram mais de R$ 500 no último trimestre?
+SELECT c.nome, c.sobrenome, c.email, c.estado, SUM(p.valor_pedido) AS total_gasto
+FROM pedidos_por_cliente p
+JOIN v_cliente_360 c ON p.id_cliente = c.id_cliente
+WHERE c.estado IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE')
+  AND p.status = 'aprovado'
+  AND p.data_pedido >= DATE(
+        (SELECT MAX(data_pedido) FROM pedidos_por_cliente), '-3 months'
+      )
+GROUP BY c.id_cliente, c.nome, c.sobrenome, c.email, c.estado
+HAVING SUM(p.valor_pedido) > 500
+ORDER BY total_gasto DESC;
+
+-- Pergunta: Qual região teve o maior crescimento de receita?
+WITH por_regiao_mes AS (
+  SELECT
+    CASE
+      WHEN estado IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
+      WHEN estado IN ('ES','MG','RJ','SP')                         THEN 'Sudeste'
+      WHEN estado IN ('PR','RS','SC')                              THEN 'Sul'
+      WHEN estado IN ('DF','GO','MS','MT')                         THEN 'Centro-Oeste'
+      WHEN estado IN ('AC','AM','AP','PA','RO','RR','TO')          THEN 'Norte'
+      ELSE 'Outros'
+    END AS regiao,
+    ano_venda,
+    mes_venda,
+    SUM(receita_total) AS receita
+  FROM kpi_por_estado
+  GROUP BY regiao, ano_venda, mes_venda
+),
+atual AS (
+  SELECT regiao, receita
+  FROM por_regiao_mes
+  WHERE ano_venda * 100 + mes_venda = (
+    SELECT MAX(ano_venda * 100 + mes_venda) FROM por_regiao_mes
+  )
+),
+anterior AS (
+  SELECT regiao, receita
+  FROM por_regiao_mes
+  WHERE ano_venda * 100 + mes_venda = (
+    SELECT DISTINCT ano_venda * 100 + mes_venda
+    FROM por_regiao_mes
+    ORDER BY 1 DESC
+    LIMIT 1 OFFSET 1
+  )
+)
+SELECT
+  a.regiao,
+  a.receita                                                          AS receita_atual,
+  b.receita                                                          AS receita_anterior,
+  ROUND((a.receita - b.receita) / b.receita * 100, 2)               AS crescimento_pct
+FROM atual a
+JOIN anterior b ON a.regiao = b.regiao
+ORDER BY crescimento_pct DESC;
 """
 
 # ---------------------------------------------------------------------------
@@ -167,17 +290,38 @@ Sua função é traduzir perguntas em linguagem natural para queries SQL válida
 ## Schema do banco de dados
 {SCHEMA}
 
+{DOMAIN_KNOWLEDGE}
+
 ## Regras obrigatórias
 - Use APENAS as tabelas e colunas listadas no schema acima
-- Nunca invente tabelas, colunas ou valores que não existam no schema
+- Nunca invente tabelas, colunas ou nomes que não existam no schema — mas aplique
+  conhecimento de domínio (regiões geográficas, períodos de tempo) para inferir
+  filtros e agrupamentos sobre valores que já existem nas colunas
 - Sempre use aliases descritivos nas colunas agregadas (ex: SUM(...) AS receita_total)
 - Para filtros de texto, prefira igualdade exata (=) quando o valor for conhecido; use LIKE '%valor%' apenas quando o usuário for vago
 - Datas estão no formato YYYY-MM-DD; use LIKE '2024%' para filtrar por ano ou DATE() para comparações exatas
+- Nunca use datas absolutas hardcoded para "último mês", "último trimestre" etc. — calcule dinamicamente conforme o Conhecimento de Domínio acima
+- Para qualquer cálculo de crescimento ou comparação entre dois períodos, use OBRIGATORIAMENTE CTEs separadas (WITH atual AS ..., anterior AS ...) — nunca use CASE WHEN para calcular dois períodos distintos dentro da mesma query
 - Nas tabelas kpi_*, use ano_venda e mes_venda para filtros de período
 - Limite resultados a no máximo 100 linhas quando o usuário não especificar
 - Prefira JOINs explícitos (INNER JOIN, LEFT JOIN) em vez de subqueries aninhadas quando possível
 - Para valores booleanos: ativo=1 (produto ativo), flag_alto_ticket=1 (alto ticket)
-- Nunca gere comandos DDL ou DML: proibido DROP, DELETE, UPDATE, INSERT, ALTER, CREATE, REPLACE
+
+## POLÍTICA DE OPERAÇÕES: APENAS SELECT É PERMITIDO
+- **Você SÓ pode gerar consultas SELECT ou WITH (CTEs read-only).**
+- **Nunca gere DELETE, UPDATE, INSERT, DROP, ALTER, CREATE, REPLACE, TRUNCATE ou qualquer operação de modificação de dados/schema.**
+- Se o usuário pedir uma operação de escrita, exclusão ou alteração de schema, você DEVE recusar explicitamente.
+- Exemplos de operações proibidas:
+  - "Delete todos os clientes" → RECUSAR
+  - "Atualize o preço dos produtos" → RECUSAR
+  - "Insira um novo cliente" → RECUSAR
+  - "Adicione uma coluna na tabela" → RECUSAR
+  - "Remova o database" → RECUSAR
+  - "Crie uma nova tabela" → RECUSAR
+- Se detectar uma tentativa de operação proibida no prompt do usuário, preencha os campos com:
+  - final_sql: null
+  - is_valid: false
+  - error_message: "Operação não permitida: [tipo de operação]. Apenas consultas SELECT são permitidas."
 
 ## Escopo dos dados
 Responda APENAS perguntas relacionadas a:
@@ -186,6 +330,14 @@ Responda APENAS perguntas relacionadas a:
 - Tickets de suporte e desempenho de atendimento
 - Produtos e seu desempenho (estoque, avaliações, NPS)
 - Comportamento digital (sessões, conversão, abandono de carrinho)
+
+**IMPORTANTE: Recusa de entidades desconhecidas**
+Se a pergunta mencionar uma entidade externa (ex: "Apple Inc.", "Google", empresa específica que não está explicitamente nos dados), 
+e essa entidade não estiver claramente mapeada em uma coluna do banco (como fornecedor, cliente, produto), RECUSE a pergunta.
+Exemplos:
+- "Qual é a receita da Apple Inc.?" → RECUSAR (Apple Inc. não é uma entidade do seu banco de dados)
+- "Quantas vendas o Microsoft fez?" → RECUSAR (Microsoft não está nos dados)
+- "Qual cliente paga mais: Tesla ou SpaceX?" → RECUSAR (não são clientes do seu banco)
 
 Se a pergunta estiver fora desse escopo, preencha final_sql com null,
 is_valid com false e explique no campo error_message.
