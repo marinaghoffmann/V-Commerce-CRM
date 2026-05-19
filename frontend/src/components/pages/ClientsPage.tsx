@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Upload, Search, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Upload, Search, ChevronDown, ChevronUp, ArrowUp, ArrowDown, Check } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import api from "../../services/api";
 import { useClientes } from "../../hooks/useClientes";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { ExportCSVModal } from "../molecules/ExportCSVModal";
+import { DropdownFilter } from "../atoms/DropdownFilter";
 
 function getInitials(nome: string, sobrenome: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -30,22 +31,116 @@ function getAvatarColor(nome: string): string {
   return colors[(nome?.charCodeAt(0) ?? 0) % colors.length];
 }
 
+type OrderOption = {
+  label: string;
+  value: string;
+  icon: typeof ArrowUp;
+};
+
+const ORDER_OPTIONS: OrderOption[] = [
+  { label: "Maior receita", value: "receita_total_cliente:desc", icon: ArrowUp },
+  { label: "Menor receita", value: "receita_total_cliente:asc", icon: ArrowDown },
+  { label: "Mais pedidos", value: "total_compras:desc", icon: ArrowUp },
+  { label: "Menos pedidos", value: "total_compras:asc", icon: ArrowDown },
+  { label: "Maior ticket", value: "ticket_medio:desc", icon: ArrowUp },
+  { label: "Menor ticket", value: "ticket_medio:asc", icon: ArrowDown },
+  { label: "Mais recente", value: "data_ultima_compra:desc", icon: ArrowUp },
+  { label: "Mais antigo", value: "data_ultima_compra:asc", icon: ArrowDown },
+];
+
+function OrderFilter({ selected, onSelect }: { selected: string; onSelect: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selectedOption = ORDER_OPTIONS.find((option) => option.value === selected);
+
+  return (
+    <div ref={ref} className="relative flex-none" style={{ width: "200px" }}>
+      <button
+        onClick={() => setOpen((current) => !current)}
+        className={`flex items-center justify-between gap-2 w-full border px-5 py-2.5 rounded-full text-sm transition-all shadow-sm cursor-pointer ${
+          open || selected
+            ? "border-blue-500 bg-white text-gray-800"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+        }`}
+      >
+        <span className="font-medium truncate">{selectedOption ? selectedOption.label : "Ordenar por"}</span>
+        <ChevronDown
+          size={16}
+          className={`transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-120 bg-white rounded-2xl border border-gray-100 shadow-xl z-40 overflow-hidden py-3">
+          <div className="grid grid-cols-2 divide-x divide-gray-100 max-h-100 overflow-y-auto">
+            {ORDER_OPTIONS.map((option) => {
+              const isSelected = selected === option.value;
+
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    onSelect(option.value);
+                    setOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
+                      isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {isSelected && <Check size={12} className="text-white" strokeWidth={3} />}
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 shrink-0">
+                      <option.icon size={12} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 truncate">{option.label}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Clients() {
   const [busca, setBusca] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<string[]>([]);
+  const [ordem, setOrdem] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showExportModal, setShowExportModal] = useState(false);
   const navigate = useNavigate();
 
-  const { clientes, total, loading } = useClientes({ busca, status, page, limit });
+  const { clientes, total, loading } = useClientes({ busca, status, ordem, page, limit });
 
   const handleBusca = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBusca(e.target.value);
     setPage(1);
   };
-  const handleStatus = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatus(e.target.value);
+  const handleStatus = (values: string[]) => {
+    setStatus(values);
+    setPage(1);
+  };
+
+  const handleOrdem = (value: string) => {
+    setOrdem(value);
     setPage(1);
   };
 
@@ -53,7 +148,8 @@ function Clients() {
     try {
       const params = new URLSearchParams();
       if (busca) params.append("busca", busca);
-      if (status) params.append("status", status);
+      status.forEach((segmento) => params.append("status", segmento));
+      if (ordem) params.append("ordem", ordem);
       params.append("limit", "999999");
       params.append("page", "1");
 
@@ -111,21 +207,13 @@ function Clients() {
               onChange={handleBusca}
             />
           </div>
-          <div className="relative flex-none" style={{ width: "200px" }}>
-            <select
-              className="w-full border border-gray-200 px-5 py-2.5 bg-white text-sm text-gray-600 focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-sm transition-all appearance-none"
-              style={{ borderRadius: "28px" }}
-              value={status}
-              onChange={handleStatus}
-            >
-              <option value="">Segmento</option>
-              <option value="Premium">Premium</option>
-              <option value="Inativo">Inativo</option>
-              <option value="Recorrente">Recorrente</option>
-              <option value="Novo">Novo</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          </div>
+          <OrderFilter selected={ordem} onSelect={handleOrdem} />
+          <DropdownFilter
+            label="Segmento"
+            options={["Premium", "Inativo", "Recorrente", "Novo"]}
+            selected={status}
+            onChange={handleStatus}
+          />
         </div>
 
         {loading ? (

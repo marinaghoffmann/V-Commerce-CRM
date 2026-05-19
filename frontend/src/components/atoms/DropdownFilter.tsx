@@ -58,12 +58,12 @@ export const DropdownFilter = ({
         </div>
         <ChevronDown
           size={14}
-          className={`transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}
+          className={`transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl min-w-[190px] py-2 overflow-hidden">
+        <div className="absolute left-0 top-full mt-2 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl min-w-47.5 py-2 overflow-hidden">
           {options.length === 0 ? (
             <p className="px-4 py-2 text-xs text-gray-400">Sem opções</p>
           ) : (
@@ -77,7 +77,7 @@ export const DropdownFilter = ({
                 >
                   <span
                     className={[
-                      "flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
+                      "shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
                       isSelected
                         ? "bg-blue-500 border-blue-500"
                         : "border-gray-300 bg-white",
@@ -93,17 +93,6 @@ export const DropdownFilter = ({
             })
           )}
 
-          {hasSelection && (
-            <>
-              <div className="mx-3 my-1.5 border-t border-gray-100" />
-              <button
-                onClick={() => onChange([])}
-                className="w-full px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors text-left cursor-pointer"
-              >
-                Limpar seleção
-              </button>
-            </>
-          )}
         </div>
       )}
     </div>
