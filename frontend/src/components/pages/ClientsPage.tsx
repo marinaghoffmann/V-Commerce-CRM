@@ -91,7 +91,7 @@ function OrderFilter({ selected, onSelect }: { selected: string; onSelect: (valu
                 <button
                   key={option.value}
                   onClick={() => {
-                    onSelect(option.value);
+                    onSelect(selected === option.value ? "" : option.value);
                     setOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
