@@ -18,6 +18,22 @@ router = APIRouter(
     tags=["pedidos_cliente"],
 )
 
+
+FILTER_MAP = {
+    "nome_cliente":      (Pedidos.nome_completo,   None),
+    "nome_produto":      (Produto.nome_produto,     None),
+    "categoria_produto": (Produto.categoria,        None),
+    "status":            (Pedidos.status,           None),
+    "metodo_pagamento":  (Pedidos.metodo_pagamento, lambda v: "cartao" if v == "Cartão" else v),
+}
+
+RANGE_FILTER_MAP = {
+    "data_inicio": (Pedidos.data_pedido, "__ge__"),
+    "data_fim":    (Pedidos.data_pedido, "__le__"),
+}
+
+from sqlalchemy import or_
+
 @router.get("/", response_model=dict)
 def get_pedido_cliente(
     db: Session = Depends(get_db),
@@ -28,9 +44,15 @@ def get_pedido_cliente(
     categoria_produto: str | None = None,
     status: str | None = None,
     metodo_pagamento: str | None = None,
-    data_inicio: str | None = None,
-    data_fim: str | None = None,
+    data_inicio: date | None = None,
+    data_fim: date | None = None,
 ):
+    if data_inicio and data_fim and data_inicio > data_fim:
+        raise HTTPException(
+            status_code=400,
+            detail="data_inicio não pode ser maior que data_fim"
+        )
+
     query = (
         db.query(
             Pedidos.id_pedido,
@@ -47,23 +69,49 @@ def get_pedido_cliente(
         .join(Cliente, Pedidos.id_cliente == Cliente.id_cliente)
     )
 
-    if nome_cliente:
-        query = query.filter(Pedidos.nome_completo.ilike(f"%{nome_cliente}%"))
-    if nome_produto:
-        query = query.filter(Produto.nome_produto.ilike(f"%{nome_produto}%"))
-    if categoria_produto:
-        query = query.filter(Produto.categoria.ilike(f"%{categoria_produto}%"))
-    if status:
-        query = query.filter(Pedidos.status.ilike(f"%{status}%"))
-    if metodo_pagamento:
-        metodo_pagamento = metodo_pagamento if metodo_pagamento != "Cartão" else "cartao"
-        query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
-    
-    # Filtro de intervalo de datas
-    if data_inicio:
-        query = query.filter(Pedidos.data_pedido >= data_inicio)
-    if data_fim:
-        query = query.filter(Pedidos.data_pedido <= data_fim)
+    if nome_cliente or nome_produto:
+        filtros = []
+
+        if nome_cliente:
+            filtros.append(
+                Pedidos.nome_completo.ilike(f"%{nome_cliente}%")
+            )
+
+        if nome_produto:
+            filtros.append(
+                Produto.nome_produto.ilike(f"%{nome_produto}%")
+            )
+
+        query = query.filter(or_(*filtros))
+
+    text_params = {
+        "categoria_produto": categoria_produto,
+        "status": status,
+        "metodo_pagamento": metodo_pagamento,
+    }
+
+    for param_name, value in text_params.items():
+        if value:
+            coluna, transform = FILTER_MAP[param_name]
+
+            value = transform(value) if transform else value
+
+            query = query.filter(
+                coluna.ilike(f"%{value}%")
+            )
+
+    range_params = {
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+    }
+
+    for param_name, value in range_params.items():
+        if value:
+            coluna, op = RANGE_FILTER_MAP[param_name]
+
+            query = query.filter(
+                getattr(coluna, op)(value)
+            )
 
     total = query.count()
 
@@ -90,7 +138,7 @@ def get_pedido_cliente(
                 data_pedido=row.data_pedido,
             )
             for row in rows
-        ]
+        ],
     }
 
 @router.get("/total-com-tickets", status_code=status.HTTP_200_OK, response_model=TotalPedidosComTicketsSchema)

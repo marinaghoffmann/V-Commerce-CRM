@@ -45,7 +45,7 @@ export const DateRangeFilter = ({ selected, onChange }: DateRangeFilterProps) =>
     setOpen(false);
   };
 
-  const hasSelection = selected.data_inicio !== null || selected.data_fim !== null;
+  const hasSelection = Boolean(selected.data_inicio) || Boolean(selected.data_fim);
   const displayText = hasSelection
     ? `${selected.data_inicio || "—"} a ${selected.data_fim || "—"}`
     : "Período";
