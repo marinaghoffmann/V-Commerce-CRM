@@ -101,6 +101,7 @@ export const OrdersPage = () => {
 
   const {
     pedidos,
+    allFiltered,
     isFetching,
     total,
     categoriaOptions,
@@ -116,7 +117,7 @@ export const OrdersPage = () => {
   });
 
   const handleExportCSV = () => {
-    exportCSV(pedidos, "pedidos");
+    exportCSV(allFiltered, "pedidos");
     setShowExportModal(false);
   };
 

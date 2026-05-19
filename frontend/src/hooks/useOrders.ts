@@ -131,6 +131,7 @@ export function useOrders({
 
   return {
     pedidos,
+    allFiltered: filtered,
     isFetching,
     total,
     categoriaOptions,
