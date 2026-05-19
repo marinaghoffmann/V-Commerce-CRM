@@ -138,7 +138,7 @@ export function useOrders({
     const fetchFilterOptions = async () => {
       try {
         const res = await api.get(
-          "/pedidos_cliente?limit=999999&offset=0"
+          "/pedidos_cliente?limit=99&offset=0"
         );
 
         const items: Pedido[] =
