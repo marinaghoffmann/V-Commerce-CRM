@@ -27,7 +27,7 @@ function formatRelative(dateStr: string | null): string {
 export function TicketRow({ ticket }: TicketRowProps) {
   return (
     <div
-      className="flex items-center justify-between py-4 px-4 gap-4 cursor-pointer hover:bg-blue-50/50 transition-colors rounded-xl"
+      className="flex items-center justify-between py-4 px-4 gap-4 hover:bg-blue-50/50 transition-colors rounded-xl"
     >
       {/* Coluna esquerda */}
       <div className="flex-1 min-w-0">

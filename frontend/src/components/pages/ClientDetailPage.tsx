@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useClienteDetalhe } from "../../hooks/useClienteDetalhe";
-
-interface Evento {
-  tipo: "pedido" | "entrega" | "suporte";
-  titulo: string;
-  data: string;
-}
+import type { EventoCliente } from "../types/cliente.types";
 
 function getInitials(nome?: string, sobrenome?: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -20,18 +15,7 @@ function getAvatarColor(nome?: string): string {
   return colors[(nome?.charCodeAt(0) ?? 0) % colors.length];
 }
 
-function gerarEventosMock(): Evento[] {
-  return [
-    { tipo: "pedido",  titulo: "Pedido #1042 criado e confirmado",  data: "12/05/2025 às 14:32" },
-    { tipo: "entrega", titulo: "Pedido #1042 saiu para entrega",     data: "13/05/2025 às 09:10" },
-    { tipo: "suporte", titulo: "Ticket #88 de suporte aberto",       data: "15/05/2025 às 16:45" },
-    { tipo: "entrega", titulo: "Ticket #88 resolvido com sucesso",   data: "16/05/2025 às 11:00" },
-    { tipo: "pedido",  titulo: "Pedido #1078 criado e confirmado",   data: "20/05/2025 às 10:20" },
-    { tipo: "entrega", titulo: "Pedido #1078 entregue",              data: "22/05/2025 às 15:00" },
-  ];
-}
-
-function EventoBullet({ tipo }: { tipo: Evento["tipo"] }) {
+function EventoBullet({ tipo }: { tipo: EventoCliente["tipo"] }) {
   if (tipo === "pedido") return <span className="w-3 h-3 rounded-full shrink-0 bg-blue-500" />;
   if (tipo === "entrega") return <span className="w-3 h-3 rounded-full shrink-0 bg-emerald-500" />;
   if (tipo === "suporte") return <span className="w-3 h-3 rounded-full shrink-0 bg-red-400" />;
@@ -107,7 +91,7 @@ function ClientDetail(): React.ReactElement {
     </div>
   );
 
-  const eventos = gerarEventosMock();
+  const eventos = data.eventos ?? [];
   const totalEventPages = Math.ceil(eventos.length / eventsPerPage);
   const eventosPagina = eventos.slice((eventPage - 1) * eventsPerPage, eventPage * eventsPerPage);
 
@@ -279,7 +263,7 @@ function ClientDetail(): React.ReactElement {
               <span className="text-base font-bold text-gray-800">Atividade</span>
             </div>
 
-            {(data.total_compras ?? 0) === 0 ? (
+            {eventos.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10 text-center">
                 <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
