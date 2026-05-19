@@ -8,6 +8,7 @@ from database import execute_query
 from prompt import SYSTEM_PROMPT
 from utils import validar_sql, get_tabelas_validas
 from session_memory import build_session_context, register_turn, clear_session_state
+from context_enricher import build_context_payload
 
 load_dotenv()
 
@@ -26,11 +27,24 @@ class CHESSContext(BaseModel):
 client = genai.Client(api_key=google_api_key)
 
 def perguntar(question: str, session_id: str = "default") -> dict:
+    """Pergunta ao agente principal com contexto de sessão e amostras reais.
+
+    O contexto enriquecido é coletado internamente por um módulo de seleção de
+    tabelas e amostragem, sem alterar a API pública.
+    """
     session_context = build_session_context(session_id)
+    enriched_payload = build_context_payload(question)
     prompt_parts = []
 
     if session_context:
         prompt_parts.append(session_context)
+
+    if enriched_payload.get("context"):
+        prompt_parts.append(
+            "Contexto de amostras relevantes:\n"
+            f"Plano: {enriched_payload.get('targets', [])}\n"
+            f"Amostras:\n{enriched_payload['context']}"
+        )
 
     prompt_parts.append(f"Pergunta atual do usuário:\n{question}")
 
@@ -68,6 +82,43 @@ def perguntar(question: str, session_id: str = "default") -> dict:
     )
 
     return ctx.model_dump()
+
+
+def call_agent(question: str, session_id: str = "default") -> str:
+    """Compat layer: chama a função `perguntar()` (que usa o Gemini) e retorna texto.
+
+    Isso evita invocar o `generate_content` duas vezes com configurações distintas
+    e previne erros de argumento inválido do SDK. Retorna um texto contendo
+    o SQL (entre blocos ```sql```) quando disponível, seguido por uma
+    representação das primeiras linhas do resultado.
+    """
+    try:
+        ctx = perguntar(question, session_id=session_id)
+    except Exception as e:
+        return f"ERROR calling agent: {e}"
+
+    final_sql = ctx.get("final_sql")
+    is_valid = ctx.get("is_valid")
+    error = ctx.get("error_message")
+    rows = ctx.get("rows")
+
+    if final_sql:
+        out = []
+        out.append("```sql")
+        out.append(final_sql)
+        out.append("```")
+        if rows:
+            # show up to first 5 rows
+            preview = rows[:5]
+            out.append("Amostra de resultados:")
+            for r in preview:
+                out.append(str(tuple(r.values()) if hasattr(r, 'values') else r))
+        return "\n".join(out)
+
+    if not is_valid and error:
+        return error
+
+    return str(ctx)
 
 if __name__ == "__main__":
     clear_session_state("default")
