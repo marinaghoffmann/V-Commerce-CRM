@@ -60,6 +60,17 @@ const CHART_COLORS = [
   "#84CC16", "#F43F5E",
 ];
 
+const CATEGORIAS_FALLBACK = [
+  "Automotivo",
+  "Beleza",
+  "Brinquedos",
+  "Casa",
+  "Eletronicos",
+  "Esportes",
+  "Moveis",
+  "Vestuario",
+];
+
 const ESTADOS_FALLBACK = [
   "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia",
   "Ceará", "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
@@ -192,8 +203,11 @@ function Dashboard() {
     categoriasLabels = sortedCategorias.map((k) => k.categoria);
     categoriasValores = sortedCategorias.map((k) => k.total_pedidos);
   } else {
-    categoriasLabels = [];
-    categoriasValores = [];
+    const sortedFallback = [...CATEGORIAS_FALLBACK].sort((a, b) =>
+      a.localeCompare(b, "pt-BR")
+    );
+    categoriasLabels = sortedFallback;
+    categoriasValores = sortedFallback.map(() => 0);
   }
   const totalPedidosCategoria = categoriasValores.reduce((sum, v) => sum + v, 0);
   const porcentagensCategoria = categoriasValores.map((v) =>
