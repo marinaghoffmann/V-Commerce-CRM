@@ -26,7 +26,8 @@ def contar_clientes(
         query = query.filter(
             (Cliente.nome.ilike(f"%{busca}%")) |
             (Cliente.sobrenome.ilike(f"%{busca}%")) |
-            (Cliente.email.ilike(f"%{busca}%"))
+            (Cliente.email.ilike(f"%{busca}%")) |
+            ((Cliente.nome + " " + Cliente.sobrenome).ilike(f"%{busca}%"))
         )
 
     if status:
@@ -49,7 +50,8 @@ def listar_clientes(
         query = query.filter(
             (Cliente.nome.ilike(f"%{busca}%")) |
             (Cliente.sobrenome.ilike(f"%{busca}%")) |
-            (Cliente.email.ilike(f"%{busca}%"))
+            (Cliente.email.ilike(f"%{busca}%")) |
+            ((Cliente.nome + " " + Cliente.sobrenome).ilike(f"%{busca}%"))
         )
 
     if status:

@@ -162,7 +162,9 @@ function Clients() {
                     <td className="px-6 py-4 text-sm text-gray-700 text-center">
                       R$ {c.ticket_medio?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-6 py-4 text-center text-gray-400 text-xs">{c.data_ultima_compra}</td>
+                    <td className="px-6 py-4 text-center text-gray-400 text-xs">
+                      {c.data_ultima_compra || "Indisponível"}
+                    </td>
                   </tr>
                 ))}
                 {clientes.length === 0 && (
