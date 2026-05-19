@@ -6,6 +6,7 @@ import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import { useOrders } from "../../hooks/useOrders";
 import type { PeriodoSelecionado } from "../atoms/PeriodoFilter";
+import { ExportCSVModal } from "../molecules/ExportCSVModal";
 
 type StatusKey =
   | "entregue"
@@ -87,6 +88,7 @@ export const OrdersPage = () => {
   const [selectedStatus, setSelectedStatus]       = useState<string[]>([]);
   const [page, setPage]                           = useState(1);
   const [pageSize, setPageSize]                   = useState(10);
+  const [showExportModal, setShowExportModal]     = useState(false);
 
   // Debounce busca
   useEffect(() => {
@@ -115,6 +117,7 @@ export const OrdersPage = () => {
 
   const handleExportCSV = () => {
     exportCSV(pedidos, "pedidos");
+    setShowExportModal(false);
   };
 
   return (
@@ -135,7 +138,7 @@ export const OrdersPage = () => {
             </p>
           </div>
           <button
-            onClick={handleExportCSV}
+            onClick={() => setShowExportModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
           >
             <Upload size={16} />
@@ -143,7 +146,11 @@ export const OrdersPage = () => {
           </button>
         </div>
 
-        {/* Filtros */}
+        <ExportCSVModal
+          isOpen={showExportModal}
+          onCancel={() => setShowExportModal(false)}
+          onConfirm={handleExportCSV}
+        />        {/* Filtros */}
         <div className="mb-4">
           <FilterBar
             search={searchInput}
