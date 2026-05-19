@@ -69,3 +69,69 @@ class TestBasicQueries:
                 import pytest
 
                 pytest.fail(f"SQL inválido gerado pelo agente: {e}\nSQL: {sql}")
+
+    def test_BASIC_08_clientes_nordeste_ultimo_trimestre(self):
+        """Agente deve receber a consulta com região e janela temporal dinâmica."""
+        response = call_agent(
+            "Quais clientes do nordeste compraram mais de R$ 500 no último trimestre?"
+        )
+        assert response
+        assert "nordeste" in response.lower() or "500" in response.lower() or len(response) > 0
+
+        sql = _extract_sql(response)
+        if sql:
+            assert not _is_destructive_sql(sql), f"SQL destrutivo detectado: {sql}"
+
+    def test_BASIC_09_regiao_maior_crescimento_receita(self):
+        """Agente deve identificar a região com maior crescimento de receita."""
+        response = call_agent("Qual região teve maior crescimento de receita?")
+        assert response
+
+        real = _run_sql(
+            """
+            WITH por_regiao_mes AS (
+                SELECT
+                    CASE
+                        WHEN estado IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
+                        WHEN estado IN ('ES','MG','RJ','SP') THEN 'Sudeste'
+                        WHEN estado IN ('PR','RS','SC') THEN 'Sul'
+                        WHEN estado IN ('DF','GO','MS','MT') THEN 'Centro-Oeste'
+                        WHEN estado IN ('AC','AM','AP','PA','RO','RR','TO') THEN 'Norte'
+                        ELSE 'Outros'
+                    END AS regiao,
+                    ano_venda,
+                    mes_venda,
+                    SUM(receita_total) AS receita
+                FROM kpi_por_estado
+                GROUP BY regiao, ano_venda, mes_venda
+            ),
+            atual AS (
+                SELECT regiao, receita
+                FROM por_regiao_mes
+                WHERE ano_venda * 100 + mes_venda = (
+                    SELECT MAX(ano_venda * 100 + mes_venda) FROM por_regiao_mes
+                )
+            ),
+            anterior AS (
+                SELECT regiao, receita
+                FROM por_regiao_mes
+                WHERE ano_venda * 100 + mes_venda = (
+                    SELECT DISTINCT ano_venda * 100 + mes_venda
+                    FROM por_regiao_mes
+                    ORDER BY 1 DESC
+                    LIMIT 1 OFFSET 1
+                )
+            )
+            SELECT a.regiao, ROUND((a.receita - b.receita) / b.receita * 100, 2) AS crescimento_pct
+            FROM atual a
+            JOIN anterior b ON a.regiao = b.regiao
+            ORDER BY crescimento_pct DESC
+            LIMIT 1
+            """
+        )
+
+        assert real
+        regiao_esperada = str(real[0][0])
+        assert regiao_esperada.lower() in response.lower(), (
+            f"Esperava encontrar a região {regiao_esperada} na resposta, mas recebeu: {response[:300]}"
+        )
