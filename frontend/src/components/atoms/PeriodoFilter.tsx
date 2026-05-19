@@ -64,18 +64,20 @@ export const PeriodoFilter = ({ options, selected, onChange }: PeriodoFilterProp
       <button
         onClick={() => setOpen((prev) => !prev)}
         className={[
-          "flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap cursor-pointer select-none",
+          "flex items-center justify-between gap-2 px-4 py-2.5 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap cursor-pointer select-none w-48",
           hasSelection
             ? "border-blue-500 bg-blue-50 text-blue-700"
             : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50",
         ].join(" ")}
       >
-        <span>Período</span>
-        {hasSelection && (
-          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold leading-none">
-            {selected.length}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          <span>Período</span>
+          {hasSelection && (
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold leading-none">
+              {selected.length}
+            </span>
+          )}
+        </div>
         <ChevronDown
           size={14}
           className={`transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}

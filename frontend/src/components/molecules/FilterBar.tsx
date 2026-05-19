@@ -31,8 +31,8 @@ export const FilterBar = ({
   onStatusChange,
 }: FilterBarProps) => {
   return (
-    <div className="flex items-center gap-3 w-full">
-      <div className="flex-1 min-w-0">
+    <div className="flex items-center gap-4 w-full">
+      <div className="flex-1">
         <SearchInput
           value={search}
           onChange={onSearchChange}
@@ -47,7 +47,7 @@ export const FilterBar = ({
       />
 
       <DropdownFilter
-        label="Categoria"
+        label="Produto"
         options={categoriaOptions}
         selected={selectedCategoria}
         onChange={onCategoriaChange}
