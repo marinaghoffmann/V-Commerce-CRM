@@ -18,20 +18,12 @@ def get_kpis(
     mes: int | None = None,
     ano: int | None = None,
 ):
-    rows = (
-        db.query(Ticket.status_ticket, func.count(Ticket.id_ticket))
-        .group_by(Ticket.status_ticket)
-        .all()
-    )
-    kpis = {s: c for s, c in rows}
-
     if mes and ano:
         m = str(mes).zfill(2)
         a = str(ano)
     else:
         ultima_data = (
-            db.query(func.max(Ticket.data_resolucao))
-            .filter(Ticket.status_ticket == "fechado")
+            db.query(func.max(Ticket.data_abertura))
             .scalar()
         )
         if ultima_data:
@@ -39,6 +31,19 @@ def get_kpis(
             a = ultima_data[:4]
         else:
             m, a = "01", "1970"
+
+    filtro_periodo = [
+        func.strftime("%m", Ticket.data_abertura) == m,
+        func.strftime("%Y", Ticket.data_abertura) == a,
+    ]
+
+    rows = (
+        db.query(Ticket.status_ticket, func.count(Ticket.id_ticket))
+        .filter(*filtro_periodo)
+        .group_by(Ticket.status_ticket)
+        .all()
+    )
+    kpis = {s: c for s, c in rows}
 
     fechados_mes = (
         db.query(func.count(Ticket.id_ticket))
