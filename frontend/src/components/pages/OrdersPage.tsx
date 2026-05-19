@@ -140,8 +140,8 @@ export const OrdersPage = () => {
 
   const [dateRange, setDateRange] =
     useState<DateRange>({
-      startDate: null,
-      endDate: null,
+      data_inicio: null,
+      data_fim: null,
     });
 
   const [page, setPage] =
