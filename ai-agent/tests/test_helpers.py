@@ -1,6 +1,12 @@
+import os
+import sys
 import time
 import re
 import pytest
+
+ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 from agent import call_agent
 from utils import (
