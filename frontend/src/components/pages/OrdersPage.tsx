@@ -151,6 +151,7 @@ export const OrdersPage = () => {
               setPageSize={(size) => { setPageSize(Number(size)); setPage(1); }}
               page={page}
               onPageChange={setPage}
+              totalItems={total}
             />
           )}
         </div>

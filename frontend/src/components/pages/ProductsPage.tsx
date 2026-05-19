@@ -730,26 +730,43 @@ export default function ProductsPage() {
           {products.length > 0 && (
             <div className="mt-6 flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-sm">
               <span className="text-xs text-gray-400">
-                {`${(page - 1) * limit + 1}–${(page - 1) * limit + products.length}`}
+                {`Mostrando ${String((page - 1) * limit + 1).padStart(2, "0")} a ${String((page - 1) * limit + products.length).padStart(2, "0")} resultados`}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={15} />
                 </button>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500 text-xs font-semibold text-white">
-                  {page}
-                </span>
+
+                {Array.from({ length: 5 }, (_, i) => {
+                  const start = Math.max(1, page - 2);
+                  return start + i;
+                }).filter((n) => products.length === limit || n <= page).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setPage(n)}
+                    className={[
+                      "w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors cursor-pointer",
+                      page === n
+                        ? "border-2 border-blue-500 text-blue-600 bg-white"
+                        : "text-gray-400 hover:bg-gray-100",
+                    ].join(" ")}
+                  >
+                    {n}
+                  </button>
+                ))}
+
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={products.length < limit}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-30 transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={15} />
                 </button>
+
                 <div className="ml-2">
                   <PageSizeSelect
                     value={limit}
