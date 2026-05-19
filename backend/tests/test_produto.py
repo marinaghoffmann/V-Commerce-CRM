@@ -42,7 +42,7 @@ class TestProduto:
         update_payload = mock_produto.copy()
         update_payload["nome_produto"] = "Produto Atualizado"
 
-        update_response = client.put(f"/produto/{produto_id}", json=update_payload)
+        update_response = client.patch(f"/produto/{produto_id}", json=update_payload)
         assert update_response.status_code == 200
         assert update_response.json()["nome_produto"] == "Produto Atualizado"
 
@@ -51,16 +51,16 @@ class TestProduto:
         produto_id = produto_response.json()["id_produto"]
 
         update_payload = mock_produto.copy()
-        update_payload["preco"] = 999.0
+        payload = {'preco': 999.0}
 
-        client.put(f"/produto/{produto_id}", json=update_payload)
+        client.patch(f"/produto/{produto_id}", json=payload)
 
         get_response = client.get(f"/produto/{produto_id}")
         assert get_response.status_code == 200
         assert get_response.json()["preco"] == 999.0
 
     def test_update_nonexistent_produto(self, client: TestClient, mock_produto):
-        update_response = client.put("/produto/ID_INEXISTENTE", json=mock_produto)
+        update_response = client.patch("/produto/ID_INEXISTENTE", json=mock_produto)
         assert update_response.status_code == 404
         assert update_response.json()["detail"] == "Produto não encontrado"
 

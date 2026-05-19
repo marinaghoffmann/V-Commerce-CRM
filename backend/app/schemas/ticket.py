@@ -10,6 +10,7 @@ STATUS_VALIDOS  = {"aberto", "fechado"}
 class TicketSchema(BaseModel):
     id_ticket: str = Field(..., min_length=1, description="Identificador do ticket")
     id_cliente: str = Field(..., min_length=1, description="Client identifier")
+    id_pedido: str = Field(..., min_length=1, description="Identificador do pedido associado ao ticket")
     nome_cliente: str | None = Field(None, min_length=1, description="Nome completo do cliente")
     tipo_problema: str | None = Field(None, description="Tipo do problema: reembolso, entrega, produto ou pagamento")
     status_ticket: str | None = Field(None, description="Ticket status: aberto ou fechado")
@@ -28,6 +29,7 @@ class TicketSchema(BaseModel):
 class TicketSchemaRead(BaseModel):
     id_ticket: str = Field(..., min_length=1, description="Identificador do ticket")
     id_cliente: str = Field(..., min_length=1, description="Client identifier")
+    id_pedido: str = Field(..., min_length=1, description="Identificador do pedido associado ao ticket")
     nome_cliente: str | None = Field(None, min_length=1, description="Nome completo do cliente")
     tipo_problema: str | None = Field(None, description="Tipo do problema: reembolso, entrega, produto ou pagamento")
     status_ticket: str | None = Field(None, description="Ticket status: aberto ou fechado")
@@ -47,6 +49,7 @@ class TicketSchemaRead(BaseModel):
 class TicketCreateSchema(BaseModel):
     id_ticket: str = Field(..., min_length=1, description="Identificador único do ticket")
     id_cliente: str = Field(..., min_length=1, description="Identificador do cliente")
+    id_pedido: str = Field(..., min_length=1, description="Identificador do pedido associado ao ticket")
     nome_cliente: str = Field(..., min_length=1, description="Nome completo do cliente")
     tipo_problema: str = Field(..., description="Tipo do problema: reembolso, entrega, produto ou pagamento")
     status_ticket: str = Field("aberto", description="Status do ticket: aberto ou fechado")
