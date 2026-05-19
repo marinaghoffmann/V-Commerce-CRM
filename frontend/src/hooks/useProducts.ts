@@ -7,6 +7,7 @@ interface UseProductsArgs {
   limit?: number;
   nome_produto?: string | null;
   categorias?: string[];
+  ordem?: string | null;
 }
 
 export function useProducts(initArgs: UseProductsArgs = {}) {
@@ -17,9 +18,11 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
   const [limit, setLimit] = useState<number>(initArgs.limit ?? 12);
   const categoriasRef = useRef<string[]>(initArgs.categorias ?? []);
   const nomeProdutoRef = useRef<string | null | undefined>(initArgs.nome_produto);
+  const ordemRef = useRef<string | null | undefined>(initArgs.ordem);
 
   categoriasRef.current = initArgs.categorias ?? [];
   nomeProdutoRef.current = initArgs.nome_produto;
+  ordemRef.current = initArgs.ordem;
 
   const fetchProducts = useCallback(async (args?: UseProductsArgs) => {
     setLoading(true);
@@ -29,6 +32,7 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
       params.append("page", String(args?.page ?? page));
       params.append("limit", String(args?.limit ?? limit));
       if (args?.nome_produto) params.append("nome_produto", args.nome_produto);
+      if (args?.ordem) params.append("ordem", args.ordem);
       (args?.categorias ?? []).forEach((c) => params.append("categoria", c));
 
       const res = await api.get(`/produto?${params.toString()}`);
@@ -48,11 +52,12 @@ export function useProducts(initArgs: UseProductsArgs = {}) {
       limit,
       categorias: categoriasRef.current,
       nome_produto: nomeProdutoRef.current,
+      ordem: ordemRef.current,
     });
-  }, [fetchProducts, page, limit, initArgs.categorias?.join(","), initArgs.nome_produto]);
+  }, [fetchProducts, page, limit, initArgs.categorias?.join(","), initArgs.nome_produto, initArgs.ordem]);
 
   const refetch = useCallback(
-    () => fetchProducts({ page, limit, categorias: categoriasRef.current, nome_produto: nomeProdutoRef.current }),
+    () => fetchProducts({ page, limit, categorias: categoriasRef.current, nome_produto: nomeProdutoRef.current, ordem: ordemRef.current }),
     [fetchProducts, page, limit]
   );
 

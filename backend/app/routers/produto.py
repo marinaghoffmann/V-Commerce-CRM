@@ -26,6 +26,7 @@ def list_produto(
     limit: int = 10,
     nome_produto: str | None = None,
     categoria: List[str] | None = Query(default=None),
+    ordem: str | None = Query(default=None),
 ):
     query = db.query(Produto)
     filters = []
@@ -35,11 +36,19 @@ def list_produto(
     if categoria:
         filters.append(Produto.categoria.in_(categoria))
 
+    # Ordenação dinâmica
+    if ordem:
+        coluna, direcao = ordem.split(":") if ":" in ordem else (ordem, "desc")
+        attr = getattr(Produto, coluna, None)
+        if attr:
+            query = query.order_by(attr.desc() if direcao == "desc" else attr.asc())
+    else:
+        query = query.order_by(Produto.id_produto)
+
     offset = (page - 1) * limit
     produtos = (
         query
         .filter(*filters)
-        .order_by(Produto.id_produto)
         .offset(offset)
         .limit(limit)
         .all()
