@@ -28,6 +28,8 @@ def get_pedido_cliente(
     categoria_produto: str | None = None,
     status: str | None = None,
     metodo_pagamento: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
 ):
     query = (
         db.query(
@@ -56,6 +58,12 @@ def get_pedido_cliente(
     if metodo_pagamento:
         metodo_pagamento = metodo_pagamento if metodo_pagamento != "Cartão" else "cartao"
         query = query.filter(Pedidos.metodo_pagamento.ilike(f"%{metodo_pagamento}%"))
+    
+    # Filtro de intervalo de datas
+    if data_inicio:
+        query = query.filter(Pedidos.data_pedido >= data_inicio)
+    if data_fim:
+        query = query.filter(Pedidos.data_pedido <= data_fim)
 
     total = query.count()
 

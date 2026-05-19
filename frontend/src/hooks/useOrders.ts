@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { Pedido } from "../components/types/pedido.types";
-import type { PeriodoSelecionado } from "../components/atoms/PeriodoFilter";
+import type { DateRange } from "../components/atoms/DateRangeFilter";
 import api from "../services/api";
 
 interface UseOrdersArgs {
@@ -9,7 +9,7 @@ interface UseOrdersArgs {
   search: string;
   selectedCategoria: string[];
   selectedStatus: string[];
-  selectedPeriodo: PeriodoSelecionado[];
+  dateRange: DateRange;
 }
 
 export function useOrders({
@@ -18,7 +18,7 @@ export function useOrders({
   search,
   selectedCategoria,
   selectedStatus,
-  selectedPeriodo,
+  dateRange,
 }: UseOrdersArgs) {
   const [allPedidos, setAllPedidos] = useState<Pedido[]>([]);
   const [isFetching, setIsFetching] = useState(true);
@@ -57,27 +57,6 @@ export function useOrders({
     [allPedidos]
   );
 
-  // Pares únicos de mês/ano extraídos dos dados
-  const periodoOptions = useMemo((): PeriodoSelecionado[] => {
-    const seen = new Set<string>();
-    const result: PeriodoSelecionado[] = [];
-    for (const item of allPedidos) {
-      if (!item.data_pedido) continue;
-      const [anoStr, mesStr] = item.data_pedido.split("-");
-      const ano = parseInt(anoStr, 10);
-      const mes = parseInt(mesStr, 10);
-      const key = `${ano}-${mes}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        result.push({ ano, mes });
-      }
-    }
-    // Ordena do mais recente para o mais antigo
-    return result.sort((a, b) =>
-      a.ano !== b.ano ? b.ano - a.ano : b.mes - a.mes
-    );
-  }, [allPedidos]);
-
   // Filtragem local
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -108,19 +87,18 @@ export function useOrders({
       )
         return false;
 
-      // Período por mês/ano (multi, OR)
-      if (selectedPeriodo.length > 0) {
+      // Intervalo de datas
+      if (dateRange.data_inicio || dateRange.data_fim) {
         if (!item.data_pedido) return false;
-        const [anoStr, mesStr] = item.data_pedido.split("-");
-        const ano = parseInt(anoStr, 10);
-        const mes = parseInt(mesStr, 10);
-        const match = selectedPeriodo.some((p) => p.ano === ano && p.mes === mes);
-        if (!match) return false;
+        const dataPedido = item.data_pedido;
+        
+        if (dateRange.data_inicio && dataPedido < dateRange.data_inicio) return false;
+        if (dateRange.data_fim && dataPedido > dateRange.data_fim) return false;
       }
 
       return true;
     });
-  }, [allPedidos, search, selectedCategoria, selectedStatus, selectedPeriodo]);
+  }, [allPedidos, search, selectedCategoria, selectedStatus, dateRange]);
 
   // Paginação local
   const total = filtered.length;
@@ -136,6 +114,5 @@ export function useOrders({
     total,
     categoriaOptions,
     statusOptions,
-    periodoOptions,
   };
 }

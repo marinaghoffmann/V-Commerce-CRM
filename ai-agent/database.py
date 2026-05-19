@@ -1,6 +1,9 @@
+from pathlib import Path
+
 from sqlalchemy import create_engine, inspect, text
 
-engine = create_engine("sqlite:///../backend/V-Commerce-CRM-360.db")
+DB_PATH = Path(__file__).resolve().parent.parent / "backend" / "V-Commerce-CRM-360.db"
+engine = create_engine(f"sqlite:///{DB_PATH}")
 
 def get_schema() -> str:
     inspector = inspect(engine)
