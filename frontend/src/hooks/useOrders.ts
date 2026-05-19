@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Pedido } from "../components/types/pedido.types";
 import api from "../services/api";
 
@@ -14,6 +14,7 @@ export function useOrders({ page, pageSize, search, searchField, activeFilter }:
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [isFetching, setIsFetching] = useState(true);
   const [total, setTotal] = useState(0);
+  const totalRef = useRef(0);
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -30,17 +31,19 @@ export function useOrders({ page, pageSize, search, searchField, activeFilter }:
 
         const res = await api.get(`/pedidos_cliente?${params.toString()}`);
         const data = res.data;
-        const items = Array.isArray(data) ? data : data.items ?? data.data ?? [];
-        
+        const items = data.items ?? (Array.isArray(data) ? data : []);
+
         setPedidos(items);
-        if (data.total) setTotal(data.total);
+        if (data.total !== undefined) {
+          setTotal(data.total);
+        }
       } catch (err) {
         console.error("Erro ao buscar pedidos:", err);
       } finally {
         setIsFetching(false);
       }
     };
-    
+
     fetchPedidos();
   }, [page, pageSize, search, searchField, activeFilter]);
 
