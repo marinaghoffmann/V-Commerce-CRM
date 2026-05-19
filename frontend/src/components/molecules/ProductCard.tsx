@@ -60,7 +60,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
           SKU: {product.id_produto}
         </span>
         <div className="flex items-center gap-2 flex-wrap">
-            {product.indicador_crescimento == null ? 'Não informado' : 
+            {product.indicador_crescimento == null ? '' : 
             product.indicador_crescimento >= 0 ? 
             <span className="px-2.5 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full"> Faturamento: +{product.indicador_crescimento}% </span> : 
             <span className="px-2.5 py-1 bg-red-100 text-red-600 text-xs font-medium rounded-full">Faturamento: {product.indicador_crescimento}% </span>} {product.flag_alto_ticket ? 
