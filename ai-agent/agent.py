@@ -8,6 +8,7 @@ from database import execute_query
 from prompt import SYSTEM_PROMPT
 from utils import validar_sql, get_tabelas_validas
 from session_memory import build_session_context, register_turn, clear_session_state
+from context_enricher import build_context_payload
 
 load_dotenv()
 
@@ -26,11 +27,24 @@ class CHESSContext(BaseModel):
 client = genai.Client(api_key=google_api_key)
 
 def perguntar(question: str, session_id: str = "default") -> dict:
+    """Pergunta ao agente principal com contexto de sessão e amostras reais.
+
+    O contexto enriquecido é coletado internamente por um módulo de seleção de
+    tabelas e amostragem, sem alterar a API pública.
+    """
     session_context = build_session_context(session_id)
+    enriched_payload = build_context_payload(question)
     prompt_parts = []
 
     if session_context:
         prompt_parts.append(session_context)
+
+    if enriched_payload.get("context"):
+        prompt_parts.append(
+            "Contexto de amostras relevantes:\n"
+            f"Plano: {enriched_payload.get('targets', [])}\n"
+            f"Amostras:\n{enriched_payload['context']}"
+        )
 
     prompt_parts.append(f"Pergunta atual do usuário:\n{question}")
 
