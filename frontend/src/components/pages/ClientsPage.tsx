@@ -36,6 +36,7 @@ function Clients() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const navigate = useNavigate();
 
   const { clientes, total, loading } = useClientes({ busca, status, page, limit });
@@ -50,6 +51,8 @@ function Clients() {
   };
 
   const handleExportCSV = async () => {
+    setShowExportModal(false);
+    setIsExporting(true);
     try {
       const params = new URLSearchParams();
       if (busca) params.append("busca", busca);
@@ -62,7 +65,7 @@ function Clients() {
     } catch (err) {
       console.error("Erro ao exportar clientes:", err);
     } finally {
-      setShowExportModal(false);
+      setIsExporting(false);
     }
   };
 
@@ -84,10 +87,22 @@ function Clients() {
         </div>
         <button
           onClick={() => setShowExportModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
+          disabled={isExporting}
+          className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+            isExporting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-900 hover:bg-blue-800"
+          }`}
         >
-          <Upload size={16} />
-          Exportar CSV
+          {isExporting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
+              Exportando...
+            </>
+          ) : (
+            <>
+              <Upload size={16} />
+              Exportar CSV
+            </>
+          )}
         </button>
         </div>
 
