@@ -2,7 +2,7 @@ from typing import List
 from uuid import uuid4
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -12,12 +12,19 @@ from app.schemas.cliente import ClienteSchema, ClienteCreateSchema, ClienteUpdat
 from app.models.ticket import Ticket
 from app.models.pedido import Pedido
 
+CLIENTE_ORDER_FIELDS = {
+    "receita_total_cliente": Cliente.receita_total_cliente,
+    "total_compras": Cliente.total_compras,
+    "ticket_medio": Cliente.ticket_medio,
+    "data_ultima_compra": Cliente.data_ultima_compra,
+}
+
 router = APIRouter(prefix="/clientes", tags=["Cliente"])
 
 @router.get("/count")
 def contar_clientes(
     busca: str = None,
-    status: str = None,
+    status: list[str] | None = Query(default=None),
     db: Session = Depends(get_db)
 ):
     query = db.query(func.count(Cliente.id_cliente))
@@ -31,15 +38,16 @@ def contar_clientes(
         )
 
     if status:
-        query = query.filter(Cliente.segmento_cliente == status)
+        query = query.filter(Cliente.segmento_cliente.in_(status))
 
     return {"total": query.scalar()}
 
 @router.get("/", response_model=list[ClienteSchema])
 def listar_clientes(
     busca: str = None,
-    status: str = None,
+    status: list[str] | None = Query(default=None),
     categoria: str = None,
+    ordem: str = None,
     page: int = 1,
     limit: int = 10,
     db: Session = Depends(get_db)
@@ -55,13 +63,26 @@ def listar_clientes(
         )
 
     if status:
-        query = query.filter(Cliente.segmento_cliente == status)
+        query = query.filter(Cliente.segmento_cliente.in_(status))
 
     if categoria:
         query = query.filter(Cliente.categoria_preferida == categoria)
 
+    if ordem:
+        coluna, direcao = ordem.split(":", 1) if ":" in ordem else (ordem, "desc")
+        campo_ordenacao = CLIENTE_ORDER_FIELDS.get(coluna)
+        if campo_ordenacao is not None:
+            query = query.order_by(
+                campo_ordenacao.desc() if direcao == "desc" else campo_ordenacao.asc(),
+                Cliente.id_cliente,
+            )
+        else:
+            query = query.order_by(Cliente.id_cliente)
+    else:
+        query = query.order_by(Cliente.id_cliente)
+
     offset = (page - 1) * limit
-    return query.order_by(Cliente.id_cliente).offset(offset).limit(limit).all()
+    return query.offset(offset).limit(limit).all()
 
 @router.get("/{cliente_id}", response_model=ClienteSchema)
 def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):

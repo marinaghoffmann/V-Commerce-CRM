@@ -12,6 +12,21 @@ import pytest
 from fastapi.testclient import TestClient
 from datetime import date
 
+from app.models.cliente import Cliente
+
+
+def _atualizar_cliente(db_session, email: str, **attrs):
+    cliente = db_session.query(Cliente).filter(Cliente.email == email).first()
+    assert cliente is not None
+
+    for chave, valor in attrs.items():
+        setattr(cliente, chave, valor)
+
+    db_session.add(cliente)
+    db_session.commit()
+    db_session.refresh(cliente)
+    return cliente
+
 
 class TestClienteCreate:
     """Tests for POST /clientes (create client)."""
@@ -372,6 +387,127 @@ class TestClienteRead:
         # This test verifies the filter parameter is accepted
         response = client.get("/clientes?status=premium")
         assert response.status_code == 200
+
+    def test_listar_clientes_com_multiplos_status(self, client: TestClient, mock_cliente, db_session):
+        """Test filtering clients by more than one segment value."""
+        payload_a = mock_cliente.copy()
+        payload_a["email"] = "multi-premium@example.com"
+        client.post("/clientes", json=payload_a)
+
+        payload_b = mock_cliente.copy()
+        payload_b["email"] = "multi-inativo@example.com"
+        client.post("/clientes", json=payload_b)
+
+        payload_c = mock_cliente.copy()
+        payload_c["email"] = "multi-novo@example.com"
+        client.post("/clientes", json=payload_c)
+
+        for email, segmento in [
+            ("multi-premium@example.com", "premium"),
+            ("multi-inativo@example.com", "inativo"),
+            ("multi-novo@example.com", "novo"),
+        ]:
+            cliente = db_session.query(Cliente).filter(Cliente.email == email).first()
+            assert cliente is not None
+            cliente.segmento_cliente = segmento
+            db_session.add(cliente)
+        db_session.commit()
+
+        response = client.get("/clientes?status=premium&status=inativo")
+
+        assert response.status_code == 200
+        emails = [cliente["email"] for cliente in response.json()]
+        assert emails == ["multi-premium@example.com", "multi-inativo@example.com"]
+
+    def test_listar_clientes_ordem_por_receita_desc(self, client: TestClient, mock_cliente, db_session):
+        """Test ordering clients by highest revenue first."""
+        payload_a = mock_cliente.copy()
+        payload_a["email"] = "cliente-a@example.com"
+        client.post("/clientes", json=payload_a)
+
+        payload_b = mock_cliente.copy()
+        payload_b["email"] = "cliente-b@example.com"
+        client.post("/clientes", json=payload_b)
+
+        payload_c = mock_cliente.copy()
+        payload_c["email"] = "cliente-c@example.com"
+        client.post("/clientes", json=payload_c)
+
+        _atualizar_cliente(
+            db_session,
+            "cliente-a@example.com",
+            receita_total_cliente=120.0,
+            total_compras=2,
+            ticket_medio=60.0,
+            data_ultima_compra=date(2026, 5, 10),
+        )
+        _atualizar_cliente(
+            db_session,
+            "cliente-b@example.com",
+            receita_total_cliente=320.0,
+            total_compras=6,
+            ticket_medio=53.33,
+            data_ultima_compra=date(2026, 5, 18),
+        )
+        _atualizar_cliente(
+            db_session,
+            "cliente-c@example.com",
+            receita_total_cliente=210.0,
+            total_compras=4,
+            ticket_medio=52.5,
+            data_ultima_compra=date(2026, 5, 15),
+        )
+
+        response = client.get("/clientes?ordem=receita_total_cliente:desc")
+
+        assert response.status_code == 200
+        emails = [cliente["email"] for cliente in response.json()]
+        assert emails == ["cliente-b@example.com", "cliente-c@example.com", "cliente-a@example.com"]
+
+    def test_listar_clientes_ordem_por_total_compras_asc_com_status(self, client: TestClient, mock_cliente, db_session):
+        """Test ordering clients by fewest purchases while preserving status filtering."""
+        payload_a = mock_cliente.copy()
+        payload_a["email"] = "premium-1@example.com"
+        client.post("/clientes", json=payload_a)
+
+        payload_b = mock_cliente.copy()
+        payload_b["email"] = "premium-2@example.com"
+        client.post("/clientes", json=payload_b)
+
+        payload_c = mock_cliente.copy()
+        payload_c["email"] = "inativo-1@example.com"
+        client.post("/clientes", json=payload_c)
+
+        _atualizar_cliente(
+            db_session,
+            "premium-1@example.com",
+            segmento_cliente="premium",
+            total_compras=9,
+            receita_total_cliente=900.0,
+            ticket_medio=100.0,
+        )
+        _atualizar_cliente(
+            db_session,
+            "premium-2@example.com",
+            segmento_cliente="premium",
+            total_compras=3,
+            receita_total_cliente=300.0,
+            ticket_medio=100.0,
+        )
+        _atualizar_cliente(
+            db_session,
+            "inativo-1@example.com",
+            segmento_cliente="inativo",
+            total_compras=1,
+            receita_total_cliente=100.0,
+            ticket_medio=100.0,
+        )
+
+        response = client.get("/clientes?status=premium&ordem=total_compras:asc")
+
+        assert response.status_code == 200
+        emails = [cliente["email"] for cliente in response.json()]
+        assert emails == ["premium-2@example.com", "premium-1@example.com"]
 
 
 class TestClienteUpdate:

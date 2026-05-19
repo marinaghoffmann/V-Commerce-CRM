@@ -4,12 +4,13 @@ import api from "../services/api";
 
 interface UseClientesArgs {
   busca: string;
-  status: string;
+  status: string[];
+  ordem: string;
   page: number;
   limit: number;
 }
 
-export function useClientes({ busca, status, page, limit }: UseClientesArgs) {
+export function useClientes({ busca, status, ordem, page, limit }: UseClientesArgs) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -21,13 +22,14 @@ export function useClientes({ busca, status, page, limit }: UseClientesArgs) {
 
     const params = new URLSearchParams();
     if (busca) params.append("busca", busca);
-    if (status) params.append("status", status);
+    status.forEach((segmento) => params.append("status", segmento));
+    if (ordem) params.append("ordem", ordem);
     params.append("page", String(page));
     params.append("limit", String(limit));
 
     const countParams = new URLSearchParams();
     if (busca) countParams.append("busca", busca);
-    if (status) countParams.append("status", status);
+    status.forEach((segmento) => countParams.append("status", segmento));
 
     Promise.all([
       api.get(`/clientes/?${params.toString()}`).then((r) => r.data),
@@ -42,7 +44,7 @@ export function useClientes({ busca, status, page, limit }: UseClientesArgs) {
         setError(err.message ?? String(err));
       })
       .finally(() => setLoading(false));
-  }, [busca, status, page, limit]);
+  }, [busca, status, ordem, page, limit]);
 
   return { clientes, total, loading, error };
 }
