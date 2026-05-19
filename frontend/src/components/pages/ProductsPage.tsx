@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle, Search } from "lucide-react";
 
 import ProductGrid from "../organisms/ProductGrid";
@@ -6,6 +6,7 @@ import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
+import api from "../../services/api"; // <-- Importação do serviço de API do seu frontend
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -424,21 +425,12 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
 
         {/* SKU e Categoria — lado a lado */}
         <div className="grid grid-cols-2 gap-4">
-          {isEdit ? (
-            <Field
-              label="SKU"
-              value={form.id_produto}
-              onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
-              disabled={true}
-            />
-          ) : (
-            <Field
-              label="SKU"
-              value={form.id_produto}
-              onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
-              disabled={true}
-            />
-          )}
+          <Field
+            label="SKU"
+            value={form.id_produto}
+            onChange={(v) => setForm((f) => ({ ...f, id_produto: v }))}
+            disabled={true}
+          />
           <Field
             label="Categoria"
             value={form.categoria}
@@ -670,6 +662,23 @@ export default function ProductsPage() {
   const [searchInput, setSearchInput] = useState<string>("");
   const [searchCommitted, setSearchCommitted] = useState<string>("");
 
+  // Novo estado controlado para a lista completa de categorias do filtro
+  const [availableCategories, setAvailableCategories] = useState<string[]>(Object.keys(CATEGORY_COLORS));
+
+  // Função assíncrona responsável por consultar a rota /categorias do backend
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await api.get("/produto/categorias");
+      const fromDb = res.data || [];
+      const predefined = Object.keys(CATEGORY_COLORS);
+      
+      // Mescla as categorias predefinidas esteticamente com as existentes no banco
+      setAvailableCategories(Array.from(new Set([...predefined, ...fromDb])).sort());
+    } catch (err) {
+      console.error("Erro ao carregar categorias do banco de dados:", err);
+    }
+  }, []);
+
   function handleSearch() {
     setSearchCommitted(searchInput.trim());
     setPage(1);
@@ -690,19 +699,26 @@ export default function ProductsPage() {
       ordem: ordemSelecionada,
     });
 
-  const availableCategories = useMemo(() => {
-    const predefined = Object.keys(CATEGORY_COLORS);
-    const fromData = products
-      .map((p) => p.categoria)
-      .filter((c): c is string => !!c);
-    return Array.from(new Set([...predefined, ...fromData])).sort();
-  }, [products]);
+  // Dispara a consulta assim que o componente for montado em tela
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   function openCreate() { setFormModal({ open: true, product: null }); }
   function openEdit(product: Product) { setFormModal({ open: true, product }); }
   function closeForm() { setFormModal({ open: false, product: null }); }
-  function handleSaved() { closeForm(); refetch(); }
-  function handleDeleted() { setDeleteModal(null); refetch(); }
+  
+  function handleSaved() { 
+    closeForm(); 
+    refetch(); 
+    fetchCategories(); // <-- Re-requisita do banco para capturar se uma nova categoria foi criada
+  }
+  
+  function handleDeleted() { 
+    setDeleteModal(null); 
+    refetch(); 
+    fetchCategories(); // <-- Atualiza a lista caso a última unidade pertencente àquela categoria tenha sumido
+  }
 
   const editInitial: FormState = formModal.product
     ? {
