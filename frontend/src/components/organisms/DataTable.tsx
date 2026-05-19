@@ -1,6 +1,7 @@
 // components/organisms/DataTable.tsx
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PageSizeSelect } from "../atoms/PageSizeSelect";
 
 interface Column<T> {
   key: string;
@@ -63,14 +64,6 @@ export const DataTable = <T extends object>({
                   {col.label}
                 </th>
               ))}
-              <th className="px-2 py-3 text-right">
-                <select onChange={(e) => setPageSize(Number(e.target.value))} value={pageSize} className="p-1 border rounded text-xs text-gray-600 bg-white cursor-pointer">
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                </select>
-              </th>
             </tr>
           </thead>
 
@@ -145,6 +138,13 @@ export const DataTable = <T extends object>({
           >
             <ChevronRight size={15} />
           </button>
+          
+          <div className="ml-2">
+            <PageSizeSelect
+              value={pageSize}
+              onChange={(size) => { setPageSize(size); if (!isControlled) setInternalPage(1); }}
+            />
+          </div>
         </div>
       </div>
     </div>
