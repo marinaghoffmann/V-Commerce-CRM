@@ -629,23 +629,22 @@ function Dashboard() {
                         scales: {
                           x: { display: false },
                           y: {
+                            display: false,
                             min: 0,
                             max: 100,
-                            ticks: { callback: (value) => `${value}%`, stepSize: 20 },
-                            grid: { color: "#F3F4F6" },
-                            border: { display: false },
+                            grid: { display: false },
                           },
                         },
                       }}
                     />
                   </div>
 
-                  {/* Legenda centralizada com as barras */}
+                  {/* Legenda alinhada com as barras */}
                   <div className="flex mt-4 border-t border-gray-100 pt-4">
                     {activeConfig.legend.map((label, i) => (
                       <div
                         key={label}
-                        className="flex-1 flex flex-col items-center justify-start gap-1 text-sm font-medium text-gray-700"
+                        className="flex-1 flex flex-col items-center gap-1 font-medium text-gray-700"
                       >
                         {chartView === "status" ? (
                           getStatusIcon(label)
