@@ -347,18 +347,25 @@ function Dashboard() {
   const mesAtual = reviewData;
   const satisfacaoValores    = [mesAtual?.positiva ?? 0, mesAtual?.neutra ?? 0, mesAtual?.ruim ?? 0];
   const satisfacaoCores      = ["#5CA860", "#8A8D93", "#C64C4B"];
-  const satisfacaoFundoCinza = satisfacaoValores.map((v) => 100 - v);
+  const positiva = mesAtual?.positiva ?? 0
+  const negativa = mesAtual?.ruim ?? 0
+  const neutra = mesAtual?.neutra ?? 0
+  const vazio = (positiva + neutra + negativa) === 0
   const satisfacaoData = {
     labels: ["Positivo", "Neutro", "Negativo"],
     datasets: [
-      { data: satisfacaoValores,    backgroundColor: satisfacaoCores, barThickness: 45 },
-      { data: satisfacaoFundoCinza, backgroundColor: "#EBEDF0",       barThickness: 45 },
+    {
+      data: vazio ? [0.75, 0.75, 0.75] : satisfacaoValores,
+      backgroundColor: satisfacaoCores,
+      barThickness: 45,
+    },
     ],
   };
 
   const pluginTextoHorizontal = {
     id: "textoHorizontal",
     afterDatasetsDraw(chart: any) {
+
       const { ctx } = chart;
       const meta = chart.getDatasetMeta(0);
       meta.data.forEach((bar: any, index: number) => {
@@ -367,6 +374,10 @@ function Dashboard() {
         ctx.font = "bold 12px sans-serif";
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
+        if (vazio){
+          ctx.fillText(`0%`, bar.x + 8, bar.y);
+          return
+        }
         ctx.fillText(`${valor}%`, bar.x + 8, bar.y);
       });
     },
