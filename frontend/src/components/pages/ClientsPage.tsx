@@ -6,6 +6,7 @@ import api from "../../services/api";
 import { useClientes } from "../../hooks/useClientes";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
+import { ExportCSVModal } from "../molecules/ExportCSVModal";
 
 function getInitials(nome: string, sobrenome: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -34,6 +35,7 @@ function Clients() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [showExportModal, setShowExportModal] = useState(false);
   const navigate = useNavigate();
 
   const { clientes, total, loading } = useClientes({ busca, status, page, limit });
@@ -59,6 +61,8 @@ function Clients() {
       exportCSV(res.data, "clientes");
     } catch (err) {
       console.error("Erro ao exportar clientes:", err);
+    } finally {
+      setShowExportModal(false);
     }
   };
 
@@ -79,13 +83,19 @@ function Clients() {
           </p>
         </div>
         <button
-          onClick={handleExportCSV}
+          onClick={() => setShowExportModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
         >
           <Upload size={16} />
           Exportar CSV
         </button>
         </div>
+
+        <ExportCSVModal
+          isOpen={showExportModal}
+          onCancel={() => setShowExportModal(false)}
+          onConfirm={handleExportCSV}
+        />
 
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1">
