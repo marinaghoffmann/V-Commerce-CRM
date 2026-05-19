@@ -96,6 +96,7 @@ def register_turn(
 
 
 def build_session_context(session_id: str) -> str:
+    """Build a textual session context for inclusion in the system prompt."""
     session = get_session_state(session_id)
 
     context_parts: list[str] = []

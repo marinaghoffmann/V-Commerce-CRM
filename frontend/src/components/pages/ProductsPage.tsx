@@ -746,7 +746,12 @@ export default function ProductsPage() {
             <input
               type="text"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSearchInput(v);
+                setSearchCommitted(v.trim());
+                setPage(1);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSearch();
               }}

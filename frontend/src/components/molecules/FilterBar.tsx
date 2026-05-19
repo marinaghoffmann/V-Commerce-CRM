@@ -1,14 +1,13 @@
 import { SearchInput } from "../atoms/SearchInput";
 import { DropdownFilter } from "../atoms/DropdownFilter";
-import { PeriodoFilter } from "../atoms/PeriodoFilter";
-import type { PeriodoSelecionado } from "../atoms/PeriodoFilter";
+import { DateRangeFilter } from "../atoms/DateRangeFilter";
+import type { DateRange } from "../atoms/DateRangeFilter";
 
 interface FilterBarProps {
   search: string;
   onSearchChange: (value: string) => void;
-  periodoOptions: PeriodoSelecionado[];
-  selectedPeriodo: PeriodoSelecionado[];
-  onPeriodoChange: (v: PeriodoSelecionado[]) => void;
+  dateRange: DateRange;
+  onDateRangeChange: (v: DateRange) => void;
   categoriaOptions: string[];
   selectedCategoria: string[];
   onCategoriaChange: (v: string[]) => void;
@@ -20,9 +19,8 @@ interface FilterBarProps {
 export const FilterBar = ({
   search,
   onSearchChange,
-  periodoOptions,
-  selectedPeriodo,
-  onPeriodoChange,
+  dateRange,
+  onDateRangeChange,
   categoriaOptions,
   selectedCategoria,
   onCategoriaChange,
@@ -40,10 +38,9 @@ export const FilterBar = ({
         />
       </div>
 
-      <PeriodoFilter
-        options={periodoOptions}
-        selected={selectedPeriodo}
-        onChange={onPeriodoChange}
+      <DateRangeFilter
+        selected={dateRange}
+        onChange={onDateRangeChange}
       />
 
       <DropdownFilter

@@ -5,7 +5,7 @@ import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 import { Upload } from "lucide-react";
 import { exportCSV } from "../../utils/exportCSV";
 import { useOrders } from "../../hooks/useOrders";
-import type { PeriodoSelecionado } from "../atoms/PeriodoFilter";
+import type { DateRange } from "../atoms/DateRangeFilter";
 import { ExportCSVModal } from "../molecules/ExportCSVModal";
 
 type StatusKey =
@@ -83,7 +83,7 @@ const columns = [
 export const OrdersPage = () => {
   const [searchInput, setSearchInput]             = useState("");
   const [search, setSearch]                       = useState("");
-  const [selectedPeriodo, setSelectedPeriodo]     = useState<PeriodoSelecionado[]>([]);
+  const [dateRange, setDateRange]                 = useState<DateRange>({ data_inicio: null, data_fim: null });
   const [selectedCategoria, setSelectedCategoria] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus]       = useState<string[]>([]);
   const [page, setPage]                           = useState(1);
@@ -97,7 +97,7 @@ export const OrdersPage = () => {
   }, [searchInput]);
 
   // Reseta página em qualquer mudança de filtro
-  useEffect(() => { setPage(1); }, [selectedPeriodo, selectedCategoria, selectedStatus]);
+  useEffect(() => { setPage(1); }, [dateRange, selectedCategoria, selectedStatus]);
 
   const {
     pedidos,
@@ -106,14 +106,13 @@ export const OrdersPage = () => {
     total,
     categoriaOptions,
     statusOptions,
-    periodoOptions,
   } = useOrders({
     page,
     pageSize,
     search,
     selectedCategoria,
     selectedStatus,
-    selectedPeriodo,
+    dateRange,
   });
 
   const handleExportCSV = () => {
@@ -156,9 +155,8 @@ export const OrdersPage = () => {
           <FilterBar
             search={searchInput}
             onSearchChange={setSearchInput}
-            periodoOptions={periodoOptions}
-            selectedPeriodo={selectedPeriodo}
-            onPeriodoChange={setSelectedPeriodo}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
             categoriaOptions={categoriaOptions}
             selectedCategoria={selectedCategoria}
             onCategoriaChange={setSelectedCategoria}
