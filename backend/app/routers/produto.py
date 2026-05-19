@@ -123,15 +123,7 @@ def create_produto(payload: ProdutoCreateSchema, db: Session = Depends(get_db)):
     if produto_existente:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Produto com este nome já existe")
 
-    max_id = db.query(func.max(Produto.id_produto)).filter(Produto.id_produto.like("PROD-%")).scalar()
-    if max_id:
-        try:
-            current_num = int(max_id.split("-")[1])
-            new_id = f"PROD-{current_num + 1:04d}"
-        except ValueError:
-            new_id = "PROD-0001"
-    else:
-        new_id = "PROD-0001"
+    new_id = f"PROD-{uuid.uuid4().hex[:8].upper()}"
 
     obj = Produto(
         id_produto=new_id,
