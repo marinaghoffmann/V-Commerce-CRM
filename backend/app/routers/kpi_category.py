@@ -16,8 +16,16 @@ def get_kpi_categories(
     db: Session = Depends(get_db),
     page: int = 1,
     limit: int = 10,
+    ano: int | None = None,
+    mes: int | None = None,
 ):
     filters = []
+
+    if ano is not None:
+        filters.append(KpiPorCategoria.ano_venda == ano)
+
+    if mes is not None:
+        filters.append(KpiPorCategoria.mes_venda == mes)
     
     offset = (page - 1) * limit
     

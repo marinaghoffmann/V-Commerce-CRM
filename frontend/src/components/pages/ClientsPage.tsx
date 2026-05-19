@@ -5,6 +5,8 @@ import { exportCSV } from "../../utils/exportCSV";
 import api from "../../services/api";
 import { useClientes } from "../../hooks/useClientes";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
+import { PageSizeSelect } from "../atoms/PageSizeSelect";
+import { ExportCSVModal } from "../molecules/ExportCSVModal";
 
 function getInitials(nome: string, sobrenome: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -32,7 +34,8 @@ function Clients() {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+  const [showExportModal, setShowExportModal] = useState(false);
   const navigate = useNavigate();
 
   const { clientes, total, loading } = useClientes({ busca, status, page, limit });
@@ -58,6 +61,8 @@ function Clients() {
       exportCSV(res.data, "clientes");
     } catch (err) {
       console.error("Erro ao exportar clientes:", err);
+    } finally {
+      setShowExportModal(false);
     }
   };
 
@@ -78,13 +83,19 @@ function Clients() {
           </p>
         </div>
         <button
-          onClick={handleExportCSV}
+          onClick={() => setShowExportModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl text-sm font-medium hover:bg-blue-800 transition-colors cursor-pointer"
         >
           <Upload size={16} />
           Exportar CSV
         </button>
         </div>
+
+        <ExportCSVModal
+          isOpen={showExportModal}
+          onCancel={() => setShowExportModal(false)}
+          onConfirm={handleExportCSV}
+        />
 
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1">
@@ -121,10 +132,11 @@ function Clients() {
           <TableSkeletonLoader rowCount={limit} cellCount={6} />
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full" style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr className="border-b border-gray-100 bg-blue-50">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Cliente</th>
+            <div style={{ maxHeight: 550 }} className="overflow-y-auto">
+              <table className="w-full" style={{ borderCollapse: "collapse" }}>
+                <thead className="sticky top-0 z-10 bg-blue-50">
+                  <tr className="border-b border-gray-100">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Cliente</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-800 uppercase tracking-widest">Segmento</th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">Pedidos</th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-800 uppercase tracking-widest">LTV</th>
@@ -162,7 +174,9 @@ function Clients() {
                     <td className="px-6 py-4 text-sm text-gray-700 text-center">
                       R$ {c.ticket_medio?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-6 py-4 text-center text-gray-400 text-xs">{c.data_ultima_compra}</td>
+                    <td className="px-6 py-4 text-center text-gray-400 text-xs">
+                      {c.data_ultima_compra || "Indisponível"}
+                    </td>
                   </tr>
                 ))}
                 {clientes.length === 0 && (
@@ -174,8 +188,9 @@ function Clients() {
                 )}
               </tbody>
             </table>
+            </div>
 
-            <div className="mt-6 flex items-center justify-between px-6 pb-4">
+            <div className="mt-6 flex items-center justify-between px-6 pb-4 border-t border-gray-100 pt-4">
               <span className="text-xs text-gray-400">
                 Mostrando {String(inicio).padStart(2, "0")} a {String(fim).padStart(2, "0")} de {String(total).padStart(2, "0")} resultados
               </span>
@@ -211,6 +226,12 @@ function Clients() {
                 >
                   <ChevronRight size={15} />
                 </button>
+                <div className="ml-2">
+                  <PageSizeSelect
+                    value={limit}
+                    onChange={(size) => { setLimit(size); setPage(1); }}
+                  />
+                </div>
               </div>
             </div>
           </div>

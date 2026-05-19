@@ -31,7 +31,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
 
   return (
     <div className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4">
-
+      
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-sm font-bold text-gray-900 leading-snug flex-1">{product.nome_produto}</h3>
@@ -59,6 +59,14 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
         <span className="px-2.5 py-1 bg-gray-100 text-gray-500 text-xs font-mono rounded-full">
           SKU: {product.id_produto}
         </span>
+        <div className="flex items-center gap-2 flex-wrap">
+            {product.indicador_crescimento == null ? '' : 
+            product.indicador_crescimento >= 0 ? 
+            <span className="px-2.5 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full"> Faturamento: +{product.indicador_crescimento}% </span> : 
+            <span className="px-2.5 py-1 bg-red-100 text-red-600 text-xs font-medium rounded-full">Faturamento: {product.indicador_crescimento}% </span>} {product.flag_alto_ticket ? 
+            <span className="px-2.5 py-1 bg-red-100 text-red-600 text-xs font-mono rounded-full">Alto numero de tickets</span> : 
+            <span className="px-2.5 py-1 bg-green-100 text-green-600 text-xs font-mono rounded-full"> Produto OK </span>}
+        </div>
       </div>
 
       {/* Preço e avaliação */}
@@ -96,6 +104,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
       </div>
     </div>
   );
+  
 }
 
 export default ProductCard;

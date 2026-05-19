@@ -121,6 +121,7 @@ def mock_ticket():
     return {
         "id_ticket": "111-222-333",
         "id_cliente": "1231241335123123123",
+        "id_pedido": "123",
         "nome_cliente": "João Silva",
         "tipo_problema": "produto",
         "status_ticket": "aberto",
