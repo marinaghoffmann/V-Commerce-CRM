@@ -69,6 +69,43 @@ def perguntar(question: str, session_id: str = "default") -> dict:
 
     return ctx.model_dump()
 
+
+def call_agent(question: str, session_id: str = "default") -> str:
+    """Compat layer: chama a função `perguntar()` (que usa o Gemini) e retorna texto.
+
+    Isso evita invocar o `generate_content` duas vezes com configurações distintas
+    e previne erros de argumento inválido do SDK. Retorna um texto contendo
+    o SQL (entre blocos ```sql```) quando disponível, seguido por uma
+    representação das primeiras linhas do resultado.
+    """
+    try:
+        ctx = perguntar(question, session_id=session_id)
+    except Exception as e:
+        return f"ERROR calling agent: {e}"
+
+    final_sql = ctx.get("final_sql")
+    is_valid = ctx.get("is_valid")
+    error = ctx.get("error_message")
+    rows = ctx.get("rows")
+
+    if final_sql:
+        out = []
+        out.append("```sql")
+        out.append(final_sql)
+        out.append("```")
+        if rows:
+            # show up to first 5 rows
+            preview = rows[:5]
+            out.append("Amostra de resultados:")
+            for r in preview:
+                out.append(str(tuple(r.values()) if hasattr(r, 'values') else r))
+        return "\n".join(out)
+
+    if not is_valid and error:
+        return error
+
+    return str(ctx)
+
 if __name__ == "__main__":
     clear_session_state("default")
     resultado = perguntar("Quais foram os 10 produtos mais vendidos?", session_id="default")
