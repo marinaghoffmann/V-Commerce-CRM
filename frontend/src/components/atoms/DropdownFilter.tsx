@@ -92,18 +92,6 @@ export const DropdownFilter = ({
               );
             })
           )}
-
-          {hasSelection && (
-            <>
-              <div className="mx-3 my-1.5 border-t border-gray-100" />
-              <button
-                onClick={() => onChange([])}
-                className="w-full px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors text-left cursor-pointer"
-              >
-                Limpar seleção
-              </button>
-            </>
-          )}
         </div>
       )}
     </div>
