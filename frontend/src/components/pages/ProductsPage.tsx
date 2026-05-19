@@ -325,8 +325,8 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     if (!form.categoria.trim()) e.categoria = "Categoria obrigatória";
     if (!form.preco || isNaN(Number(form.preco)) || Number(form.preco) < 0)
       e.preco = "Preço inválido";
-    if (form.estoque_disponivel && isNaN(Number(form.estoque_disponivel)))
-      e.estoque_disponivel = "Estoque inválido";
+    if (form.estoque_disponivel && isNaN(Number(form.estoque_disponivel)) || Number(form.estoque_disponivel) < 0)
+        e.estoque_disponivel = "Estoque inválido";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
