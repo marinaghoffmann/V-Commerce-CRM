@@ -10,7 +10,7 @@ import { exportCSV } from "../../utils/exportCSV";
 import { useOrders } from "../../hooks/useOrders";
 import api from "../../services/api";
 
-import type { DateRange } from "../atoms/DateRangeFilter";
+import type { DateRange } from "../organisms/DateRangeFilter";
 
 type StatusKey =
   | "entregue"
@@ -127,15 +127,15 @@ const columns = [
 ];
 
 export const OrdersPage = () => {
-  const [searchInput, setSearchInput]             = useState("");
-  const [search, setSearch]                       = useState("");
-  const [dateRange, setDateRange]                 = useState<DateRange>({ data_inicio: null, data_fim: null });
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>({ data_inicio: null, data_fim: null });
   const [selectedCategoria, setSelectedCategoria] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus]       = useState<string[]>([]);
-  const [page, setPage]                           = useState(1);
-  const [pageSize, setPageSize]                   = useState(10);
-  const [showExportModal, setShowExportModal]     = useState(false);
-  const [isExporting, setIsExporting]             = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // debounce busca
   useEffect(() => {
@@ -176,7 +176,7 @@ export const OrdersPage = () => {
   const handleExportCSV = async () => {
     setShowExportModal(false);
     setIsExporting(true);
-    
+
     try {
       const params = new URLSearchParams();
       params.append("limit", "999999");
@@ -233,9 +233,8 @@ export const OrdersPage = () => {
           <button
             onClick={() => setShowExportModal(true)}
             disabled={isExporting}
-            className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer ${
-              isExporting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-900 hover:bg-blue-800"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer ${isExporting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-900 hover:bg-blue-800"
+              }`}
           >
             {isExporting ? (
               <>

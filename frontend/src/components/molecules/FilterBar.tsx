@@ -1,7 +1,7 @@
 import { SearchInput } from "../atoms/SearchInput";
 import { DropdownFilter } from "../atoms/DropdownFilter";
-import { DateRangeFilter } from "../atoms/DateRangeFilter";
-import type { DateRange } from "../atoms/DateRangeFilter";
+import { DateRangeFilter } from "../organisms/DateRangeFilter";
+import type { DateRange } from "../organisms/DateRangeFilter";
 
 interface FilterBarProps {
   search: string;
