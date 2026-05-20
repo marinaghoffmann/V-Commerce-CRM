@@ -32,7 +32,7 @@ function App() {
       <AIFloatingButton
         onClick={(pos) => {
           setButtonPos(pos);
-          setChatOpen(true);
+          setChatOpen((prev) => !prev);
         }}
       />
 
