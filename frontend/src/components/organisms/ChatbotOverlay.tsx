@@ -7,16 +7,13 @@ import { BotMessage } from "../molecules/BotMessage";
 import { UserMessage } from "../molecules/UserMessage";
 import { TypingIndicator } from "../atoms/TypingIndicator";
 
-// Dimensões da janela do chat
 const WINDOW_W = 400;
 const WINDOW_H = 560;
-const MARGIN   = 12; // espaço entre o botão e a janela
+const MARGIN   = 12; 
 
 interface ChatbotOverlayProps {
   onClose: () => void;
-  /** Posição atual do botão flutuante no viewport (top-left do botão) */
   buttonPos: { x: number; y: number };
-  /** Tamanho do botão em px */
   buttonSize?: number;
 }
 
@@ -30,23 +27,17 @@ export function ChatbotOverlay({
   const messagesEndRef       = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // ─── Posição inicial da janela: tenta abrir acima do botão ────────────────
   const calcInitialPos = useCallback(() => {
-    // Tenta colocar acima do botão, alinhado à direita com ele
     let x = buttonPos.x + buttonSize - WINDOW_W;
     let y = buttonPos.y - WINDOW_H - MARGIN;
 
-    // Se não cabe acima, coloca abaixo
     if (y < 8) {
       y = buttonPos.y + buttonSize + MARGIN;
     }
-    // Se não cabe à esquerda com esse alinhamento, empurra para a direita
     if (x < 8) x = 8;
-    // Se ultrapassa a direita, recua
     if (x + WINDOW_W > window.innerWidth - 8) {
       x = window.innerWidth - WINDOW_W - 8;
     }
-    // Garante que não sai embaixo
     if (y + WINDOW_H > window.innerHeight - 8) {
       y = window.innerHeight - WINDOW_H - 8;
     }
@@ -56,13 +47,10 @@ export function ChatbotOverlay({
 
   const [pos, setPos] = useState(calcInitialPos);
 
-  // Recalcula posição quando buttonPos muda (botão foi arrastado)
   useEffect(() => {
     setPos(calcInitialPos());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buttonPos.x, buttonPos.y]);
 
-  // ─── Lógica de arrasto da janela pelo cabeçalho ───────────────────────────
   const isDragging   = useRef(false);
   const startPointer = useRef({ x: 0, y: 0 });
   const startPos     = useRef({ x: 0, y: 0 });
@@ -115,12 +103,10 @@ export function ChatbotOverlay({
     };
   }, [onPointerMove, onPointerUp]);
 
-  // ─── Auto-scroll ──────────────────────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // ─── Envio de mensagem ────────────────────────────────────────────────────
   const handleSendMessage = async () => {
     if (inputValue.trim()) {
       await sendMessage(inputValue);

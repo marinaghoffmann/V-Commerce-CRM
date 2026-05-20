@@ -11,7 +11,6 @@ interface BotMessageProps {
 }
 
 export function BotMessage({ content, rows, sql, isValid }: BotMessageProps) {
-  // isValid === false (ou undefined sem rows) → Estado 3: Fora do escopo
   const isError = isValid === false;
 
   return (
@@ -31,7 +30,6 @@ export function BotMessage({ content, rows, sql, isValid }: BotMessageProps) {
 
       {/* Balão da mensagem */}
       {isError ? (
-        /* ── Estado 3: Fora do escopo ─────────────────────────────────────── */
         <div
           style={{
             background  : "#fffbeb",
@@ -71,7 +69,6 @@ export function BotMessage({ content, rows, sql, isValid }: BotMessageProps) {
           </p>
         </div>
       ) : (
-        /* ── Estado 2: Resposta padrão ────────────────────────────────────── */
         <div
           style={{
             background  : "#eff6ff",

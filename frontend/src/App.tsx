@@ -11,10 +11,8 @@ import { AIFloatingButton } from "./components/organisms/AIFloatingButton";
 import { ChatbotOverlay } from "./components/organisms/ChatbotOverlay";
 
 function App() {
-  // Controla se a janela do chat está aberta
   const [chatOpen, setChatOpen] = useState(false);
 
-  // Guarda a última posição do botão para abrir a janela perto dele
   const [buttonPos, setButtonPos] = useState({ x: 0, y: 0 });
 
   return (
@@ -31,21 +29,13 @@ function App() {
         <Route path="/suporte"   element={<SuportePage />} />
       </Routes>
 
-      {/* ── Botão flutuante da IA ──────────────────────────────────────────
-          Sempre visível. Ao ser clicado (sem arrasto), abre o chat.
-          A posição é rastreada para abrir a janela perto dele.
-      ────────────────────────────────────────────────────────────────────── */}
       <AIFloatingButton
         onClick={(pos) => {
-          // Salva a posição atual do botão antes de abrir o chat
           setButtonPos(pos);
           setChatOpen(true);
         }}
       />
 
-      {/* ── Janela do chat ────────────────────────────────────────────────
-          Renderizada sobre tudo; fecha sem mover o botão.
-      ────────────────────────────────────────────────────────────────────── */}
       {chatOpen && (
         <ChatbotOverlay
           onClose={() => setChatOpen(false)}
