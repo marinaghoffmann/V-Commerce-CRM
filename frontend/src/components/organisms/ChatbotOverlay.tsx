@@ -163,6 +163,7 @@ export function ChatbotOverlay({
                       rows={msg.rows}
                       sql={msg.sql}
                       isValid={msg.isValid}
+                      error={msg.error}
                       sourceTables={msg.sourceTables}
                     />
                   )}
