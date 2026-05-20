@@ -213,6 +213,10 @@ function ClientDetail(): React.ReactElement {
                 { label: "Freq. de interação", valor: `${data.total_compras ?? 0}x` },
                 { label: "Último pedido", valor: data.data_ultima_compra ?? "—" },
                 { label: "Freq. de suporte", valor: `${data.total_tickets ?? 0}x` },
+                { label: "Sessões totais", valor: data.total_sessoes ?? 0 },
+                { label: "Taxa de compra de produtos", valor: typeof data.taxa_conversao_compra === 'number' ? `${(data.taxa_conversao_compra * 100).toFixed(1).replace(".0", "")}%` : "—" },
+                { label: "Taxa de abandono do carrinho", valor: typeof data.taxa_abandono_carrinho === 'number' ? `${(data.taxa_abandono_carrinho * 100).toFixed(1).replace(".0", "")}%` : "—" },
+                { label: "Canal predominante", valor: data.canal_predominante ? (data.canal_predominante === "mobile_web" ? "Mobile Web" : data.canal_predominante === "web" ? "Web" : data.canal_predominante === "app" ? "App" : data.canal_predominante) : "—" },
               ].map(({ label, valor }) => (
                 <div key={label} className="bg-slate-50 rounded-xl p-4 flex flex-col gap-1">
                   <span className="text-xs text-gray-400 font-medium">{label}</span>
