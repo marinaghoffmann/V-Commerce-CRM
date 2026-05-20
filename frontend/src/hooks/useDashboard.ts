@@ -227,7 +227,7 @@ export function useMonthlyReview(anoInicio: number, mesInicio: number, anoFim: n
       .then((res) => {
         const item = res.data;
         const total = item.positiva + item.neutra + item.ruim;
-        const toPercent = (val: number) => total > 0 ? Math.round((val / total) * 100) : 0;
+        const toPercent = (val: number) => total > 0 ? Number(((val / total) * 100).toFixed(2)) : 0;
         setData({
           ano: item.ano,
           mes: item.mes,

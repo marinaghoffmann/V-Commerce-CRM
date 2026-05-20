@@ -305,8 +305,8 @@ function Dashboard() {
   const noPrazo   = ticketData?.entrega_no_prazo  ?? 0;
   const atrasado  = ticketData?.entrega_atrasada  ?? 0;
   const totalEntregas   = noPrazo + atrasado;
-  const noPrazoPercent  = totalEntregas > 0 ? Math.round((noPrazo  / totalEntregas) * 100) : 0;
-  const atrasadoPercent = totalEntregas > 0 ? Math.round((atrasado / totalEntregas) * 100) : 0;
+  const noPrazoPercent  = totalEntregas > 0 ? Number((noPrazo  / totalEntregas) * 100).toFixed(2).replace(".", ",") : 0;
+  const atrasadoPercent = totalEntregas > 0 ? Number((atrasado / totalEntregas) * 100).toFixed(2).replace(".", ",") : 0;
   const semDados        = totalEntregas === 0;
 
   const entregaData = {
