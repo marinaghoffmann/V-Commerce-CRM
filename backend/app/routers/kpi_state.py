@@ -18,17 +18,30 @@ def get_kpi_states(
     limit: int = 10,
     ano: int | None = None,
     mes: int | None = None,
+    ano_inicio: int | None = None,
+    mes_inicio: int | None = None,
+    ano_fim: int | None = None,
+    mes_fim: int | None = None,
 ):
     filters = []
 
-    if ano is not None:
-        filters.append(KpiPorEstado.ano_venda == ano)
+    if ano_inicio and mes_inicio and ano_fim and mes_fim:
+        data_inicio = ano_inicio * 100 + mes_inicio
+        data_fim    = ano_fim   * 100 + mes_fim
+        filters.append(
+            (KpiPorEstado.ano_venda * 100 + KpiPorEstado.mes_venda) >= data_inicio
+        )
+        filters.append(
+            (KpiPorEstado.ano_venda * 100 + KpiPorEstado.mes_venda) <= data_fim
+        )
+    else:
+        if ano is not None:
+            filters.append(KpiPorEstado.ano_venda == ano)
+        if mes is not None:
+            filters.append(KpiPorEstado.mes_venda == mes)
 
-    if mes is not None:
-        filters.append(KpiPorEstado.mes_venda == mes)
-    
     offset = (page - 1) * limit
-    
+
     kpi_states = (
         db.query(KpiPorEstado)
         .filter(*filters)
