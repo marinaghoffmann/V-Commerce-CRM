@@ -27,7 +27,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
   const sold = product.unidades_vendidas ?? 0;
   const stock = product.estoque_disponivel ?? 0;
   const denom = sold + stock || 1;
-  const percent = Math.round((sold / denom) * 100);
+  const percent = ((sold / denom) * 100).toFixed(2);
 
   return (
     <div className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4">
