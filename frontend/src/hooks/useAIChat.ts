@@ -10,6 +10,7 @@ export interface ChatMessage {
   isValid?: boolean;
   rows?: unknown[];
   error?: string;
+  sourceTables?: string[];
 }
 
 interface UseAIChatReturn {
@@ -29,19 +30,47 @@ const INITIAL_SUGGESTIONS = [
   "Mostre os top 10 produtos com mais tickets, com a quantidade.",
 ];
 
+// Mapa de nomes de tabela (snake_case do banco) → label legível em português
+const TABLE_LABELS: Record<string, string> = {
+  tickets:          "Tickets de suporte",
+  clientes:         "Clientes",
+  pedidos:          "Pedidos",
+  produtos:         "Produtos",
+  itens_pedido:     "Itens de pedido",
+  orders:           "Pedidos",
+  customers:        "Clientes",
+  products:         "Produtos",
+  support_tickets:  "Tickets de suporte",
+};
+
+function extractTablesFromSQL(sql: string): string[] {
+  if (!sql) return [];
+
+  const tableRegex = /(?:FROM|JOIN)\s+([`"[\w]+)/gi;
+  const found = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = tableRegex.exec(sql)) !== null) {
+    const raw = match[1].replace(/[`"[\]]/g, "").toLowerCase();
+    found.add(raw);
+  }
+
+  return Array.from(found).map(
+    (t) => TABLE_LABELS[t] ?? t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}
+
 export function useAIChat(): UseAIChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
 
-  // Initialize session ID on first mount
   useEffect(() => {
     const stored = sessionStorage.getItem("ai_chat_session_id");
     if (stored) {
       setSessionId(stored);
     } else {
-      // Generate new UUID for this session
       const newSessionId = crypto.randomUUID();
       sessionStorage.setItem("ai_chat_session_id", newSessionId);
       setSessionId(newSessionId);
@@ -52,7 +81,6 @@ export function useAIChat(): UseAIChatReturn {
     async (question: string) => {
       if (!sessionId || !question.trim()) return;
 
-      // Add user message
       const userMessage: ChatMessage = {
         type: "user",
         content: question,
@@ -66,13 +94,8 @@ export function useAIChat(): UseAIChatReturn {
       try {
         const response = await fetch(`${BASE_URL}/agent/chat`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            question: question,
-            session_id: sessionId,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, session_id: sessionId }),
         });
 
         if (!response.ok) {
@@ -81,7 +104,9 @@ export function useAIChat(): UseAIChatReturn {
 
         const data = await response.json();
 
-        // Add bot response message
+        // Extrai tabelas do SQL retornado pela API
+        const sourceTables = extractTablesFromSQL(data.final_sql ?? "");
+
         const botMessage: ChatMessage = {
           type: "bot",
           content: data.is_valid
@@ -92,6 +117,7 @@ export function useAIChat(): UseAIChatReturn {
           isValid: data.is_valid,
           rows: data.rows,
           error: data.error_message,
+          sourceTables,
         };
 
         setMessages((prev) => [...prev, botMessage]);
@@ -114,17 +140,7 @@ export function useAIChat(): UseAIChatReturn {
     [sessionId]
   );
 
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-  }, []);
+  const clearMessages = useCallback(() => setMessages([]), []);
 
-  return {
-    messages,
-    loading,
-    error,
-    sessionId,
-    sendMessage,
-    clearMessages,
-    suggestions: INITIAL_SUGGESTIONS,
-  };
+  return { messages, loading, error, sessionId, sendMessage, clearMessages, suggestions: INITIAL_SUGGESTIONS };
 }

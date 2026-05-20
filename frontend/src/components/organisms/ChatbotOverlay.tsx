@@ -27,25 +27,20 @@ export function ChatbotOverlay({
   const messagesEndRef       = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Calcula posição inicial uma única vez, baseada em onde o botão estava
-  // quando o usuário clicou. Como o botão é fixo, isso só roda na abertura.
   const calcInitialPos = useCallback(() => {
     let x = buttonPos.x + buttonSize - WINDOW_W;
     let y = buttonPos.y - WINDOW_H - MARGIN;
 
-    if (y < 8)                              y = buttonPos.y + buttonSize + MARGIN;
-    if (x < 8)                              x = 8;
+    if (y < 8)                                 y = buttonPos.y + buttonSize + MARGIN;
+    if (x < 8)                                 x = 8;
     if (x + WINDOW_W > window.innerWidth  - 8) x = window.innerWidth  - WINDOW_W - 8;
     if (y + WINDOW_H > window.innerHeight - 8) y = window.innerHeight - WINDOW_H - 8;
 
     return { x, y };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // ↑ Dependências vazias: posição inicial calculada só uma vez na montagem.
-  //   O botão não se move mais, então não precisamos recalcular.
+  }, []); 
 
   const [pos, setPos] = useState(calcInitialPos);
 
-  // Lógica de arrasto da janela pelo cabeçalho
   const isDragging   = useRef(false);
   const startPointer = useRef({ x: 0, y: 0 });
   const startPos     = useRef({ x: 0, y: 0 });
@@ -74,9 +69,7 @@ export function ChatbotOverlay({
     [clampWindow]
   );
 
-  const onPointerUp = useCallback(() => {
-    isDragging.current = false;
-  }, []);
+  const onPointerUp = useCallback(() => { isDragging.current = false; }, []);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => onPointerMove(e.clientX, e.clientY);
@@ -84,12 +77,10 @@ export function ChatbotOverlay({
       e.preventDefault();
       onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
     };
-
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup",   onPointerUp);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend",  onPointerUp);
-
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup",   onPointerUp);
@@ -123,91 +114,75 @@ export function ChatbotOverlay({
   const hasMessages = messages.length > 0;
 
   return (
-    <div
-      style={{
-        position     : "fixed",
-        left         : pos.x,
-        top          : pos.y,
-        width        : WINDOW_W,
-        height       : WINDOW_H,
-        zIndex       : 9998,
-        display      : "flex",
-        flexDirection: "column",
-        borderRadius : 16,
-        background   : "#ffffff",
-        border       : "1px solid #e5e7eb",
-        boxShadow    : "0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)",
-        overflow     : "hidden",
-        animation    : "chatWindowOpen 0.2s ease-out",
-      }}
-    >
+    <>
+      {/* Keyframe de abertura — não tem utilitário Tailwind para isso */}
       <style>{`
         @keyframes chatWindowOpen {
           from { opacity: 0; transform: scale(0.95) translateY(8px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0);   }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
+        .chat-window { animation: chatWindowOpen 0.2s ease-out; }
       `}</style>
 
       <div
-        style={{ cursor: isDragging.current ? "grabbing" : "grab", userSelect: "none" }}
-        onMouseDown={(e) => {
-          if ((e.target as HTMLElement).closest("button")) return;
-          e.preventDefault();
-          onHeaderPointerDown(e.clientX, e.clientY);
-        }}
-        onTouchStart={(e) => {
-          if ((e.target as HTMLElement).closest("button")) return;
-          onHeaderPointerDown(e.touches[0].clientX, e.touches[0].clientY);
-        }}
+        className="chat-window fixed flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xl"
+        style={{ left: pos.x, top: pos.y, width: WINDOW_W, height: WINDOW_H, zIndex: 9998 }}
       >
-        <ChatbotHeader onClose={onClose} />
-      </div>
+        {/* Cabeçalho arrastável */}
+        <div
+          className="cursor-grab select-none"
+          onMouseDown={(e) => {
+            if ((e.target as HTMLElement).closest("button")) return;
+            e.preventDefault();
+            onHeaderPointerDown(e.clientX, e.clientY);
+          }}
+          onTouchStart={(e) => {
+            if ((e.target as HTMLElement).closest("button")) return;
+            onHeaderPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+          }}
+        >
+          <ChatbotHeader onClose={onClose} />
+        </div>
 
-      <div
-        ref={messagesContainerRef}
-        style={{
-          flex      : 1,
-          overflowY : "auto",
-          overflowX : "hidden",
-          padding   : "16px",
-          background: "#ffffff",
-        }}
-        className="space-y-4"
-      >
-        {!hasMessages ? (
-          <EmptyState
-            suggestions={suggestions}
-            onSelectSuggestion={handleSendSuggestion}
-          />
-        ) : (
-          <>
-            {messages.map((msg, idx) => (
-              <div key={idx}>
-                {msg.type === "user" ? (
-                  <UserMessage content={msg.content} />
-                ) : (
-                  <BotMessage
-                    content={msg.content}
-                    rows={msg.rows}
-                    sql={msg.sql}
-                    isValid={msg.isValid}
-                  />
-                )}
-              </div>
-            ))}
-            {loading && <TypingIndicator />}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
+        {/* Área de mensagens */}
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 bg-white"
+        >
+          {!hasMessages ? (
+            <EmptyState suggestions={suggestions} onSelectSuggestion={handleSendSuggestion} />
+          ) : (
+            <>
+              {messages.map((msg, idx) => (
+                <div key={idx}>
+                  {msg.type === "user" ? (
+                    <UserMessage content={msg.content} />
+                  ) : (
+                    <BotMessage
+                      content={msg.content}
+                      rows={msg.rows}
+                      sql={msg.sql}
+                      isValid={msg.isValid}
+                      sourceTables={msg.sourceTables}
+                    />
+                  )}
+                </div>
+              ))}
+              {loading && <TypingIndicator />}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
 
-      <ChatbotInput
-        value={inputValue}
-        onChange={setInputValue}
-        onSend={handleSendMessage}
-        onKeyPress={handleKeyPress}
-        disabled={loading}
-      />
-    </div>
+        {/* Rodapé */}
+        <ChatbotInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSend={handleSendMessage}
+          onKeyPress={handleKeyPress}
+          disabled={loading}
+        />
+      </div>
+    </>
   );
 }
