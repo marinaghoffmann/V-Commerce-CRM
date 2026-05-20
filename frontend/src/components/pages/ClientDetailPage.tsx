@@ -105,11 +105,10 @@ function ClientDetail(): React.ReactElement {
     <div className="min-h-screen bg-[#F4F7FE]">
       {copyFeedback && (
         <div
-          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold shadow-lg ring-1 ${
-            copyFeedback.type === "success"
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold shadow-lg ring-1 ${copyFeedback.type === "success"
               ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
               : "bg-rose-50 text-rose-700 ring-rose-200"
-          }`}
+            }`}
           role="status"
           aria-live="polite"
         >
@@ -174,30 +173,22 @@ function ClientDetail(): React.ReactElement {
               <div className="text-xl font-bold text-gray-900">{nomeCompleto}</div>
               <div className="text-sm text-gray-400 mb-3">{data.email}</div>
               <button
-                className={`inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-full hover:bg-blue-600 transition-transform duration-150 cursor-pointer ${
-                  isPressingContact ? "scale-95" : "scale-100"
-                }`}
+                className={`inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-full hover:bg-blue-600 transition-transform duration-150 cursor-pointer ${isPressingContact ? "scale-95" : "scale-100"
+                  }`}
                 onClick={handleCopyContact}
                 type="button"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.57a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/>
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.57a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z" />
                 </svg>
                 Contato
               </button>
             </div>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-1.5 border border-blue-400 text-blue-500 text-xs font-semibold rounded-full hover:bg-blue-50 transition-colors cursor-pointer" type="button">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-              Redes Sociais
-            </button>
             <div className="flex items-center gap-1.5 text-sm text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
               </svg>
               {cidade}, {estado}
             </div>
@@ -211,7 +202,7 @@ function ClientDetail(): React.ReactElement {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-2 mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
               <span className="text-base font-bold text-gray-800">Geral</span>
             </div>
@@ -258,7 +249,7 @@ function ClientDetail(): React.ReactElement {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
               <span className="text-base font-bold text-gray-800">Atividade</span>
             </div>
@@ -267,7 +258,7 @@ function ClientDetail(): React.ReactElement {
               <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10 text-center">
                 <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                   </svg>
                 </div>
                 <div>
@@ -306,11 +297,10 @@ function ClientDetail(): React.ReactElement {
                   {Array.from({ length: totalEventPages }, (_, i) => i + 1).map((p) => (
                     <button
                       key={p}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border font-medium transition-all duration-150 cursor-pointer ${
-                        p === eventPage
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border font-medium transition-all duration-150 cursor-pointer ${p === eventPage
                           ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
                           : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50"
-                      }`}
+                        }`}
                       onClick={() => setEventPage(p)}
                       type="button"
                     >{p}</button>
