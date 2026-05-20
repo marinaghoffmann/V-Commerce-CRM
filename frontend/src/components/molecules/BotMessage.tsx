@@ -10,44 +10,33 @@ interface BotMessageProps {
   isValid?: boolean;
   sourceTables?: string[];
   error?: string;
+  errorType?: string;
 }
 
-function resolveErrorLabel(error: string): string {
-  const text = error.toLowerCase();
+const ERROR_LABELS: Record<string, string> = {
+  fora_do_escopo:          "Fora do escopo",
+  operacao_nao_permitida:  "Operação não permitida",
+  pergunta_ambigua:        "Pergunta ambígua",
+  entidade_desconhecida:   "Entidade desconhecida",
+  erro_execucao:           "Erro de execução",
+};
 
-  if (text.includes("operação não permitida") || text.includes("operacao nao permitida"))
-    return "Operação não permitida";
-  if (text.includes("fora do escopo") || text.includes("fora desse escopo") || text.includes("fora de escopo"))
-    return "Fora do escopo";
-  if (text.includes("ambígua") || text.includes("ambigua"))
-    return "Pergunta ambígua";
-  if (text.includes("entidade") || text.includes("não está nos dados") || text.includes("nao esta nos dados"))
-    return "Entidade desconhecida";
-  if (text.includes("erro ao executar") || text.includes("erro de sql"))
-    return "Erro de execução";
-
-  return "Erro";
-}
-
-export function BotMessage({ content, rows, sql, isValid, sourceTables, error }: BotMessageProps) {
+export function BotMessage({ content, rows, sql, isValid, sourceTables, error, errorType }: BotMessageProps) {
   const isError = isValid === false;
 
   const sourceLabel =
     sourceTables && sourceTables.length > 0 ? sourceTables.join(", ") : null;
 
-  const errorLabel = resolveErrorLabel(error ?? content);
-
-  // Corpo: remove o prefixo "Erro: " para não duplicar
+  // Usa o error_type como chave direta; fallback para "Erro" se vier algo inesperado
+  const errorLabel = (errorType && ERROR_LABELS[errorType]) ?? "Erro";
   const errorBody = content.replace(/^erro:\s*/i, "").trim();
 
   return (
     <div className="flex justify-start items-start gap-2">
       {/* Avatar */}
-      <div
-        className={`w-8 h-8 rounded-full flex flex-shrink-0 items-center justify-center ${
-          isError ? "bg-amber-400" : "bg-blue-500"
-        }`}
-      >
+      <div className={`w-8 h-8 rounded-full flex flex-shrink-0 items-center justify-center ${
+        isError ? "bg-amber-400" : "bg-blue-500"
+      }`}>
         {isError ? (
           <AlertTriangle size={16} className="text-white" />
         ) : (

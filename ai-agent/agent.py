@@ -20,6 +20,7 @@ class CHESSContext(BaseModel):
     candidate_sql: Optional[str] = None
     final_sql: Optional[str] = None
     is_valid: bool = False
+    error_type: Optional[str] = None  # novo campo
     error_message: Optional[str] = None
     rows: List[Any] | None = None
 
@@ -70,6 +71,7 @@ def perguntar(question: str, session_id: str = "default") -> dict:
         except Exception as e:
             ctx.is_valid = False
             ctx.rows = None
+            ctx.error_type = "erro_execucao"  # novo campo
             ctx.error_message = f"Erro ao executar SQL: {str(e)}"
 
     register_turn(

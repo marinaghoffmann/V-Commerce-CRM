@@ -10,6 +10,7 @@ export interface ChatMessage {
   isValid?: boolean;
   rows?: unknown[];
   error?: string;
+  errorType?: string;      // novo campo
   sourceTables?: string[];
 }
 
@@ -30,7 +31,6 @@ const INITIAL_SUGGESTIONS = [
   "Mostre os top 10 produtos com mais tickets, com a quantidade.",
 ];
 
-// Mapa de nomes de tabela (snake_case do banco) → label legível em português
 const TABLE_LABELS: Record<string, string> = {
   tickets:          "Tickets de suporte",
   clientes:         "Clientes",
@@ -45,16 +45,13 @@ const TABLE_LABELS: Record<string, string> = {
 
 function extractTablesFromSQL(sql: string): string[] {
   if (!sql) return [];
-
   const tableRegex = /(?:FROM|JOIN)\s+([`"[\w]+)/gi;
   const found = new Set<string>();
   let match: RegExpExecArray | null;
-
   while ((match = tableRegex.exec(sql)) !== null) {
     const raw = match[1].replace(/[`"[\]]/g, "").toLowerCase();
     found.add(raw);
   }
-
   return Array.from(found).map(
     (t) => TABLE_LABELS[t] ?? t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
   );
@@ -98,13 +95,9 @@ export function useAIChat(): UseAIChatReturn {
           body: JSON.stringify({ question, session_id: sessionId }),
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
         const data = await response.json();
-
-        // Extrai tabelas do SQL retornado pela API
         const sourceTables = extractTablesFromSQL(data.final_sql ?? "");
 
         const botMessage: ChatMessage = {
@@ -117,6 +110,7 @@ export function useAIChat(): UseAIChatReturn {
           isValid: data.is_valid,
           rows: data.rows,
           error: data.error_message,
+          errorType: data.error_type,  // novo campo
           sourceTables,
         };
 
