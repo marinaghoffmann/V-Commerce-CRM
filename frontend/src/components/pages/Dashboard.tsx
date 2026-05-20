@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   TrendingUp, TrendingDown, XCircle, CheckCircle2,
   AlertCircle, RotateCcw, Clock3, Package,
@@ -12,9 +12,11 @@ import {
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import type { KpiStatusItem } from "../../components/types/dashboard.types";
 import {
-  useKpiStatus, useMonthlyKpi, useMonthlyReview,
+  useKpiStatus, useMonthlyKpi, useMonthlyKpiForCards,
+  useMonthlyKpiForPreviousPeriod, useMonthlyReview,
   useMonthlyTickets, useKpiCategoria, useKpiEstado,
 } from "../../hooks/useDashboard";
+import { PeriodPicker } from "../atoms/PeriodPicker";
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement,
@@ -25,6 +27,7 @@ const MESES_LABEL = [
   "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
+const MESES_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 const STATUS_CONFIG = [
   { name: "recusado",    color: "#C62828", label: "Recusado"    },
@@ -74,7 +77,7 @@ function transformarStatus(data: KpiStatusItem[]) {
   return {
     labels: orderedData.map((i) => i.status),
     valores: orderedData.map((i) => i.total_pedidos),
-    colors: orderedData.map((i) => i.color),
+    colors:  orderedData.map((i) => i.color),
   };
 }
 
@@ -92,17 +95,46 @@ function getStatusLabel(status: string) {
   return STATUS_CONFIG.find((c) => status.toLowerCase().includes(c.name))?.label || status;
 }
 
+// Calcula crescimento médio mensal (média das variações consecutivas)
+function calcAvgMonthlyGrowth(values: number[]): number {
+  if (values.length < 2) return 0;
+  const variations: number[] = [];
+  for (let i = 1; i < values.length; i++) {
+    if (values[i - 1] > 0) {
+      variations.push(((values[i] - values[i - 1]) / values[i - 1]) * 100);
+    }
+  }
+  if (variations.length === 0) return 0;
+  return variations.reduce((s, v) => s + v, 0) / variations.length;
+}
+
+// Encontra pico e baixa
+function findPeakAndLow<T>(
+  data: { value: number; label: string }[]
+): { peak: T | null; low: T | null } {
+  if (data.length === 0) return { peak: null, low: null };
+  const peak = data.reduce((a, b) => b.value > a.value ? b : a);
+  const low  = data.reduce((a, b) => b.value < a.value ? b : a);
+  return { peak: peak as T, low: low as T };
+}
+
+interface CardMetrics {
+  avgGrowth:    number;
+  peak:         { value: number; label: string } | null;
+  low:          { value: number; label: string } | null;
+  prevTotal:    number | null;
+  prevAvailable: boolean;
+}
+
 function Dashboard() {
   const currentYear  = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
-  // Período selecionado
   const [startMonth, setStartMonth] = useState(currentMonth);
   const [startYear,  setStartYear]  = useState(currentYear);
   const [endMonth,   setEndMonth]   = useState(currentMonth);
   const [endYear,    setEndYear]    = useState(currentYear);
 
-  // Debounced
   const [dStartMonth, setDStartMonth] = useState(startMonth);
   const [dStartYear,  setDStartYear]  = useState(startYear);
   const [dEndMonth,   setDEndMonth]   = useState(endMonth);
@@ -120,22 +152,26 @@ function Dashboard() {
     return () => clearTimeout(timer);
   }, [startMonth, startYear, endMonth, endYear]);
 
-  // Validação: início não pode ser maior que fim
-  const periodoValido = dStartYear < dEndYear || (dStartYear === dEndYear && dStartMonth <= dEndMonth);
+  const periodoValido =
+    dStartYear < dEndYear || (dStartYear === dEndYear && dStartMonth <= dEndMonth);
 
-  const yearOptions = Array.from({ length: currentYear - 2022 }, (_, i) => 2023 + i);
-
-  // Label do período
   const periodoLabel = `${MESES_LABEL[dStartMonth - 1]} ${dStartYear} → ${MESES_LABEL[dEndMonth - 1]} ${dEndYear}`;
+
+  // Label do período anterior para exibição
+  const prevPeriodLabel = `${MESES_SHORT[dStartMonth - 1]}/${dStartYear - 1} → ${MESES_SHORT[dEndMonth - 1]}/${dEndYear - 1}`;
 
   // Hooks
   const { kpiData: kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
     anoInicio: dStartYear, mesInicio: dStartMonth,
-    anoFim: dEndYear,      mesFim: dEndMonth,
+    anoFim:    dEndYear,   mesFim:    dEndMonth,
     kpiType: "status",
   });
   const { data: monthlyData, loading: loadingMonthly, error: errorMonthly } =
     useMonthlyKpi(dStartYear, dStartMonth, dEndYear, dEndMonth);
+  const { data: cardsData } =
+    useMonthlyKpiForCards(dStartYear, dStartMonth, dEndYear, dEndMonth);
+  const { data: prevData, available: prevAvailable } =
+    useMonthlyKpiForPreviousPeriod(dStartYear, dStartMonth, dEndYear, dEndMonth);
   const { data: reviewData,  loading: loadingReview,  error: errorReview  } =
     useMonthlyReview(dStartYear, dStartMonth, dEndYear, dEndMonth);
   const { data: ticketData,  loading: loadingTicket,  error: errorTicket  } =
@@ -150,23 +186,80 @@ function Dashboard() {
   const monthLabels   = monthlyData?.map((item) => item.label) || [];
   const revenueValues = monthlyData?.map((item) => item.receita_total) || [];
 
-  // Cards — soma total do período
-  const totalReceita  = monthlyData?.reduce((s, i) => s + i.receita_total, 0) ?? 0;
-  const totalPedidos  = monthlyData?.reduce((s, i) => s + i.total_pedidos, 0) ?? 0;
-  const ticketMedio   = totalPedidos > 0 ? totalReceita / totalPedidos : 0;
+  const firstLabel    = monthlyData?.[0]?.label ?? "";
+  const isQuarterView = firstLabel.startsWith("Jan") || firstLabel.startsWith("Abr") ||
+                        firstLabel.startsWith("Jul") || firstLabel.startsWith("Out")
+                        ? false : /^\w{3}-\w{3}\/\d{2}$/.test(firstLabel);
+  const isYearView    = /^\d{4}$/.test(firstLabel);
 
-  // Crescimento: primeiro ponto vs último ponto
-  const firstMonth = monthlyData?.[0];
-  const lastMonth  = monthlyData?.[monthlyData.length - 1];
+  // Totais do período
+  const totalReceita = cardsData.reduce((s, i) => s + i.receita_total, 0);
+  const totalPedidos = cardsData.reduce((s, i) => s + i.total_pedidos, 0);
+  const ticketMedio  = totalPedidos > 0 ? totalReceita / totalPedidos : 0;
 
-  const calcGrowth = (first: number, last: number) => {
-    if (!first || first === 0) return 0;
-    return ((last - first) / first) * 100;
+  // Totais do período anterior
+  const prevTotalReceita = prevData.reduce((s, i) => s + i.receita_total, 0);
+  const prevTotalPedidos = prevData.reduce((s, i) => s + i.total_pedidos, 0);
+  const prevTicketMedio  = prevTotalPedidos > 0 ? prevTotalReceita / prevTotalPedidos : 0;
+
+  const isSingleMonth = cardsData.length <= 1;
+
+  // Métricas por card
+  const receitaMetrics: CardMetrics = {
+    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.receita_total)),
+    ...(() => {
+      const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
+        cardsData.map((d, i) => ({
+          value: d.receita_total,
+          label: `${MESES_SHORT[
+            new Date(dStartYear, dStartMonth - 1 + i).getMonth()
+          ]}/${String(new Date(dStartYear, dStartMonth - 1 + i).getFullYear()).slice(-2)}`,
+        }))
+      );
+      return { peak, low };
+    })(),
+    prevTotal:    prevAvailable ? prevTotalReceita : null,
+    prevAvailable,
   };
 
-  const revenueGrowth = calcGrowth(firstMonth?.receita_total ?? 0, lastMonth?.receita_total ?? 0);
-  const ordersGrowth  = calcGrowth(firstMonth?.total_pedidos  ?? 0, lastMonth?.total_pedidos  ?? 0);
-  const ticketGrowth  = calcGrowth(firstMonth?.ticket_medio   ?? 0, lastMonth?.ticket_medio   ?? 0);
+  const pedidosMetrics: CardMetrics = {
+    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.total_pedidos)),
+    ...(() => {
+      const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
+        cardsData.map((d, i) => ({
+          value: d.total_pedidos,
+          label: `${MESES_SHORT[
+            new Date(dStartYear, dStartMonth - 1 + i).getMonth()
+          ]}/${String(new Date(dStartYear, dStartMonth - 1 + i).getFullYear()).slice(-2)}`,
+        }))
+      );
+      return { peak, low };
+    })(),
+    prevTotal:    prevAvailable ? prevTotalPedidos : null,
+    prevAvailable,
+  };
+
+  const ticketMetrics: CardMetrics = {
+    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.ticket_medio)),
+    ...(() => {
+      const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
+        cardsData.map((d, i) => ({
+          value: d.ticket_medio,
+          label: `${MESES_SHORT[
+            new Date(dStartYear, dStartMonth - 1 + i).getMonth()
+          ]}/${String(new Date(dStartYear, dStartMonth - 1 + i).getFullYear()).slice(-2)}`,
+        }))
+      );
+      return { peak, low };
+    })(),
+    prevTotal:    prevAvailable ? prevTicketMedio : null,
+    prevAvailable,
+  };
+
+  const calcGrowthVsPrev = (current: number, prev: number) => {
+    if (!prev || prev === 0) return 0;
+    return ((current - prev) / prev) * 100;
+  };
 
   const revenueData = {
     labels: monthLabels,
@@ -182,8 +275,8 @@ function Dashboard() {
   // Status chart
   const statusData = (kpiStatus || []) as KpiStatusItem[];
   const { labels, valores, colors } = transformarStatus(statusData);
-  const totalPedidosStatus  = valores.reduce((s, v) => s + v, 0);
-  const porcentagensStatus  = valores.map((v) =>
+  const totalPedidosStatus = valores.reduce((s, v) => s + v, 0);
+  const porcentagensStatus = valores.map((v) =>
     totalPedidosStatus > 0 ? Number(((v / totalPedidosStatus) * 100).toFixed(2)) : 0
   );
 
@@ -219,7 +312,7 @@ function Dashboard() {
     const normLabel = normalizeKey(label);
     let regionIdx = 99; let idxInRegion = 0; let regionCount = 1;
     for (const [rIdx, group] of Object.entries(REGION_GROUPS)) {
-      const ng = group.map((g) => normalizeKey(g));
+      const ng    = group.map((g) => normalizeKey(g));
       const found = ng.indexOf(normLabel);
       if (found !== -1) { regionIdx = Number(rIdx); idxInRegion = found; regionCount = ng.length; break; }
     }
@@ -302,11 +395,11 @@ function Dashboard() {
   };
 
   // Entrega
-  const noPrazo   = ticketData?.entrega_no_prazo  ?? 0;
-  const atrasado  = ticketData?.entrega_atrasada  ?? 0;
+  const noPrazo         = ticketData?.entrega_no_prazo  ?? 0;
+  const atrasado        = ticketData?.entrega_atrasada  ?? 0;
   const totalEntregas   = noPrazo + atrasado;
-  const noPrazoPercent  = totalEntregas > 0 ? Number((noPrazo  / totalEntregas) * 100).toFixed(2).replace(".", ",") : 0;
-  const atrasadoPercent = totalEntregas > 0 ? Number((atrasado / totalEntregas) * 100).toFixed(2).replace(".", ",") : 0;
+  const noPrazoPercent  = totalEntregas > 0 ? Number((noPrazo  / totalEntregas) * 100).toFixed(2).replace(".", ",") : "0";
+  const atrasadoPercent = totalEntregas > 0 ? Number((atrasado / totalEntregas) * 100).toFixed(2).replace(".", ",") : "0";
   const semDados        = totalEntregas === 0;
 
   const entregaData = {
@@ -332,6 +425,70 @@ function Dashboard() {
     },
   };
 
+  // Componente de card com as 3 métricas
+  const KpiCard = ({
+    label, value, metrics, currentTotal, formatValue,
+  }: {
+    label: string;
+    value: string;
+    metrics: CardMetrics;
+    currentTotal: number;
+    formatValue: (v: number) => string;
+  }) => (
+    <div className={cardStyle}>
+      <p className="text-sm text-[#333] font-medium mb-3">{label}</p>
+      <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">{value}</h2>
+
+      {isSingleMonth ? (
+        <p className="text-xs text-gray-400 font-medium">Período único — sem comparativo</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+
+          {/* Métrica 1 — Crescimento médio mensal */}
+          <div className={`flex items-center gap-1.5 text-xs font-medium ${metrics.avgGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
+            {metrics.avgGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+            <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% ao mês em média</span>
+          </div>
+
+          {/* Métrica 2 — Pico e Baixa com valores */}
+          {metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label && (
+            <div className="flex flex-col gap-1 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <span className="text-green-500 font-bold">📈</span>
+                <span>Pico {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-red-400 font-bold">📉</span>
+                <span>Baixa {metrics.low.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.low.value)}</span></span>
+              </span>
+            </div>
+          )}
+
+          {/* Métrica 3 — vs período equivalente anterior */}
+          {metrics.prevAvailable && metrics.prevTotal !== null ? (
+            (() => {
+              const growth = calcGrowthVsPrev(currentTotal, metrics.prevTotal);
+              return (
+                <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
+                  {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                  <span>
+                    {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
+                  </span>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <span>⚠️</span>
+              <span>Sem dados para período equivalente anterior</span>
+            </div>
+          )}
+
+        </div>
+      )}
+    </div>
+  );
+
   const cardStyle = "bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm";
   const estadoChartHeight = Math.max(400, estadosLabels.length * 28);
 
@@ -346,51 +503,16 @@ function Dashboard() {
             <p className="text-blue-600 font-semibold mt-1">{periodoLabel}</p>
             <p className="text-sm text-gray-500 mt-0.5">CRM 360 visão geral do período</p>
           </div>
-
-          {/* SELETOR DE PERÍODO */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-8">De</span>
-              <select
-                value={startMonth}
-                onChange={(e) => setStartMonth(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
-              >
-                {MESES_LABEL.map((m, i) => (
-                  <option key={i + 1} value={i + 1}>{m}</option>
-                ))}
-              </select>
-              <select
-                value={startYear}
-                onChange={(e) => setStartYear(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
-              >
-                {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-8">Até</span>
-              <select
-                value={endMonth}
-                onChange={(e) => setEndMonth(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
-              >
-                {MESES_LABEL.map((m, i) => (
-                  <option key={i + 1} value={i + 1}>{m}</option>
-                ))}
-              </select>
-              <select
-                value={endYear}
-                onChange={(e) => setEndYear(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
-              >
-                {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            {!periodoValido && (
-              <p className="text-xs text-red-500 mt-1">A data de início não pode ser maior que a data de fim.</p>
-            )}
-          </div>
+          <PeriodPicker
+            startMonth={startMonth}
+            startYear={startYear}
+            endMonth={endMonth}
+            endYear={endYear}
+            onStartChange={(m, y) => { setStartMonth(m); setStartYear(y); }}
+            onEndChange={(m, y) => { setEndMonth(m); setEndYear(y); }}
+            minYear={2023}
+            maxYear={currentYear}
+          />
         </div>
 
         {!periodoValido ? (
@@ -404,6 +526,8 @@ function Dashboard() {
                 <div key={i} className="bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
                   <div className="h-4 w-2/5 bg-gray-200 rounded animate-pulse" />
                   <div className="h-8 w-3/5 bg-gray-300 rounded animate-pulse" />
+                  <div className="h-3 w-2/5 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 w-3/5 bg-gray-200 rounded animate-pulse" />
                   <div className="h-3 w-2/5 bg-gray-200 rounded animate-pulse" />
                 </div>
               ))}
@@ -433,41 +557,44 @@ function Dashboard() {
           <>
             {/* KPI CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className={cardStyle}>
-                <p className="text-sm text-[#333] font-medium mb-4">Receita total do período</p>
-                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalReceita)}
-                </h2>
-                <div className={`flex items-center gap-1 text-xs font-medium ${revenueGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {revenueGrowth >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  <span>{Math.abs(revenueGrowth).toFixed(1)}% do início ao fim do período</span>
-                </div>
-              </div>
-              <div className={cardStyle}>
-                <p className="text-sm text-[#333] font-medium mb-4">Total de pedidos do período</p>
-                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
-                  {new Intl.NumberFormat("pt-BR").format(totalPedidos)}
-                </h2>
-                <div className={`flex items-center gap-1 text-xs font-medium ${ordersGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {ordersGrowth >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  <span>{Math.abs(ordersGrowth).toFixed(1)}% do início ao fim do período</span>
-                </div>
-              </div>
-              <div className={cardStyle}>
-                <p className="text-sm text-[#333] font-medium mb-4">Ticket médio do período</p>
-                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ticketMedio)}
-                </h2>
-                <div className={`flex items-center gap-1 text-xs font-medium ${ticketGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {ticketGrowth >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  <span>{Math.abs(ticketGrowth).toFixed(1)}% do início ao fim do período</span>
-                </div>
-              </div>
+              <KpiCard
+                label="Receita total do período"
+                value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalReceita)}
+                metrics={receitaMetrics}
+                currentTotal={totalReceita}
+                formatValue={(v) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)}
+              />
+              <KpiCard
+                label="Total de pedidos do período"
+                value={new Intl.NumberFormat("pt-BR").format(totalPedidos)}
+                metrics={pedidosMetrics}
+                currentTotal={totalPedidos}
+                formatValue={(v) => new Intl.NumberFormat("pt-BR").format(v)}
+              />
+              <KpiCard
+                label="Ticket médio do período"
+                value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ticketMedio)}
+                metrics={ticketMetrics}
+                currentTotal={ticketMedio}
+                formatValue={(v) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)}
+              />
             </div>
 
             {/* LINE CHART */}
             <div className={`${cardStyle} mb-6`}>
-              <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Receita ao longo do período</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-[#2B2B2B]">Receita ao longo do período</h2>
+                {isQuarterView && (
+                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    Agrupado por trimestre — período entre 13 e 36 meses
+                  </span>
+                )}
+                {isYearView && (
+                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    Agrupado por ano — período acima de 36 meses
+                  </span>
+                )}
+              </div>
               <div className="h-[350px]">
                 <Line
                   data={revenueData}
