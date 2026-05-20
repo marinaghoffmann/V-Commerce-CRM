@@ -260,7 +260,31 @@ export function useKpiCategoria(anoInicio: number, mesInicio: number, anoFim: nu
 
     api
       .get(`/kpi-category?${params.toString()}`)
-      .then((res) => setData(res.data))
+      .then((res) => {
+        const items = res.data as KpiCategoryItem[];
+        const map = new Map<string, { receita_total: number; total_pedidos: number; total_clientes_unicos: number }>();
+        items.forEach((it) => {
+          const key = it.categoria ?? "";
+          const entry = map.get(key) ?? { receita_total: 0, total_pedidos: 0, total_clientes_unicos: 0 };
+          entry.receita_total += it.receita_total ?? 0;
+          entry.total_pedidos += it.total_pedidos ?? 0;
+          entry.total_clientes_unicos += it.total_clientes_unicos ?? 0;
+          map.set(key, entry);
+        });
+
+        const aggregated: KpiCategoryItem[] = Array.from(map.entries()).map(([categoria, v]) => ({
+          id: categoria,
+          ano_venda: anoFim,
+          mes_venda: mesFim,
+          categoria,
+          receita_total: v.receita_total,
+          total_pedidos: v.total_pedidos,
+          total_clientes_unicos: v.total_clientes_unicos,
+          ticket_medio: v.total_pedidos > 0 ? v.receita_total / v.total_pedidos : 0,
+        }));
+
+        setData(aggregated.sort((a, b) => b.receita_total - a.receita_total));
+      })
       .catch((err) => { setData([]); setError(err.message ?? String(err)); })
       .finally(() => setLoading(false));
   }, [anoInicio, mesInicio, anoFim, mesFim]);
@@ -285,7 +309,31 @@ export function useKpiEstado(anoInicio: number, mesInicio: number, anoFim: numbe
 
     api
       .get(`/kpi-state?${params.toString()}`)
-      .then((res) => setData(res.data))
+      .then((res) => {
+        const items = res.data as KpiStateItem[];
+        const map = new Map<string, { receita_total: number; total_pedidos: number; total_clientes_unicos: number }>();
+        items.forEach((it) => {
+          const key = it.estado ?? "";
+          const entry = map.get(key) ?? { receita_total: 0, total_pedidos: 0, total_clientes_unicos: 0 };
+          entry.receita_total += it.receita_total ?? 0;
+          entry.total_pedidos += it.total_pedidos ?? 0;
+          entry.total_clientes_unicos += it.total_clientes_unicos ?? 0;
+          map.set(key, entry);
+        });
+
+        const aggregated: KpiStateItem[] = Array.from(map.entries()).map(([estado, v]) => ({
+          id: estado,
+          ano_venda: anoFim,
+          mes_venda: mesFim,
+          estado,
+          receita_total: v.receita_total,
+          total_pedidos: v.total_pedidos,
+          total_clientes_unicos: v.total_clientes_unicos,
+          ticket_medio: v.total_pedidos > 0 ? v.receita_total / v.total_pedidos : 0,
+        }));
+
+        setData(aggregated.sort((a, b) => b.receita_total - a.receita_total));
+      })
       .catch((err) => { setData([]); setError(err.message ?? String(err)); })
       .finally(() => setLoading(false));
   }, [anoInicio, mesInicio, anoFim, mesFim]);
