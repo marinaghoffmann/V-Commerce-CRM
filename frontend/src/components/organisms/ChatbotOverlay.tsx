@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAIChat } from "../../hooks/useAIChat";
 import { ChatbotHeader } from "../molecules/ChatbotHeader";
 import { ChatbotInput } from "../molecules/ChatbotInput";
@@ -7,21 +7,120 @@ import { BotMessage } from "../molecules/BotMessage";
 import { UserMessage } from "../molecules/UserMessage";
 import { TypingIndicator } from "../atoms/TypingIndicator";
 
+// Dimensões da janela do chat
+const WINDOW_W = 400;
+const WINDOW_H = 560;
+const MARGIN   = 12; // espaço entre o botão e a janela
+
 interface ChatbotOverlayProps {
   onClose: () => void;
+  /** Posição atual do botão flutuante no viewport (top-left do botão) */
+  buttonPos: { x: number; y: number };
+  /** Tamanho do botão em px */
+  buttonSize?: number;
 }
 
-export function ChatbotOverlay({ onClose }: ChatbotOverlayProps) {
+export function ChatbotOverlay({
+  onClose,
+  buttonPos,
+  buttonSize = 56,
+}: ChatbotOverlayProps) {
   const { messages, loading, sendMessage, suggestions } = useAIChat();
   const [inputValue, setInputValue] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef       = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // ─── Posição inicial da janela: tenta abrir acima do botão ────────────────
+  const calcInitialPos = useCallback(() => {
+    // Tenta colocar acima do botão, alinhado à direita com ele
+    let x = buttonPos.x + buttonSize - WINDOW_W;
+    let y = buttonPos.y - WINDOW_H - MARGIN;
+
+    // Se não cabe acima, coloca abaixo
+    if (y < 8) {
+      y = buttonPos.y + buttonSize + MARGIN;
+    }
+    // Se não cabe à esquerda com esse alinhamento, empurra para a direita
+    if (x < 8) x = 8;
+    // Se ultrapassa a direita, recua
+    if (x + WINDOW_W > window.innerWidth - 8) {
+      x = window.innerWidth - WINDOW_W - 8;
+    }
+    // Garante que não sai embaixo
+    if (y + WINDOW_H > window.innerHeight - 8) {
+      y = window.innerHeight - WINDOW_H - 8;
+    }
+
+    return { x, y };
+  }, [buttonPos, buttonSize]);
+
+  const [pos, setPos] = useState(calcInitialPos);
+
+  // Recalcula posição quando buttonPos muda (botão foi arrastado)
+  useEffect(() => {
+    setPos(calcInitialPos());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buttonPos.x, buttonPos.y]);
+
+  // ─── Lógica de arrasto da janela pelo cabeçalho ───────────────────────────
+  const isDragging   = useRef(false);
+  const startPointer = useRef({ x: 0, y: 0 });
+  const startPos     = useRef({ x: 0, y: 0 });
+
+  const clampWindow = useCallback((x: number, y: number) => ({
+    x: Math.min(Math.max(x, 0), window.innerWidth  - WINDOW_W),
+    y: Math.min(Math.max(y, 0), window.innerHeight - WINDOW_H),
+  }), []);
+
+  const onHeaderPointerDown = useCallback(
+    (clientX: number, clientY: number) => {
+      isDragging.current   = true;
+      startPointer.current = { x: clientX, y: clientY };
+      startPos.current     = { ...pos };
+    },
+    [pos]
+  );
+
+  const onPointerMove = useCallback(
+    (clientX: number, clientY: number) => {
+      if (!isDragging.current) return;
+      const dx = clientX - startPointer.current.x;
+      const dy = clientY - startPointer.current.y;
+      setPos(clampWindow(startPos.current.x + dx, startPos.current.y + dy));
+    },
+    [clampWindow]
+  );
+
+  const onPointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => onPointerMove(e.clientX, e.clientY);
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup",   onPointerUp);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend",  onPointerUp);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup",   onPointerUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend",  onPointerUp);
+    };
+  }, [onPointerMove, onPointerUp]);
+
+  // ─── Auto-scroll ──────────────────────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // ─── Envio de mensagem ────────────────────────────────────────────────────
   const handleSendMessage = async () => {
     if (inputValue.trim()) {
       await sendMessage(inputValue);
@@ -43,15 +142,64 @@ export function ChatbotOverlay({ onClose }: ChatbotOverlayProps) {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="fixed top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl h-[75vh] bg-white rounded-xl shadow-2xl flex flex-col z-50">
-      <ChatbotHeader onClose={onClose} />
+    <div
+      style={{
+        position     : "fixed",
+        left         : pos.x,
+        top          : pos.y,
+        width        : WINDOW_W,
+        height       : WINDOW_H,
+        zIndex       : 9998,
+        display      : "flex",
+        flexDirection: "column",
+        borderRadius : 16,
+        background   : "#ffffff",
+        border       : "1px solid #e5e7eb",
+        boxShadow    : "0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)",
+        overflow     : "hidden",
+        // Animação de entrada
+        animation    : "chatWindowOpen 0.2s ease-out",
+      }}
+    >
+      {/* Keyframe da animação de abertura (injetado inline via style tag) */}
+      <style>{`
+        @keyframes chatWindowOpen {
+          from { opacity: 0; transform: scale(0.95) translateY(8px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);   }
+        }
+      `}</style>
 
-      {/* Messages Area */}
+      {/* ── Cabeçalho arrastável ─────────────────────────────────────────── */}
+      <div
+        style={{ cursor: isDragging.current ? "grabbing" : "grab", userSelect: "none" }}
+        onMouseDown={(e) => {
+          // Não iniciar arrasto se clicou no botão X
+          if ((e.target as HTMLElement).closest("button")) return;
+          e.preventDefault();
+          onHeaderPointerDown(e.clientX, e.clientY);
+        }}
+        onTouchStart={(e) => {
+          if ((e.target as HTMLElement).closest("button")) return;
+          onHeaderPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+        }}
+      >
+        <ChatbotHeader onClose={onClose} />
+      </div>
+
+      {/* ── Área de mensagens ─────────────────────────────────────────────── */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 bg-white"
+        style={{
+          flex      : 1,
+          overflowY : "auto",
+          overflowX : "hidden",
+          padding   : "16px",
+          background: "#ffffff",
+        }}
+        className="space-y-4"
       >
         {!hasMessages ? (
+          /* Estado 1: Boas-vindas */
           <EmptyState
             suggestions={suggestions}
             onSelectSuggestion={handleSendSuggestion}
@@ -61,8 +209,10 @@ export function ChatbotOverlay({ onClose }: ChatbotOverlayProps) {
             {messages.map((msg, idx) => (
               <div key={idx}>
                 {msg.type === "user" ? (
+                  /* Estado 2 / 3 — balão do usuário (igual nos dois casos) */
                   <UserMessage content={msg.content} />
                 ) : (
+                  /* Estado 2: Resposta padrão  |  Estado 3: Erro (isValid=false) */
                   <BotMessage
                     content={msg.content}
                     rows={msg.rows}
@@ -73,14 +223,13 @@ export function ChatbotOverlay({ onClose }: ChatbotOverlayProps) {
               </div>
             ))}
 
-            {/* Typing Indicator */}
             {loading && <TypingIndicator />}
-
             <div ref={messagesEndRef} />
           </>
         )}
       </div>
 
+      {/* ── Rodapé com input ──────────────────────────────────────────────── */}
       <ChatbotInput
         value={inputValue}
         onChange={setInputValue}
