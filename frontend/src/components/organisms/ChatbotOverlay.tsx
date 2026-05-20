@@ -112,22 +112,20 @@ export function ChatbotOverlay({
   };
 
   const hasMessages = messages.length > 0;
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setIsOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
-    <>
-      {/* Keyframe de abertura — não tem utilitário Tailwind para isso */}
-      <style>{`
-        @keyframes chatWindowOpen {
-          from { opacity: 0; transform: scale(0.95) translateY(8px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .chat-window { animation: chatWindowOpen 0.2s ease-out; }
-      `}</style>
-
-      <div
-        className="chat-window fixed flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xl"
-        style={{ left: pos.x, top: pos.y, width: WINDOW_W, height: WINDOW_H, zIndex: 9998 }}
-      >
+    <div
+      className={`fixed z-[9998] flex h-[560px] w-[400px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-200 ease-out ${
+        isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+      }`}
+      style={{ left: pos.x, top: pos.y }}
+    >
         {/* Cabeçalho arrastável */}
         <div
           className="cursor-grab select-none"
@@ -185,6 +183,5 @@ export function ChatbotOverlay({
           disabled={loading}
         />
       </div>
-    </>
   );
 }

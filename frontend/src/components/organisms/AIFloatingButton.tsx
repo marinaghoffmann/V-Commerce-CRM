@@ -40,33 +40,8 @@ export function AIFloatingButton({ onClick }: AIFloatingButtonProps) {
     <button
       aria-label="Abrir Agente de IA"
       onClick={() => onClick({ ...pos })}
-      style={{
-        position        : "fixed",
-        left            : pos.x,
-        top             : pos.y,
-        width           : BUTTON_SIZE,
-        height          : BUTTON_SIZE,
-        zIndex          : 9999,
-        borderRadius    : "50%",
-        backgroundColor : "var(--ai-btn-color, #2563EB)",
-        border          : "none",
-        cursor          : "pointer",
-        display         : "flex",
-        alignItems      : "center",
-        justifyContent  : "center",
-        boxShadow       : "0 8px 24px rgba(37, 99, 235, 0.45), 0 2px 8px rgba(0,0,0,0.15)",
-        transition      : "transform 0.15s ease, box-shadow 0.15s ease",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.1)";
-        (e.currentTarget as HTMLButtonElement).style.boxShadow =
-          "0 12px 32px rgba(37, 99, 235, 0.55), 0 4px 12px rgba(0,0,0,0.2)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-        (e.currentTarget as HTMLButtonElement).style.boxShadow =
-          "0 8px 24px rgba(37, 99, 235, 0.45), 0 2px 8px rgba(0,0,0,0.15)";
-      }}
+      className="fixed z-[9999] flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--ai-btn-color,#2563EB)] shadow-[0_8px_24px_rgba(37,99,235,0.45),0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-150 ease-in-out hover:scale-110 hover:shadow-[0_12px_32px_rgba(37,99,235,0.55),0_4px_12px_rgba(0,0,0,0.2)]"
+      style={{ left: pos.x, top: pos.y, width: BUTTON_SIZE, height: BUTTON_SIZE }}
     >
       <RobotIcon />
     </button>
