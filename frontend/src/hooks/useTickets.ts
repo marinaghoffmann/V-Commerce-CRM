@@ -5,8 +5,9 @@ import api from "../services/api";
 interface UseTicketsArgs {
   page?: number;
   limit?: number;
-  status?: string | null;
+  status?: string | null;   
   search?: string | null;
+  categoria?: string | null; 
 }
 
 export function useTickets(initArgs: UseTicketsArgs = {}) {
@@ -27,22 +28,45 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
     }
   }, []);
 
+  function buildParams(args: UseTicketsArgs & { page: number; limit: number }): URLSearchParams {
+    const params = new URLSearchParams();
+    params.append("page", String(args.page));
+    params.append("limit", String(args.limit));
+
+    if (args.status) {
+      args.status.split(",").map((s) => s.trim()).filter(Boolean).forEach((s) => {
+        params.append("status[]", s);
+      });
+    }
+
+    if (args.search?.trim()) {
+      params.append("search", args.search.trim());
+    }
+
+    if (args.categoria) {
+      args.categoria.split(",").map((c) => c.trim()).filter(Boolean).forEach((c) => {
+        params.append("categoria[]", c);
+      });
+    }
+
+    return params;
+  }
+
   const fetchTickets = useCallback(
     async (args?: UseTicketsArgs) => {
       setLoading(true);
       setError(null);
       try {
-        const currentPage = args?.page ?? page;
-        const st = args?.status ?? initArgs.status;
-        const q = args?.search ?? initArgs.search;
+        const merged: UseTicketsArgs & { page: number; limit: number } = {
+          page: args?.page ?? page,
+          limit,
+          status: args?.status ?? initArgs.status ?? null,
+          search: args?.search ?? initArgs.search ?? null,
+          categoria: args?.categoria ?? initArgs.categoria ?? null,
+        };
 
-        const params = new URLSearchParams();
-        params.append("page", String(currentPage));
-        params.append("limit", String(limit));
-        if (st && st !== "Todos") params.append("status", st);
-        if (q) params.append("search", q);
+        const params = buildParams(merged);
 
-        // busca tickets e total em paralelo
         const [resTickets, resCount] = await Promise.all([
           api.get(`/ticket?${params.toString()}`),
           api.get(`/ticket/count?${params.toString()}`),
@@ -59,7 +83,7 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
         setLoading(false);
       }
     },
-    [page, limit] // eslint-disable-line
+    [page, limit] 
   );
 
   useEffect(() => {
