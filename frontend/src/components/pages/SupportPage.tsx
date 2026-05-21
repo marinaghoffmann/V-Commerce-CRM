@@ -83,11 +83,6 @@ function StatusDropdown({ selected, onChange }: StatusDropdownProps) {
     onChange(selected.includes(val) ? selected.filter((v) => v !== val) : [...selected, val]);
 
   const hasSelection = selected.length > 0;
-  const displayLabel = hasSelection
-    ? selected.length === 1
-      ? STATUS_CONFIG[selected[0]]?.label
-      : `Status (${selected.length})`
-    : "Status";
 
   return (
     <div ref={ref} className="relative">
@@ -100,7 +95,14 @@ function StatusDropdown({ selected, onChange }: StatusDropdownProps) {
             : "bg-white border-gray-200 text-gray-600 hover:border-gray-300",
         ].join(" ")}
       >
-        <span className="font-medium truncate">{displayLabel}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium truncate">Status</span>
+          {hasSelection && (
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold leading-none">
+              {selected.length}
+            </span>
+          )}
+        </div>
         <ChevronDown size={16} className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -179,11 +181,6 @@ function CategoryDropdown({ selected, onChange }: CategoryDropdownProps) {
     onChange(selected.includes(val) ? selected.filter((v) => v !== val) : [...selected, val]);
 
   const hasSelection = selected.length > 0;
-  const displayLabel = hasSelection
-    ? selected.length === 1
-      ? CATEGORY_LABELS[selected[0]] ?? selected[0]
-      : `Categoria (${selected.length})`
-    : "Categoria";
 
   return (
     <div ref={ref} className="relative">
@@ -196,7 +193,14 @@ function CategoryDropdown({ selected, onChange }: CategoryDropdownProps) {
             : "bg-white border-gray-200 text-gray-600 hover:border-gray-300",
         ].join(" ")}
       >
-        <span className="font-medium truncate">{displayLabel}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium truncate">Categoria</span>
+          {hasSelection && (
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold leading-none">
+              {selected.length}
+            </span>
+          )}
+        </div>
         <ChevronDown size={16} className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -236,18 +240,6 @@ function CategoryDropdown({ selected, onChange }: CategoryDropdownProps) {
               );
             })}
           </div>
-
-          {hasSelection && (
-            <>
-              <div className="border-t border-gray-100 mx-3 my-1" />
-              <button
-                onClick={() => { onChange([]); setOpen(false); }}
-                className="w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-              >
-                Limpar seleção
-              </button>
-            </>
-          )}
         </div>
       )}
     </div>
