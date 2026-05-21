@@ -102,6 +102,14 @@ function getStatusLabel(status: string) {
 }
 
 // Calcula crescimento médio mensal (média das variações consecutivas)
+function calcMonthlyGrowth(values: number[]): number {
+  if (values.length < 2) return 0;
+  const first = values[0];
+  const last  = values[values.length - 1];
+  if (first <= 0) return 0;
+  return (Math.pow(last / first, 1 / (values.length - 1)) - 1) * 100;
+}
+
 function calcAvgMonthlyGrowth(values: number[]): number {
   if (values.length < 2) return 0;
 
@@ -231,7 +239,7 @@ function Dashboard() {
 
   // Métricas por card
   const receitaMetrics: CardMetrics = {
-    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.receita_total)),
+    avgGrowth: isSingleMonth ? 0 : calcMonthlyGrowth(cardsData.map((d) => d.receita_total)),
     ...(() => {
       const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
         cardsData.map((d, i) => ({
@@ -248,7 +256,7 @@ function Dashboard() {
   };
 
   const pedidosMetrics: CardMetrics = {
-    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.total_pedidos)),
+    avgGrowth: isSingleMonth ? 0 : calcMonthlyGrowth(cardsData.map((d) => d.total_pedidos)),
     ...(() => {
       const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
         cardsData.map((d, i) => ({
@@ -265,7 +273,7 @@ function Dashboard() {
   };
 
   const ticketMetrics: CardMetrics = {
-    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.ticket_medio)),
+    avgGrowth: isSingleMonth ? 0 : calcMonthlyGrowth(cardsData.map((d) => d.ticket_medio)),
     ...(() => {
       const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
         cardsData.map((d, i) => ({
@@ -317,13 +325,26 @@ const revenueData = {
   ],
 };
 
+  // Distribui percentuais garantindo soma exata de 100% (largest remainder method)
+  function toFixedPercents(vals: number[]): number[] {
+    const total = vals.reduce((s, v) => s + v, 0);
+    if (total === 0) return vals.map(() => 0);
+    const exatos = vals.map((v) => (v / total) * 100);
+    const floors = exatos.map((v) => Math.floor(v * 100) / 100);
+    const deficit = Math.min(
+      Math.ceil(Math.round((100 - floors.reduce((s, v) => s + v, 0)) * 10000) / 100),
+      vals.length
+    );
+    const restos = exatos.map((v, i) => ({ i, resto: v - floors[i] }));
+    restos.sort((a, b) => b.resto - a.resto);
+    restos.slice(0, deficit).forEach(({ i }) => { floors[i] = Math.round((floors[i] + 0.01) * 100) / 100; });
+    return floors;
+  }
+
   // Status chart
   const statusData = (kpiStatus || []) as KpiStatusItem[];
   const { labels, valores, colors } = transformarStatus(statusData);
-  const totalPedidosStatus = valores.reduce((s, v) => s + v, 0);
-  const porcentagensStatus = valores.map((v) =>
-    totalPedidosStatus > 0 ? Number(((v / totalPedidosStatus) * 100).toFixed(2)) : 0
-  );
+  const porcentagensStatus = toFixedPercents(valores);
 
   // Categoria chart
   const sortedCategorias = kpiCategoria.length > 0
@@ -331,10 +352,7 @@ const revenueData = {
     : CATEGORIAS_FALLBACK.map((c) => ({ categoria: c, total_pedidos: 0, receita_total: 0 }));
   const categoriasLabels  = sortedCategorias.map((k) => k.categoria);
   const categoriasValores = sortedCategorias.map((k) => k.total_pedidos);
-  const totalPedidosCategoria = categoriasValores.reduce((s, v) => s + v, 0);
-  const porcentagensCategoria = categoriasValores.map((v) =>
-    totalPedidosCategoria > 0 ? Number(((v / totalPedidosCategoria) * 100).toFixed(2)) : 0
-  );
+  const porcentagensCategoria = toFixedPercents(categoriasValores);
   const categoriasColors = categoriasLabels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
   // Estado chart
@@ -349,10 +367,7 @@ const revenueData = {
     : ESTADOS_FALLBACK.map((e) => ({ estado: e, total_pedidos: 0, receita_total: 0 }));
   const estadosLabels  = sortedEstados.map((k) => k.estado);
   const estadosValores = sortedEstados.map((k) => k.total_pedidos);
-  const totalPedidosEstado = estadosValores.reduce((s, v) => s + v, 0);
-  const porcentagensEstado = estadosValores.map((v) =>
-    totalPedidosEstado > 0 ? Number(((v / totalPedidosEstado) * 100).toFixed(2)) : 0
-  );
+  const porcentagensEstado = toFixedPercents(estadosValores);
   const estadosColors = estadosLabels.map((label, i) => {
     const normLabel = normalizeKey(label);
     let regionIdx = 99; let idxInRegion = 0; let regionCount = 1;
@@ -369,26 +384,23 @@ const revenueData = {
   });
 
   const { valores: valoresStatusComp } = transformarStatus((kpiStatusComp || []) as KpiStatusItem[]);
-  const totalStatusComp = valoresStatusComp.reduce((s, v) => s + v, 0);
-  const porcentagensStatusComp = valoresStatusComp.map((v) =>
-    totalStatusComp > 0 ? Number(((v / totalStatusComp) * 100).toFixed(2)) : 0
-  );
+  const porcentagensStatusComp = toFixedPercents(valoresStatusComp);
 
   const totalCategoriasComp = kpiCategoriaComp.reduce((s, c) => s + c.total_pedidos, 0);
-  const porcentagensCategoriasComp = categoriasLabels.map((cat) => {
-    const match = kpiCategoriaComp.find((c) => c.categoria === cat);
-    return match && totalCategoriasComp > 0
-      ? Number(((match.total_pedidos / totalCategoriasComp) * 100).toFixed(2))
-      : 0;
-  });
+  const porcentagensCategoriasComp = toFixedPercents(
+    categoriasLabels.map((cat) => {
+      const match = kpiCategoriaComp.find((c) => c.categoria === cat);
+      return match ? match.total_pedidos : 0;
+    })
+  );
 
   const totalEstadosComp = kpiEstadoComp.reduce((s, e) => s + e.total_pedidos, 0);
-  const porcentagensEstadoComp = estadosLabels.map((est) => {
-    const match = kpiEstadoComp.find((e) => e.estado === est);
-    return match && totalEstadosComp > 0
-      ? Number(((match.total_pedidos / totalEstadosComp) * 100).toFixed(2))
-      : 0;
-  });
+  const porcentagensEstadoComp = toFixedPercents(
+    estadosLabels.map((est) => {
+      const match = kpiEstadoComp.find((e) => e.estado === est);
+      return match ? match.total_pedidos : 0;
+    })
+  );
 
   const activeConfig = {
     status:    { labels, porcentagens: porcentagensStatus, colors, legend: labels, compPorcentagens: porcentagensStatusComp },
@@ -614,7 +626,7 @@ useEffect(() => {
 
             <div className={`flex items-center gap-1.5 text-xs font-medium ${metrics.avgGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
               {metrics.avgGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% ao mês em média</span>
+              <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% crescimento mensal composto</span>
             </div>
 
             {metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label && (

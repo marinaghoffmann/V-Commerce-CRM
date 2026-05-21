@@ -316,13 +316,15 @@ export function useMonthlyKpiForCards(
     const promises = months.map(({ ano, mes }) =>
       api
         .get<KpiStatusItem[]>(`/kpi-status?page=1&limit=100&ano=${ano}&mes=${mes}`)
-        .then((res) => ({
-          receita_total: res.data.reduce((s, i) => s + i.receita_total, 0),
-          total_pedidos: res.data.reduce((s, i) => s + i.total_pedidos, 0),
-          ticket_medio:  res.data.length > 0
-            ? res.data.reduce((s, i) => s + i.ticket_medio, 0) / res.data.length
-            : 0,
-        }))
+        .then((res) => {
+          const receita_total = res.data.reduce((s, i) => s + i.receita_total, 0);
+          const total_pedidos = res.data.reduce((s, i) => s + i.total_pedidos, 0);
+          return {
+            receita_total,
+            total_pedidos,
+            ticket_medio: total_pedidos > 0 ? receita_total / total_pedidos : 0,
+          };
+        })
     );
 
     Promise.all(promises)
@@ -538,14 +540,16 @@ export function useMonthlyKpiForCompPeriod(
     const promises = months.map(({ ano, mes }) =>
       api
         .get<KpiStatusItem[]>(`/kpi-status?page=1&limit=100&ano=${ano}&mes=${mes}`)
-        .then((res) => ({
-        receita_total: res.data.reduce((s, i) => s + i.receita_total, 0),
-        total_pedidos: res.data.reduce((s, i) => s + i.total_pedidos, 0),
-        ticket_medio:  res.data.length > 0
-          ? res.data.reduce((s, i) => s + i.ticket_medio, 0) / res.data.length
-          : 0,
-        label: `${MESES[mes - 1]}/${String(ano).slice(-2)}`,
-      }))
+        .then((res) => {
+          const receita_total = res.data.reduce((s, i) => s + i.receita_total, 0);
+          const total_pedidos = res.data.reduce((s, i) => s + i.total_pedidos, 0);
+          return {
+            receita_total,
+            total_pedidos,
+            ticket_medio: total_pedidos > 0 ? receita_total / total_pedidos : 0,
+            label: `${MESES[mes - 1]}/${String(ano).slice(-2)}`,
+          };
+        })
     );
 
     Promise.all(promises)
