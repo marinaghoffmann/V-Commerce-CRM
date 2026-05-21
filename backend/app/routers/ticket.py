@@ -21,7 +21,8 @@ def _apply_filters(query, status: Optional[List[str]], search: Optional[str], ca
             | Ticket.tipo_problema.ilike(f"%{search}%")
         )
     if categoria:
-        query = query.filter(Ticket.categoria_produto.in_(categoria))
+        # Filtra pelo tipo de problema do ticket (reembolso, entrega, produto, pagamento)
+        query = query.filter(Ticket.tipo_problema.in_(categoria))
     return query
 
 

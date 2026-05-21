@@ -14,18 +14,17 @@ import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  "Automotivo": { bg: "bg-zinc-50",   border: "border-zinc-200",   text: "text-zinc-700",   dot: "bg-zinc-400"   },
-  "Beleza":     { bg: "bg-rose-50",   border: "border-rose-200",   text: "text-rose-700",   dot: "bg-rose-400"   },
-  "Brinquedos": { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", dot: "bg-purple-400" },
-  "Casa":       { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", dot: "bg-orange-400" },
-  "Eletronicos":{ bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-700",   dot: "bg-blue-400"   },
-  "Eletrônicos":{ bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-700",   dot: "bg-blue-400"   },
-  "Esportes":   { bg: "bg-green-50",  border: "border-green-200",  text: "text-green-700",  dot: "bg-green-400"  },
-  "Moveis":     { bg: "bg-amber-50",  border: "border-amber-200",  text: "text-amber-700",  dot: "bg-amber-400"  },
-  "Vestuario":  { bg: "bg-pink-50",   border: "border-pink-200",   text: "text-pink-700",   dot: "bg-pink-400"   },
-  "Roupas":     { bg: "bg-pink-50",   border: "border-pink-200",   text: "text-pink-700",   dot: "bg-pink-400"   },
-  "Alimentos":  { bg: "bg-lime-50",   border: "border-lime-200",   text: "text-lime-700",   dot: "bg-lime-400"   },
-  "Livros":     { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700", dot: "bg-indigo-400" },
+  "produto":   { bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-700",   dot: "bg-blue-400"   },
+  "entrega":   { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", dot: "bg-yellow-400" },
+  "pagamento": { bg: "bg-green-50",  border: "border-green-200",  text: "text-green-700",  dot: "bg-green-400"  },
+  "reembolso": { bg: "bg-red-50",    border: "border-red-200",    text: "text-red-700",    dot: "bg-red-400"    },
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  "produto":   "Produto",
+  "entrega":   "Entrega",
+  "pagamento": "Pagamento",
+  "reembolso": "Reembolso",
 };
 
 function getCategoryColor(cat: string) {
@@ -33,9 +32,7 @@ function getCategoryColor(cat: string) {
 }
 
 const STATUS_OPTIONS = ["aberto", "fechado"];
-const CATEGORY_OPTIONS = [
-  "Automotivo","Beleza","Brinquedos","Casa","Eletronicos","Esportes","Moveis","Vestuario","Roupas","Alimentos","Livros",
-];
+const CATEGORY_OPTIONS = ["produto", "entrega", "pagamento", "reembolso"];
 
 
 interface KpiCardProps {
@@ -184,7 +181,7 @@ function CategoryDropdown({ selected, onChange }: CategoryDropdownProps) {
   const hasSelection = selected.length > 0;
   const displayLabel = hasSelection
     ? selected.length === 1
-      ? selected[0]
+      ? CATEGORY_LABELS[selected[0]] ?? selected[0]
       : `Categoria (${selected.length})`
     : "Categoria";
 
@@ -230,9 +227,10 @@ function CategoryDropdown({ selected, onChange }: CategoryDropdownProps) {
                     {checked && <Check size={12} strokeWidth={3} />}
                   </div>
 
-                  {/* Badge colorido igual à ProductsPage */}
-                  <span className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border pointer-events-none ${colors.bg} ${colors.border} ${colors.text}`}>
-                    {cat}
+                  {/* Badge colorido com bolinha, igual ao StatusDropdown */}
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border pointer-events-none ${colors.bg} ${colors.border} ${colors.text}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${colors.dot}`} />
+                    {CATEGORY_LABELS[cat] ?? cat}
                   </span>
                 </label>
               );
