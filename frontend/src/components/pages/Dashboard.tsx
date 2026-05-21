@@ -147,6 +147,7 @@ function Dashboard() {
   const [compEndYear,    setCompEndYear]    = useState(endYear - 1);
 
   const [chartView, setChartView] = useState<ChartView>("status");
+  const [showDetailedCards, setShowDetailedCards] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -464,64 +465,64 @@ useEffect(() => {
 
   // Componente de card com as 3 métricas
   const KpiCard = ({
-    label, value, metrics, currentTotal, formatValue,
+    label, value, metrics, currentTotal, formatValue, detailed,
   }: {
     label: string;
     value: string;
     metrics: CardMetrics;
     currentTotal: number;
     formatValue: (v: number) => string;
+    detailed: boolean;
   }) => (
     <div className={cardStyle}>
       <p className="text-sm text-[#333] font-medium mb-3">{label}</p>
       <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">{value}</h2>
 
-      {isSingleMonth ? (
-        <p className="text-xs text-gray-400 font-medium">Período único — sem comparativo</p>
-      ) : (
-        <div className="flex flex-col gap-2">
+      {detailed && (
+        isSingleMonth ? (
+          <p className="text-xs text-gray-400 font-medium">Período único — sem comparativo</p>
+        ) : (
+          <div className="flex flex-col gap-2">
 
-          {/* Métrica 1 — Crescimento médio mensal */}
-          <div className={`flex items-center gap-1.5 text-xs font-medium ${metrics.avgGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
-            {metrics.avgGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% ao mês em média</span>
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${metrics.avgGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
+              {metrics.avgGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% ao mês em média</span>
+            </div>
+
+            {metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label && (
+              <div className="flex flex-col gap-1 text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="text-green-500 font-bold">📈</span>
+                  <span>Pico {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="text-red-400 font-bold">📉</span>
+                  <span>Baixa {metrics.low.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.low.value)}</span></span>
+                </span>
+              </div>
+            )}
+
+            {metrics.prevAvailable && metrics.prevTotal !== null ? (
+              (() => {
+                const growth = calcGrowthVsPrev(currentTotal, metrics.prevTotal);
+                return (
+                  <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
+                    {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    <span>
+                      {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
+                    </span>
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <span>⚠️</span>
+                <span>Sem dados para período equivalente anterior</span>
+              </div>
+            )}
+
           </div>
-
-          {/* Métrica 2 — Pico e Baixa com valores */}
-          {metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label && (
-            <div className="flex flex-col gap-1 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <span className="text-green-500 font-bold">📈</span>
-                <span>Pico {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="text-red-400 font-bold">📉</span>
-                <span>Baixa {metrics.low.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.low.value)}</span></span>
-              </span>
-            </div>
-          )}
-
-          {/* Métrica 3 — vs período equivalente anterior */}
-          {metrics.prevAvailable && metrics.prevTotal !== null ? (
-            (() => {
-              const growth = calcGrowthVsPrev(currentTotal, metrics.prevTotal);
-              return (
-                <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                  <span>
-                    {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
-                  </span>
-                </div>
-              );
-            })()
-          ) : (
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
-              <span>⚠️</span>
-              <span>Sem dados para período equivalente anterior</span>
-            </div>
-          )}
-
-        </div>
+        )
       )}
     </div>
   );
@@ -598,6 +599,25 @@ useEffect(() => {
         ) : (
           <>
             {/* KPI CARDS */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold text-gray-500">Métricas principais</span>
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full p-1.5">
+                {([["resumo", "Resumo"], ["detalhado", "Cards detalhados"]] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setShowDetailedCards(key === "detalhado")}
+                    className={[
+                      "rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150 cursor-pointer",
+                      (key === "detalhado") === showDetailedCards
+                        ? "bg-blue-500 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-600",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <KpiCard
                 label="Receita total do período"
@@ -605,6 +625,7 @@ useEffect(() => {
                 metrics={receitaMetrics}
                 currentTotal={totalReceita}
                 formatValue={(v) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)}
+                detailed={showDetailedCards}
               />
               <KpiCard
                 label="Total de pedidos do período"
@@ -612,6 +633,7 @@ useEffect(() => {
                 metrics={pedidosMetrics}
                 currentTotal={totalPedidos}
                 formatValue={(v) => new Intl.NumberFormat("pt-BR").format(v)}
+                detailed={showDetailedCards}
               />
               <KpiCard
                 label="Ticket médio do período"
@@ -619,6 +641,7 @@ useEffect(() => {
                 metrics={ticketMetrics}
                 currentTotal={ticketMedio}
                 formatValue={(v) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)}
+                detailed={showDetailedCards}
               />
             </div>
 
