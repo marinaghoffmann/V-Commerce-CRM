@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle, Search } from "lucide-react";
 
 import ProductGrid from "../organisms/ProductGrid";
@@ -6,9 +7,8 @@ import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
-import api from "../../services/api"; // <-- Importação do serviço de API do seu frontend
+import api from "../../services/api"; 
 
-// ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatCurrency(value: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value ?? 0);
@@ -655,6 +655,7 @@ function ConfirmDeleteModal({ product, onCancel, onConfirm, deleteProduct }: Con
 // ─── Página principal ───────────────────────────────────────────────────────────
 
 export default function ProductsPage() {
+  const navigate = useNavigate();
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<string[]>([]);
   const [ordemSelecionada, setOrdemSelecionada] = useState<string | null>(null);
   const [formModal, setFormModal] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null });
@@ -830,6 +831,7 @@ export default function ProductsPage() {
                 products={products as Product[]}
                 onEdit={openEdit}
                 onDelete={setDeleteModal}
+                onNavigate={(product) => navigate(`/produtos/${product.id_produto}`)}
               />
             </>
           )}
