@@ -4,12 +4,51 @@ export const CHAT_STORAGE_KEY = "ai_chat_state_v1";
 export const SESSION_TTL_MS = 30 * 60 * 1000;
 export const MAX_PERSISTED_MESSAGES = 20;
 
-export const INITIAL_SUGGESTIONS = [
+export const DEFAULT_SUGGESTIONS = [
   "Quais clientes geraram mais receita este ano?",
   "Mostre o top 10 produtos mais vendidos.",
   "Qual o produto com maior ticket médio?",
   "Mostre os top 10 produtos com mais tickets, com a quantidade.",
 ];
+
+export const PAGE_SUGGESTIONS: Record<string, string[]> = {
+  dashboard: [
+    "Qual o mês com maior receita total?",
+    "Quantos % das vendas cada região representa?",
+    "Qual o ano tem mais entregas no prazo?",
+    "Qual categoria tem mais pedidos?",
+  ],
+  clientes: [
+    "Qual o cliente com maior ticket médio?",
+    "Qual a % de clientes inativos?",
+    "Qual cliente fez mais pedidos?",
+    "Qual cliente fez o pedido mais recente?",
+  ],
+  pedidos: [
+    "Qual o pedido mais caro?",
+    "Qual a % de pedidos aprovados?",
+    "Qual o cliente que fez mais pedidos?",
+    "Qual o produto com mais pedidos?",
+  ],
+  produtos: [
+    "Qual o produto mais caro?",
+    "Qual o top 3 produtos menos vendidos?",
+    "Qual a categoria que tem mais produtos?",
+    "Qual a produto tem mais receita?",
+  ],
+  suporte: [
+    "Qual cliente abriu mais tickets?",
+    "Qual a % de tickets abertos?",
+    "Qual o mês que resolveu mais tickets?",
+    "Qual a % de tickets fechados?",
+  ],
+};
+
+export function getInitialSuggestionsForPage(pathSegment?: string): string[] {
+  if (!pathSegment) return DEFAULT_SUGGESTIONS;
+  const key = pathSegment.replace(/^\//, "").split("/")[0].toLowerCase();
+  return PAGE_SUGGESTIONS[key] ?? DEFAULT_SUGGESTIONS;
+}
 
 const TABLE_LABELS: Record<string, string> = {
   tickets: "Tickets de suporte",

@@ -3,7 +3,7 @@ import axios from "axios";
 import api from "../services/api";
 import {
   buildBotMessage,
-  INITIAL_SUGGESTIONS,
+  DEFAULT_SUGGESTIONS,
   MAX_PERSISTED_MESSAGES,
   persistStoredChatState,
   readStoredChatState,
@@ -124,6 +124,6 @@ export function useChatbotSession() {
     sessionId,
     sendMessage,
     clearMessages,
-    suggestions: INITIAL_SUGGESTIONS,
+    suggestions: DEFAULT_SUGGESTIONS,
   };
 }

@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { useChatbotSession } from "../hooks/useChatbotSession";
+import { getInitialSuggestionsForPage } from "./chatbot.utils";
 import type { ChatPoint, ChatbotContextType } from "./chatbot.types";
 
 export type { ChatMessage, UseAIChatReturn } from "./chatbot.types";
@@ -39,6 +41,14 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
     [isOpen],
   );
 
+  // Derive page-specific initial suggestions when the chat is empty.
+  const location = useLocation();
+  const routePath = location.pathname;
+
+  const derivedSuggestions = chatSession.messages.length === 0
+    ? getInitialSuggestionsForPage(routePath)
+    : chatSession.suggestions;
+
   const contextValue: ChatbotContextType = {
     isOpen,
     buttonPos,
@@ -46,6 +56,7 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
     openOverlay,
     closeOverlay,
     ...chatSession,
+    suggestions: derivedSuggestions,
   };
 
   return <ChatbotContext.Provider value={contextValue}>{children}</ChatbotContext.Provider>;
