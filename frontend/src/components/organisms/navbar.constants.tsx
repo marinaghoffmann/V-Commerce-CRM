@@ -15,9 +15,6 @@ import ProdutosActiveIcon from "../../assets/navbar_icons/ProdutosIconFill.svg?r
 import SuporteIcon from "../../assets/navbar_icons/SuporteIcon.svg?react";
 import SuporteActiveIcon from "../../assets/navbar_icons/SuporteIconFill.svg?react";
 
-import AssistenteIcon from "../../assets/navbar_icons/AssistenteIcon.svg?react";
-import AssistenteActiveIcon from "../../assets/navbar_icons/AssistenteIconFill.svg?react";
-
 export const NAV_ITEMS: NavItemConfig[] = [
   {
     id: "dashboard",
@@ -66,16 +63,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     path: "/suporte",
     activeIcon: (
       <SuporteActiveIcon className="size-5 text-blue scale-110" />
-    ),
-  },
-
-  {
-    id: "assistente",
-    label: "Assistente de IA",
-    icon: <AssistenteIcon className="size-5 text-white/70" />,
-    path: "/assistente",
-    activeIcon: (
-      <AssistenteActiveIcon className="size-5 text-blue scale-110" />
     ),
   },
 ];
