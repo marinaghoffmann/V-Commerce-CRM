@@ -7,7 +7,7 @@ import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
-import api from "../../services/api";
+import api from "../../services/api"; // <-- Importação do serviço de API do seu frontend
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -61,10 +61,11 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?
 interface CategoryFilterProps {
   selected: string[];
   onApply: (selected: string[]) => void;
+  onClear: () => void;
   availableCategories: string[];
 }
 
-function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilterProps) {
+function CategoryFilter({ selected, onApply, onClear, availableCategories }: CategoryFilterProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string[]>(selected);
   const ref = useRef<HTMLDivElement>(null);
@@ -142,12 +143,18 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
             })}
           </div>
 
-          <div className="px-3 pt-3 mt-2 border-t border-gray-100">
+          <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex flex-col gap-2">
             <button
               onClick={handleApply}
               className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               Aplicar filtro
+            </button>
+            <button
+              onClick={() => { onClear(); setDraft([]); setOpen(false); }}
+              className="w-full py-2 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+            >
+              Limpar filtro
             </button>
           </div>
         </div>
@@ -160,7 +167,7 @@ function CategoryFilter({ selected, onApply, availableCategories }: CategoryFilt
 
 interface OrderOption {
   label: string;
-  value: string; // "coluna:direcao"
+  value: string;
   icon: typeof ArrowUp;
 }
 
@@ -177,7 +184,7 @@ const ORDER_OPTIONS: OrderOption[] = [
   { label: "Menor estoque", value: "estoque_disponivel:asc", icon: ArrowDown },
 ];
 
-function OrderFilter({ selected, onSelect }: { selected: string | null; onSelect: (val: string) => void }) {
+function OrderFilter({ selected, onSelect, onClear }: { selected: string | null; onSelect: (val: string) => void; onClear: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -236,6 +243,14 @@ function OrderFilter({ selected, onSelect }: { selected: string | null; onSelect
                 </button>
               );
             })}
+          </div>
+          <div className="px-3 pt-3 mt-1 border-t border-gray-100">
+            <button
+              onClick={() => { onClear(); setOpen(false); }}
+              className="w-full py-2 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+            >
+              Limpar filtro
+            </button>
           </div>
         </div>
       )}
@@ -794,6 +809,10 @@ export default function ProductsPage() {
               setOrdemSelecionada(val);
               setPage(1);
             }}
+            onClear={() => {
+              setOrdemSelecionada(null);
+              setPage(1);
+            }}
           />
 
           {/* Filtro de categorias */}
@@ -802,6 +821,10 @@ export default function ProductsPage() {
             selected={categoriasSelecionadas}
             onApply={(cats) => {
               setCategoriasSelecionadas(cats);
+              setPage(1);
+            }}
+            onClear={() => {
+              setCategoriasSelecionadas([]);
               setPage(1);
             }}
           />
