@@ -145,9 +145,6 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?
   );
 }
 
-// ─── Edit / Delete modals imported inline ─────────────────────────────────────
-// We import the logic from ProductsPage by re-declaring the same minimal modals
-// so this page is self-contained without circular imports.
 
 import { Check, X, Trash2 as Trash2Icon, ImageIcon, AlertTriangle } from "lucide-react";
 import api from "../../services/api";
@@ -340,7 +337,6 @@ function DeleteModal({ product, onCancel, onDeleted }: { product: Product; onCan
   );
 }
 
-// ─── Página principal ─────────────────────────────────────────────────────────
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -352,7 +348,6 @@ export default function ProductDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  // ─── Derived data ───────────────────────────────────────────────────────────
 
   const sold = produto?.unidades_vendidas ?? 0;
   const stock = produto?.estoque_disponivel ?? 0;
@@ -361,18 +356,15 @@ export default function ProductDetailPage() {
 
   const totalTicketPages = ticketsData ? Math.ceil(ticketsData.total / TICKET_LIMIT) : 1;
 
-  // Last 12 months from historico
   const last12 = historico.slice(-12);
   const monthLabels = last12.map((h) => `${MES_ABREV[h.mes - 1]}/${String(h.ano).slice(-2)}`);
   const revenueValues = last12.map((h) => h.receita_total);
   const ordersValues = last12.map((h) => h.total_pedidos);
 
-  // Month-over-month revenue growth
   const lastRev = last12[last12.length - 1]?.receita_total ?? 0;
   const prevRev = last12[last12.length - 2]?.receita_total ?? 0;
   const revenueGrowth = prevRev > 0 ? ((lastRev - prevRev) / prevRev) * 100 : 0;
 
-  // Chart data — same style as Dashboard
   const revenueChartData = {
     labels: monthLabels,
     datasets: [{
@@ -410,7 +402,6 @@ export default function ProductDetailPage() {
     return weights.map((w) => Math.round((w / total) * 100));
   })();
 
-  // ─── Guards ─────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -478,6 +469,12 @@ export default function ProductDetailPage() {
               <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                 SKU: {produto.id_produto}
               </span>
+              {produto.data_cadastro && (
+                <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <CalendarDays size={12} />
+                  Cadastrado em {formatDate(produto.data_cadastro)}
+                </span>
+              )}
             </div>
 
             <h2 className="text-2xl font-bold text-gray-900 leading-tight">{produto.nome_produto}</h2>
@@ -658,49 +655,53 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Coluna direita — info cards */}
-          <div className="flex flex-col gap-4">
+          {/* Coluna direita — 3 cards info + avaliações alinhados aos gráficos */}
+          <div className="flex flex-col gap-6">
 
-            {/* Tickets totais */}
-            <div className={`${cardStyle} p-5 flex items-center gap-4`}>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                <Ticket size={18} className="text-blue-500" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-gray-900">{(produto.total_tickets ?? 0).toLocaleString("pt-BR")} tickets</p>
-                <p className="text-xs text-gray-400">
-                  {produto.total_pedidos && produto.total_pedidos > 0
-                    ? `${(((produto.total_tickets ?? 0) / produto.total_pedidos) * 100).toFixed(1)}% dos pedidos`
-                    : "sem pedidos registrados"}
-                </p>
-              </div>
-            </div>
+            {/* Bloco superior — alinhado ao gráfico de linha (3 cards empilhados com flex-1) */}
+            <div className="flex flex-col gap-3 flex-1">
 
-            {/* Visualizações */}
-            <div className={`${cardStyle} p-5 flex items-center gap-4`}>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                <Eye size={18} className="text-blue-500" />
+              {/* Tickets totais */}
+              <div className={`${cardStyle} p-5 flex items-center gap-4 flex-1`}>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <Ticket size={18} className="text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-gray-900">{(produto.total_tickets ?? 0).toLocaleString("pt-BR")} tickets</p>
+                  <p className="text-xs text-gray-400">
+                    {produto.total_pedidos && produto.total_pedidos > 0
+                      ? `${(((produto.total_tickets ?? 0) / produto.total_pedidos) * 100).toFixed(1)}% dos pedidos`
+                      : "sem pedidos registrados"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-lg font-bold text-gray-900">{(produto.total_visualizacoes ?? 0).toLocaleString("pt-BR")}</p>
-                <p className="text-xs text-gray-400">acessos ao produto</p>
-              </div>
-            </div>
 
-            {/* Data de cadastro */}
-            {produto.data_cadastro && (
-              <div className={`${cardStyle} p-5 flex items-center gap-4`}>
+              {/* Visualizações */}
+              <div className={`${cardStyle} p-5 flex items-center gap-4 flex-1`}>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <Eye size={18} className="text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-gray-900">{(produto.total_visualizacoes ?? 0).toLocaleString("pt-BR")}</p>
+                  <p className="text-xs text-gray-400">visualizações totais</p>
+                </div>
+              </div>
+
+              {/* Data de cadastro */}
+              <div className={`${cardStyle} p-5 flex items-center gap-4 flex-1`}>
                 <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
                   <CalendarDays size={18} className="text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-gray-900">{formatDate(produto.data_cadastro)}</p>
+                  <p className="text-base font-bold text-gray-900">
+                    {produto.data_cadastro ? formatDate(produto.data_cadastro) : "—"}
+                  </p>
                   <p className="text-xs text-gray-400">data de cadastro</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Avaliações detalhadas */}
+            {/* Bloco inferior — alinhado ao gráfico de barras (avaliações) */}
             <div className={`${cardStyle} p-5 flex flex-col gap-4`}>
               <div>
                 <p className="text-sm font-bold text-gray-800 mb-0.5">Avaliações</p>
