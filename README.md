@@ -1,169 +1,188 @@
-# V-Commerce CRM 360
+# 🛒 V-Commerce CRM 360
 
-Plataforma integrada de CRM desenvolvida para o RocketLab 2026 (Visagio), com pipeline de dados, sistema web e agente de IA conversacional.
+Plataforma inteligente e integrada de CRM 360 desenvolvida para o **RocketLab 2026 (Visagio)**. O projeto unifica engenharia de dados em grande escala, uma aplicação web moderna e um agente cognitivo de inteligência artificial conversacional de ponta.
 
----
 
-## Visão Geral
 
-A V-Commerce é uma varejista digital brasileira, com mais de 50.000 clientes e 300.000 pedidos acumulados. Este projeto centraliza dados de clientes, pedidos, produtos e suporte em uma única plataforma, com dashboards analíticos e um agente de IA capaz de responder perguntas de negócio em linguagem natural.
+## 📌 Sumário
 
-### Módulos
+1. [Visão Geral](#-visão-geral)
+2. [Arquitetura de Dados (Medalhão)](#-arquitetura-de-dados-medalhão)
+3. [Módulos do Sistema](#-módulos-do-sistema)
+4. [Agente de IA (Text-to-SQL)](#-agente-de-ia-text-to-sql)
+5. [Como Configurar e Executar](#-como-configurar-e-executar)
+6. [Suíte de Testes](#-suíte-de-testes)
 
-| Módulo | Tecnologia | Descrição |
-|---|---|---|
-| Engenharia de Dados | Databricks + PySpark | Pipeline Bronze → Silver → Gold |
-| CRM Web | FastAPI + React + TypeScript | Dashboards, perfil 360, CRUD |
-| Agente de IA | Gemini 2.5 Flash | Chat Text-to-SQL integrado ao CRM |
 
----
 
-## Como Executar
+## 🔍 Visão Geral
 
-### Backend
+A **V-Commerce** é uma grande varejista digital com mais de **50.000 clientes** cadastrados e uma base acumulada de mais de **300.000 pedidos**.
+
+Para transformar essa massa de dados brutos em inteligência competitiva, o **V-Commerce CRM 360** centraliza dados de clientes, transações, produtos e atendimentos de suporte. A plataforma oferece:
+
+* **Visão 360° do Cliente**: Perfis detalhados reunindo dados cadastrais, histórico de compras, métricas de satisfação (NPS), tickets de suporte e padrões de comportamento digital.
+* **Painel Executivo (Dashboard)**: Indicadores-chave de desempenho (KPIs) de vendas estruturados por geografia, categoria de produtos e status dos pedidos.
+* **Interface Conversacional**: Um agente de inteligência artificial integrado que responde a perguntas de negócios em tempo real, gerando e executando códigos SQL de leitura de forma segura e ágil.
+
+
+Documentação do projeto: https://drive.google.com/drive/folders/14wxZUj7KuyGFpH0fWI1lYd8QQTPfXDhb?usp=sharing
+
+## ⚡ Arquitetura de Dados (Medalhão)
+
+A engenharia de dados do projeto é baseada na **Arquitetura Medalhão**, executada no **Databricks** com **PySpark** para garantir pipelines resilientes e escaláveis.
+
+```mermaid
+graph TD
+    A[Origem: Arquivos CSV] --> B[(Camada Bronze: Delta Tables Brutas)]
+    B --> C[(Camada Silver: Limpeza e Normalização)]
+    C --> D[(Camada Gold: Tabelas Analíticas)]
+    D --> E[Exportação SQLite: V-Commerce-CRM-360.db]
+```
+
+### 🟫 Camada Bronze
+Ingestão de arquivos CSV brutos para tabelas Delta no Databricks, preservando o estado original das fontes e anexando metadados de auditoria.
+
+* `bronze.tb_avaliacoes` (origem: `avaliacoes.csv`)
+* `bronze.tb_catalogo_produtos` (origem: `catalogo_produtos.csv`)
+* `bronze.tb_clickstream` (origem: `clickstream.csv`)
+* `bronze.tb_clientes` (origem: `clientes.csv`)
+* `bronze.tb_pedidos` (origem: `pedidos.csv`)
+* `bronze.tb_suporte_tickets` (origem: `suporte_tickets.csv`)
+
+### ⬜ Camada Silver
+Etapa de limpeza, deduplicação, conformidade de tipos e padronização.
+* Aplicação de regex para validação de e-mails.
+* Padronização de strings categóricas para caracteres minúsculos e sem acentuação.
+* Tratamento e nulificação de datas futuras ou fora de limites físicos.
+* Substituição de valores faltantes por medianas amostrais.
+* Normalização das relações de dispositivos de clientes em tabelas correlacionadas.
+
+### 🟨 Camada Gold & Exportação SQLite
+Consolidação analítica orientada a casos de uso do negócio. As tabelas da camada Gold alimentam a API do CRM e a base de conhecimento do agente de IA:
+
+* `v_cliente_360`: Visão consolidada do comportamento do cliente, métricas de compras, NPS, suporte e navegação. Inclui classificação de segmentação de clientes (*Novo, Recorrente, Premium, Inativo*).
+* `desempenho_produtos`: Indicadores agregados de vendas, volume de tickets gerados por item, NPS médio e taxa de conversão.
+* `pedidos_por_cliente`: Linhas de pedidos individuais com detalhes de status de entrega e método de pagamento.
+* `analise_tickets`: Detalhamento de problemas reportados, tempos de resposta e resolução por agente de suporte.
+* `comportamento_digital`: Agregados comportamentais como taxa de abandono de carrinho e canal de acesso predominante.
+* `historico_avaliacoes`: Notas de produtos e comentários detalhados dos consumidores.
+* `kpi_por_categoria` / `kpi_por_estado` / `kpi_por_status`: Agrupados temporais (mês/ano) para alimentar os gráficos do dashboard.
+
+> [!NOTE]  
+> Ao final da camada Gold, o notebook `Rocket_silver_to_gold.ipynb` converte e exporta estas tabelas de forma estruturada para um banco relacional SQLite local (`V-Commerce-CRM-360.db`), garantindo portabilidade e latência ultra-baixa no servidor da aplicação.
+
+
+
+## 📦 Módulos do Sistema
+
+O repositório é organizado de forma modular para desacoplar as responsabilidades de engenharia de dados, backend, frontend e inteligência artificial.
+
+```
+├── backend/               # Servidor FastAPI com banco SQLite local
+├── frontend/              # Aplicação React executada no Vite com TailwindCSS v4
+├── ai-agent/              # Agente Text-to-SQL baseado no Gemini
+└── data-engineering/      # Notebooks Databricks e especificações de Workflows
+```
+
+### 🖥️ Frontend (React & Vite)
+A interface administrativa e operacional do CRM.
+* **Componentes Modernos**: Construídos em React, TypeScript e estilizados de forma responsiva através do **Tailwind CSS**.
+* **Visualização Avançada**: Gráficos analíticos dinâmicos usando **Chart.js** nas telas de desempenho comercial.
+
+### ⚙️ Backend (FastAPI)
+O barramento de serviços e acesso a dados.
+* **Alta Performance**: API assíncrona baseada no framework **FastAPI** rodando sobre **Uvicorn**.
+* **Persistência Segura**: Modelagem de dados integrada através de **SQLAlchemy** mapeando a base SQLite local.
+* **Conectividade**: Endpoints otimizados de CRUD para gerenciamento de clientes, produtos, tickets de suporte e entrega de KPIs agregados.
+
+
+## 🤖 Agente de IA (Text-to-SQL)
+
+O módulo `ai-agent` é responsável por processar e responder perguntas complexas de negócio através do paradigma **Text-to-SQL**, convertendo linguagem natural em queries SQL dinâmicas de forma segura e autônoma.
+
+### 🛠️ Tecnologias e Padrões
+* **Modelo Utilizado**: Inteligência generativa fornecida pelo modelo `gemini-3.1-flash-lite-preview` através do novo SDK unificado `google-genai`.
+* **Session Memory (`session_memory.py`)**: Gerenciamento de histórico de sessão para permitir conversas multi-turno e resolver termos relativos (ex: *"desses clientes, quem gastou mais?"*).
+* **Context Enricher (`context_enricher.py`)**: Injeta dinamicamente no prompt do Gemini metadados relevantes do schema e amostras reais do banco de dados para evitar alucinações de nomes ou valores.
+* **Safety Guardrails (`utils.py`)**: Camada rígida de segurança que analisa a query gerada e assegura que apenas instruções de leitura (`SELECT` ou `WITH`) sejam executadas, bloqueando de forma absoluta qualquer comando de escrita ou exclusão (ex: `DROP`, `DELETE`, `UPDATE`).
+
+
+## 🚀 Como Configurar e Executar
+
+Siga os passos abaixo para preparar os ambientes locais e executar os servidores do sistema.
+
+### 1. Configuração Inicial e Variáveis de Ambiente
+
+Crie uma cópia do arquivo de configurações na raiz do projeto:
 
 ```bash
+cp .env.example .env
+```
+
+Abra o arquivo `.env` gerado e preencha as variáveis de ambiente necessárias. Você precisará de uma chave de acesso para a API do Gemini, que pode ser obtida gratuitamente em [Google AI Studio](https://aistudio.google.com/app/apikey).
+
+### 2. Configurando e Executando o Backend
+
+#### No Windows (PowerShell):
+
+```powershell
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+.venv\Scripts\activate
 pip install -r requirements.txt
 python -m app.main
 ```
 
-Se o ambiente virtual já tiver sido criado, basta ativá-lo antes de instalar as dependências:
+#### No macOS / Linux:
 
 ```bash
 cd backend
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m app.main
+python3 -m app.main
 ```
 
-### Frontend
+O servidor backend estará ativo no endereço `http://localhost:8000`. O banco de dados SQLite local `V-Commerce-CRM-360.db` já está incluído no diretório `backend` para uso imediato.
+
+### 3. Configurando e Executando o Frontend
+
+Abra um novo terminal na raiz do projeto e execute:
 
 ```bash
 cd frontend
-pnpm install
-pnpm run dev
+npm install
+npm run dev
 ```
 
-Se o `pnpm install` já tiver sido executado anteriormente, você pode ir direto para `pnpm run dev`.
-
-## Engenharia de Dados
-
-### Arquitetura Medalhão
-
-O pipeline segue a arquitetura Medalhão em três camadas no Databricks:
-
-- **Bronze** — ingestão dos CSVs brutos como tabelas Delta, sem transformações, com timestamp de ingestão
-- **Silver** — limpeza, deduplicação, padronização de formatos e criação de colunas derivadas
-- **Gold** — tabelas analíticas consolidadas que alimentam o CRM e o agente de IA
-
-### Camada Bronze
-
-As 6 tabelas a seguir foram ingeridas na camada Bronze:
-
-| Tabela Delta | Arquivo de Origem |
-|---|---|
-| bronze.tb_avaliacoes | avaliacoes.csv |
-| bronze.tb_catalogo_produtos | catalogo_produtos.csv |
-| bronze.tb_clickstream | clickstream.csv |
-| bronze.tb_clientes | clientes.csv |
-| bronze.tb_pedidos | pedidos.csv |
-| bronze.tb_suporte_tickets | suporte_tickets.csv |
-
-### Camada Silver
-
-Notebook responsável por:
-
-* Remover linhas duplicadas via Window Functions particionadas pelo ID e ordenadas de forma decrescente pela data de cadastro
-* Validar e nulificar datas inválidas (fora de faixa, futuras ou inconsistentes)
-* Padronizar valores categóricos para valores canônicos em minúsculo sem acento
-* Converter nulos falsos para nulo real
-* Validar e marcar e-mails inválidos via regex
-* Padronizar e separar campos compostos em colunas estruturadas
-* Corrigir combinações inválidas entre colunas relacionadas
-* Substituir valores inválidos pela mediana dos valores válidos
-* Criar flags booleanas para rastreabilidade de nulos esperados
-* Remover linhas com dados críticos ausentes
-* Criar coluna derivada `status_ticket` a partir de nulos legítimos de `data_resolucao`
-* Criar tabela 1:N entre `id_cliente` e `id_device` para normalizar múltiplos dispositivos por cliente
-
-Tabelas geradas:
-
-* `silver.dim_clientes`
-* `silver.fat_avaliacoes`
-* `silver.fat_pedidos`
-* `silver.fat_suporte_tickets`
-* `silver.dim_catalogo_produtos`
-* `silver.fat_clickstream`
-
-# Camada Gold
-
-A camada Gold consolida e agrega os dados das camadas Silver em tabelas prontas para consumo pelo CRM, dashboards e pelo Agente de IA. Cada tabela é orientada a um caso de uso específico e otimizada para leitura, não para transformação.
+A interface web do CRM estará disponível para acesso no seu navegador através do endereço `http://localhost:5173`.
 
 
-## Tabelas
 
-### `gold.v_cliente_360`
-Consolida dados cadastrais com métricas de compra, suporte, satisfação e comportamento digital. 
+## 🧪 Suíte de Testes
 
-### `gold.desempenho_produtos`
-Consolida dados do catálogo com métricas de vendas, satisfação, suporte e visualizações. 
+O projeto conta com testes automatizados abrangentes tanto para os endpoints da API quanto para a lógica do agente de IA conversacional.
 
-### `gold.kpis_vendas`
-Métricas de vendas consolidadas com cortes por estado, categoria de produto e status do pedido. 
+### Testes do Servidor (Backend)
+Testa os endpoints da API, a conexão com o banco de dados e as operações de CRUD.
 
-### `gold.analise_tickets`
-Uma linha por ticket, com contexto completo do cliente e do produto envolvido.
+Para executá-los, ative o ambiente virtual no diretório `backend` e rode:
 
-### `gold.comportamento_digital`
-Uma linha por cliente,com métricas de navegação agregadas do clickstream. 
+```bash
+cd backend
+pytest
+```
 
----
+### Testes do Agente (AI Agent)
+Os testes do agente avaliam a capacidade de tradução de linguagem natural para SQL em uma grande diversidade de cenários de negócios (séries temporais, filtros, agregações de KPIs, resiliência de guardrails contra injeções SQL nocivas e perguntas fora do escopo).
 
-## Agente de IA (Text-to-SQL)
-
-O agente converte perguntas em linguagem natural para queries SQL válidas sobre o banco local, utilizando o modelo Gemini 2.5 Flash.
-
-### Estrutura
-
-| Arquivo | Descrição |
-|---|---|
-| `ai-agent/agent.py` | Função `perguntar()` — chama o Gemini, executa o SQL e retorna os resultados |
-| `ai-agent/prompt.py` | System prompt com schema completo e exemplos few-shot |
-| `ai-agent/database.py` | Conexão com o SQLite e funções `get_schema()` e `execute_query()` |
-| `ai-agent/test_prompt.py` | Script para rodar todos os testes documentados |
-
-### Configuração
+Para executá-los, ative o ambiente virtual e execute o `pytest` dentro da pasta do agente:
 
 ```bash
 cd ai-agent
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r ../backend/requirements.txt
-cp ../.env.example .env
-# editar .env com a GOOGLE_API_KEY
+pytest
 ```
 
-A chave de API pode ser obtida em: https://aistudio.google.com/app/apikey
-
-### Rodando os testes
-
-```bash
-python test_prompt.py
-```
-
-O script executa 7 perguntas de negócio em sequência, com delay de 15s entre cada chamada para respeitar o rate limit do free tier (5 requests/min do Gemini 2.5 Flash).
-
-### Perguntas testadas
-
-| # | Pergunta | Status |
-|---|---|---|
-| 1 | Quais foram os 10 produtos mais vendidos? | ✅ Validado com dados reais |
-| 2 | Qual estado teve maior receita total? | ✅ Validado com dados reais |
-| 3 | Quais produtos estão gerando mais tickets de suporte? | ✅ Validado com dados reais |
-| 4 | Me mostre os clientes do segmento Premium com maior receita | ✅ Validado com dados reais |
-| 5 | Qual o ticket médio de cada categoria de produto? | ✅ Validado com dados reais |
-| 6 | Qual a taxa média de abandono de carrinho? | ✅ Validado com dados reais |
-| 7 | Qual a previsão do tempo para amanhã em São Paulo? | ✅ Guardrail ativado (fora do escopo) |
+> [!TIP]  
+> A suíte de testes do agente de IA possui um limitador de requisições integrado (`time.sleep`) entre cada execução de teste para respeitar os limites de requisições por minuto impostos pelo plano de uso gratuito da API do Gemini.
