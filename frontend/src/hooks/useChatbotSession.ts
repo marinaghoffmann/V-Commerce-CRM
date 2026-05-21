@@ -31,13 +31,22 @@ export function useChatbotSession() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const rotateSession = useCallback(() => {
+  const clearBackendSession = useCallback(async (targetSessionId: string) => {
+    try {
+      await api.delete(`/agent/clear/${targetSessionId}`);
+    } catch {
+      // Keep the UI usable even if the backend clear fails.
+    }
+  }, []);
+
+  const resetSession = useCallback(async (targetSessionId: string) => {
+    await clearBackendSession(targetSessionId);
     setSessionId(crypto.randomUUID());
     setExpiresAt(Date.now() + SESSION_TTL_MS);
     setMessages([]);
     setLoading(false);
     setError(null);
-  }, []);
+  }, [clearBackendSession]);
 
   const touchSession = useCallback(() => {
     setExpiresAt(Date.now() + SESSION_TTL_MS);
@@ -45,16 +54,16 @@ export function useChatbotSession() {
 
   useEffect(() => {
     if (expiresAt <= Date.now()) {
-      rotateSession();
+      void resetSession(sessionId);
       return;
     }
 
     const timeout = window.setTimeout(() => {
-      rotateSession();
+      void resetSession(sessionId);
     }, expiresAt - Date.now());
 
     return () => window.clearTimeout(timeout);
-  }, [expiresAt, rotateSession]);
+  }, [expiresAt, resetSession, sessionId]);
 
   useEffect(() => {
     persistStoredChatState({ sessionId, expiresAt, messages });
@@ -105,9 +114,8 @@ export function useChatbotSession() {
   );
 
   const clearMessages = useCallback(() => {
-    setMessages([]);
-    touchSession();
-  }, [touchSession]);
+    return resetSession(sessionId);
+  }, [resetSession, sessionId]);
 
   return {
     messages,

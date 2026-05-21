@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../ai-agent"))
 
 try:
     from agent import perguntar
+    from session_memory import clear_session_state
 except ImportError as e:
     raise ImportError(f"Falha ao importar ai-agent: {e}")
 
@@ -33,3 +34,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao processar pergunta: {str(e)}")
+
+
+@router.delete("/clear/{session_id}", status_code=204)
+async def clear_session(session_id: str):
+    try:
+        clear_session_state(session_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao limpar sessão: {str(e)}")

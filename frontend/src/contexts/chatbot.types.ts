@@ -16,7 +16,7 @@ export interface UseAIChatReturn {
   error: string | null;
   sessionId: string;
   sendMessage: (question: string) => Promise<void>;
-  clearMessages: () => void;
+  clearMessages: () => Promise<void>;
   suggestions: string[];
 }
 
