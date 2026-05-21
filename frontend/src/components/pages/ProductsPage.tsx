@@ -7,8 +7,9 @@ import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { useProducts } from "../../hooks/useProducts";
 import type { Product } from "../types/product.types";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
-import api from "../../services/api"; 
+import api from "../../services/api";
 
+// ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatCurrency(value: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value ?? 0);
@@ -829,8 +830,6 @@ export default function ProductsPage() {
               )}
               <ProductGrid
                 products={products as Product[]}
-                onEdit={openEdit}
-                onDelete={setDeleteModal}
                 onNavigate={(product) => navigate(`/produtos/${product.id_produto}`)}
               />
             </>

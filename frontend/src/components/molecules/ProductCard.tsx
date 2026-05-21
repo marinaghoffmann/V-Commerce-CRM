@@ -1,5 +1,4 @@
 import type { Product } from "../types/product.types";
-import { Pencil, Trash2 } from "lucide-react";
 
 function formatCurrency(value: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value ?? 0);
@@ -24,7 +23,7 @@ interface ProductCardProps {
   onNavigate: (product: Product) => void;
 }
 
-export function ProductCard({ product, onEdit, onDelete, onNavigate }: ProductCardProps) {
+export function ProductCard({ product, onNavigate }: ProductCardProps) {
   const sold = product.unidades_vendidas ?? 0;
   const stock = product.estoque_disponivel ?? 0;
   const denom = sold + stock || 1;
@@ -32,30 +31,11 @@ export function ProductCard({ product, onEdit, onDelete, onNavigate }: ProductCa
 
   return (
     <div
-      className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4 cursor-pointer"
+      className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4 cursor-pointer"
       onClick={() => onNavigate(product)}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-bold text-gray-900 leading-snug flex-1">{product.nome_produto}</h3>
-        <div
-          className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => onEdit(product)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer"
-          >
-            <Pencil size={13} />
-          </button>
-          <button
-            onClick={() => onDelete(product)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      </div>
+      <h3 className="text-sm font-bold text-gray-900 leading-snug">{product.nome_produto}</h3>
 
       {/* Tags */}
       <div className="flex items-center gap-2 flex-wrap">
