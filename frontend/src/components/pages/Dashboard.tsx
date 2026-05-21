@@ -160,6 +160,7 @@ function Dashboard() {
 
   const [chartView, setChartView] = useState<ChartView>("status");
   const [showDetailedCards, setShowDetailedCards] = useState(false);
+  const [distChartArea, setDistChartArea] = useState<{ left: number; right: number } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -435,6 +436,21 @@ const revenueData = {
           ctx.fillText(Number(valor).toFixed(2).replace(".", ",") + "%", bar.x, bar.y - 5);
         });
       }
+    },
+  };
+
+  const pluginSyncDistArea = {
+    id: "syncDistArea",
+    afterLayout(chart: any) {
+      if (!chart.chartArea) return;
+      const left = chart.chartArea.left;
+      const right = chart.width - chart.chartArea.right;
+      setDistChartArea((prev) => {
+        if (prev && Math.abs(prev.left - left) < 0.5 && Math.abs(prev.right - right) < 0.5) {
+          return prev;
+        }
+        return { left, right };
+      });
     },
   };
 
@@ -893,7 +909,7 @@ useEffect(() => {
                     <Bar
                       key={`${chartView}-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}-${compEnabled}-${compStartYear}-${compStartMonth}`}
                       data={dynamicBarData}
-                      plugins={[pluginPorcentagemNoTopo]}
+                      plugins={[pluginPorcentagemNoTopo, pluginSyncDistArea]}
                       options={{
                         responsive: true, maintainAspectRatio: false,
                         layout: { padding: { top: 20 } },
@@ -918,7 +934,13 @@ useEffect(() => {
                       }}
                     />
                   </div>
-                  <div className="flex mt-4 border-t border-gray-100 pt-4">
+                  <div
+                    className="flex mt-4 border-t border-gray-100 pt-4"
+                    style={{
+                      paddingLeft:  distChartArea?.left  ?? 0,
+                      paddingRight: distChartArea?.right ?? 0,
+                    }}
+                  >
                     {activeConfig.legend.map((label, i) => (
                       <div key={label} className="flex-1 flex flex-col items-center gap-1 font-medium text-gray-700">
                         {chartView === "status" ? getStatusIcon(label) : (
