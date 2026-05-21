@@ -19,7 +19,6 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
   const [limit] = useState<number>(initArgs.limit ?? 7);
   const [kpis, setKpis] = useState<Record<string, number | string>>({});
 
-  // Filtros vivem como estado no hook — assim qualquer mudança (página ou filtro) acessa sempre o valor atual
   const [filters, setFilters] = useState<{
     status: string | null;
     search: string | null;
@@ -71,7 +70,6 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
     return params;
   }
 
-  // fetchTickets agora lê page, limit e filters do estado — sem receber args externos
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -93,9 +91,8 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, filters]); // agora depende dos filtros também
+  }, [page, limit, filters]); 
 
-  // Sempre que page, limit ou filters mudam → rebusca automaticamente
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
@@ -104,7 +101,6 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
     fetchKpis();
   }, [fetchKpis]);
 
-  // refetch atualiza os filtros no estado (e opcionalmente reseta a página)
   const refetch = useCallback(
     (args?: UseTicketsArgs) => {
       if (args) {

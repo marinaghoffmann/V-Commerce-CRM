@@ -13,7 +13,6 @@ import { useTickets } from "../../hooks/useTickets";
 import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 
 
-// Cores baseadas no tipo de problema do ticket (campo tipo_problema no banco)
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
   "produto":   { bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-700",   dot: "bg-blue-400"   },
   "entrega":   { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", dot: "bg-yellow-400" },
@@ -33,7 +32,6 @@ function getCategoryColor(cat: string) {
 }
 
 const STATUS_OPTIONS = ["aberto", "fechado"];
-// Tipos de problema cadastrados no banco (campo tipo_problema)
 const CATEGORY_OPTIONS = ["produto", "entrega", "pagamento", "reembolso"];
 
 
@@ -265,7 +263,6 @@ export default function SuportePage() {
   const { data: tickets, total, loading, error, page, setPage, limit, refetch, kpis } =
     useTickets({ page: 1, limit: 7 });
 
-  // Search com debounce: atualiza os filtros no hook e reseta para página 1
   useEffect(() => {
     const timer = setTimeout(() => {
       refetch({
@@ -276,7 +273,7 @@ export default function SuportePage() {
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]); // eslint-disable-line
+  }, [searchInput]); 
 
   const totalPages = Math.ceil(total / limit) || 1;
   const from = (page - 1) * limit + 1;
