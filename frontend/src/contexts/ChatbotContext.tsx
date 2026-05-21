@@ -1,33 +1,54 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-import { ChatbotOverlay } from "../components/organisms/ChatbotOverlay";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { useChatbotSession } from "../hooks/useChatbotSession";
+import type { ChatPoint, ChatbotContextType } from "./chatbot.types";
 
-interface ChatbotContextType {
-  isOpen: boolean;
-  toggleOverlay: () => void;
-  openOverlay: () => void;
-  closeOverlay: () => void;
-}
+export type { ChatMessage, UseAIChatReturn } from "./chatbot.types";
 
 const ChatbotContext = createContext<ChatbotContextType | undefined>(undefined);
 
 export function ChatbotProvider({ children }: { children: ReactNode }) {
+  const chatSession = useChatbotSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [buttonPos, setButtonPos] = useState<ChatPoint>(() => ({
+    x: window.innerWidth - 80,
+    y: window.innerHeight - 80,
+  }));
 
-  const toggleOverlay = () => setIsOpen((prev) => !prev);
-  const openOverlay = () => setIsOpen(true);
-  const closeOverlay = () => setIsOpen(false);
+  const openOverlay = useCallback((pos: ChatPoint) => {
+    setButtonPos(pos);
+    setIsOpen(true);
+  }, []);
 
-  return (
-    <ChatbotContext.Provider value={{ isOpen, toggleOverlay, openOverlay, closeOverlay }}>
-      {children}
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40 cursor-pointer" onClick={closeOverlay} />
-          <ChatbotOverlay onClose={closeOverlay} />
-        </>
-      )}
-    </ChatbotContext.Provider>
+  const closeOverlay = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const toggleOverlay = useCallback(
+    (pos?: ChatPoint) => {
+      if (isOpen) {
+        setIsOpen(false);
+        return;
+      }
+
+      if (pos) {
+        setButtonPos(pos);
+      }
+
+      setIsOpen(true);
+    },
+    [isOpen],
   );
+
+  const contextValue: ChatbotContextType = {
+    isOpen,
+    buttonPos,
+    toggleOverlay,
+    openOverlay,
+    closeOverlay,
+    ...chatSession,
+  };
+
+  return <ChatbotContext.Provider value={contextValue}>{children}</ChatbotContext.Provider>;
 }
 
 export function useChatbot() {
