@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navbar } from "./components/organisms/Navbar";
 import ClientDetail from "./components/pages/ClientDetailPage";
 import Clients from "./components/pages/ClientsPage";
@@ -7,6 +7,7 @@ import { OrdersPage } from "./components/pages/OrdersPage";
 import ProductsPage from "./components/pages/ProductsPage";
 import SuportePage from "./components/pages/SupportPage";
 import Dashboard from "./components/pages/Dashboard";
+import LandingPage from "./components/pages/LandingPage";
 import { AIFloatingButton } from "./components/organisms/AIFloatingButton";
 import { ChatbotOverlay } from "./components/organisms/ChatbotOverlay";
 
@@ -15,12 +16,15 @@ function App() {
 
   const [buttonPos, setButtonPos] = useState({ x: 0, y: 0 });
 
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/';
+
   return (
     <div className="min-h-screen block overflow-hidden bg-[#F4F7FE]">
-      <Navbar />
+      {!isLandingPage && <Navbar />}
 
       <Routes>
-        <Route path="/"          element={<Navigate to="/dashboard" />} />
+        <Route path="/"          element={<LandingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clientes"  element={<Clients />} />
         <Route path="/clientes/:id" element={<ClientDetail />} />
@@ -29,14 +33,16 @@ function App() {
         <Route path="/suporte"   element={<SuportePage />} />
       </Routes>
 
-      <AIFloatingButton
-        onClick={(pos) => {
-          setButtonPos(pos);
-          setChatOpen((prev) => !prev);
-        }}
-      />
+      {!isLandingPage && (
+        <AIFloatingButton
+          onClick={(pos) => {
+            setButtonPos(pos);
+            setChatOpen((prev) => !prev);
+          }}
+        />
+      )}
 
-      {chatOpen && (
+      {(!isLandingPage && chatOpen) && (
         <ChatbotOverlay
           onClose={() => setChatOpen(false)}
           buttonPos={buttonPos}

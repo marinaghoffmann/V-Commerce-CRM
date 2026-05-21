@@ -1,0 +1,608 @@
+/* Landing page */
+
+position: relative;
+width: 1440px;
+height: 1024px;
+
+/* Neutral Colors/Black & White/Whiteout */
+background: #FBFBFB;
+
+
+/* Frame 110 */
+
+/* Layout automático */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 0px;
+gap: 14.72px;
+
+position: absolute;
+width: 213px;
+height: 184.63px;
+left: 834px;
+top: 197px;
+
+
+
+/* Group */
+
+width: 213px;
+height: 129.12px;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Vector */
+
+position: absolute;
+left: 0%;
+right: 4.84%;
+top: 0%;
+bottom: 30.07%;
+
+border: 6.89879px solid #3377FF;
+
+
+/* Vector */
+
+position: absolute;
+left: 92.68%;
+right: 0%;
+top: 31.2%;
+bottom: 60.47%;
+
+background: #3377FF;
+border: 0.0603644px solid #3377FF;
+
+
+/* Vector */
+
+width: 213px;
+height: 49.99px;
+
+background: #374151;
+
+/* Auto layout por dentro */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Rectangle 54 */
+
+position: absolute;
+width: 732px;
+height: 1024px;
+left: 0px;
+top: 0px;
+
+background: radial-gradient(50% 50% at 50% 50%, #244FAD 0%, #142A5C 100%);
+
+
+/* 360° */
+
+position: absolute;
+width: 111px;
+height: 60px;
+left: 87px;
+top: 513px;
+
+/* Desktop/Display */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 900;
+font-size: 50px;
+line-height: 120%;
+/* idêntico à altura da caixa ou 60px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* VISÃO DO CLIENTE */
+
+position: absolute;
+width: 145px;
+height: 27px;
+left: 65px;
+top: 573px;
+
+/* Desktop/Body */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 170%;
+/* ou 27px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* 1 */
+
+position: absolute;
+width: 22px;
+height: 60px;
+left: 357px;
+top: 512px;
+
+/* Desktop/Display */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 900;
+font-size: 50px;
+line-height: 120%;
+/* idêntico à altura da caixa ou 60px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* PLATAFORMA UNIFICADA */
+
+position: absolute;
+width: 192px;
+height: 27px;
+left: 272px;
+top: 573px;
+
+/* Desktop/Body */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 170%;
+/* ou 27px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* Consolide dados, clientes e vendas em um único lugar. Tome decisões com clareza total. */
+
+position: absolute;
+width: 427px;
+height: 54px;
+left: 65px;
+top: 775px;
+
+/* Desktop/Body */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 170%;
+/* ou 27px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* Acesse sua central de relacionamento e tenha uma visão completa de cada cliente, desempenho do seus produtos e oportunidades. */
+
+position: absolute;
+width: 481px;
+height: 54px;
+left: 834px;
+top: 581px;
+
+/* Desktop/Body */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 170%;
+/* ou 27px */
+
+/* Neutral Colors/Gray/gray-800 */
+color: #1F2937;
+
+
+
+/* POSSIBILIDADES */
+
+position: absolute;
+width: 125px;
+height: 27px;
+left: 541px;
+top: 573px;
+
+/* Desktop/Body */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 170%;
+/* ou 27px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* Line 34 */
+
+position: absolute;
+width: 87px;
+height: 0px;
+left: 245px;
+top: 517px;
+
+border: 1px solid #FFFFFF;
+transform: rotate(90deg);
+
+
+/* Line 35 */
+
+position: absolute;
+width: 87px;
+height: 0px;
+left: 513px;
+top: 517px;
+
+border: 1px solid #FFFFFF;
+transform: rotate(90deg);
+
+
+/* Infinity icon */
+
+position: absolute;
+width: 64px;
+height: 64px;
+left: 575px;
+top: 512px;
+
+
+
+/* Vector */
+
+position: absolute;
+left: 1.57%;
+right: 1.57%;
+top: 26.56%;
+bottom: 26.56%;
+
+/* Neutral Colors/Black & White/Whiteout */
+background: #FBFBFB;
+
+
+/* Cada cliente,uma história completa. */
+
+position: absolute;
+width: 447px;
+height: 110px;
+left: 65px;
+top: 642px;
+
+/* Desktop/Heading 1 */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 800;
+font-size: 42px;
+line-height: 130%;
+/* ou 55px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+
+/* Frame 239 */
+
+/* Layout automático */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 4px 12px;
+gap: 10px;
+
+position: absolute;
+width: 174px;
+height: 34px;
+left: 65px;
+top: 861px;
+
+/* Primary Blue/primary-blue-700 */
+background: #244FAD;
+border-radius: 24px;
+
+
+/* Dashboard completo */
+
+width: 150px;
+height: 26px;
+
+/* Desktop/Labels/Large */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 160%;
+/* idêntico à altura da caixa ou 26px */
+
+/* Primary Blue/primary-blue-50 */
+color: #EEF4FF;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Frame 240 */
+
+/* Layout automático */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 4px 12px;
+gap: 10px;
+
+position: absolute;
+width: 191px;
+height: 34px;
+left: 246px;
+top: 861px;
+
+/* Primary Blue/primary-blue-700 */
+background: #244FAD;
+border-radius: 24px;
+
+
+/* Agente de IA integrado */
+
+width: 167px;
+height: 26px;
+
+/* Desktop/Labels/Large */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 160%;
+/* idêntico à altura da caixa ou 26px */
+
+/* Primary Blue/primary-blue-50 */
+color: #EEF4FF;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Frame 241 */
+
+/* Layout automático */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 4px 12px;
+gap: 10px;
+
+position: absolute;
+width: 282px;
+height: 34px;
+left: 65px;
+top: 919px;
+
+/* Primary Blue/primary-blue-700 */
+background: #244FAD;
+border-radius: 24px;
+
+
+/* Atividade de clientes em tempo real */
+
+width: 258px;
+height: 26px;
+
+/* Desktop/Labels/Large */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 160%;
+/* idêntico à altura da caixa ou 26px */
+
+/* Primary Blue/primary-blue-50 */
+color: #EEF4FF;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Frame 242 */
+
+/* Layout automático */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 4px 12px;
+gap: 10px;
+
+position: absolute;
+width: 243px;
+height: 34px;
+left: 444px;
+top: 861px;
+
+/* Primary Blue/primary-blue-700 */
+background: #244FAD;
+border-radius: 24px;
+
+
+/* Rotina de pedidos simplificada */
+
+width: 219px;
+height: 26px;
+
+/* Desktop/Labels/Large */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 160%;
+/* idêntico à altura da caixa ou 26px */
+
+/* Primary Blue/primary-blue-50 */
+color: #EEF4FF;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Frame 243 */
+
+/* Layout automático */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 4px 12px;
+gap: 10px;
+
+position: absolute;
+width: 292px;
+height: 34px;
+left: 354px;
+top: 919px;
+
+/* Primary Blue/primary-blue-700 */
+background: #244FAD;
+border-radius: 24px;
+
+
+/* Catálogo de produtos além do básico */
+
+width: 268px;
+height: 26px;
+
+/* Desktop/Labels/Large */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 160%;
+/* idêntico à altura da caixa ou 26px */
+
+/* Primary Blue/primary-blue-50 */
+color: #EEF4FF;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Bem-vindo de volta */
+
+position: absolute;
+width: 486px;
+height: 156px;
+left: 834px;
+top: 417px;
+
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 900;
+font-size: 65px;
+line-height: 120%;
+/* ou 78px */
+
+/* Neutral Colors/Black & White/Black Underworld */
+color: #21201D;
+
+
+
+/* Botão entrar no sistema */
+
+/* Layout automático */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 24px 80px;
+gap: 12px;
+
+position: absolute;
+width: 411px;
+height: 82px;
+left: 834px;
+top: 670px;
+
+/* Primary Blue/primary-blue-500 */
+background: #3377FF;
+border-radius: 24px;
+
+
+/* Entrar no sistema */
+
+width: 207px;
+height: 34px;
+
+/* Desktop/Heading 3 */
+font-family: 'Figtree';
+font-style: normal;
+font-weight: 600;
+font-size: 26px;
+line-height: 130%;
+/* idêntico à altura da caixa ou 34px */
+
+/* Neutral Colors/Black & White/Whiteout */
+color: #FBFBFB;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* ArrowRight icon */
+
+width: 32px;
+height: 32px;
+
+
+/* Auto layout por dentro */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Vector */
+
+position: absolute;
+left: 10.93%;
+right: 10.93%;
+top: 17.18%;
+bottom: 17.18%;
+
+/* Neutral Colors/Black & White/Whiteout */
+background: #FBFBFB;
