@@ -10,10 +10,10 @@ import {
 } from "chart.js";
 
 import { Line, Bar, Doughnut } from "react-chartjs-2";
-import type { KpiStatusItem } from "../../components/types/dashboard.types";
+import type { KpiStatusItem, MonthlyKpiItem } from "../../components/types/dashboard.types";
 import {
   useKpiStatus, useMonthlyKpi, useMonthlyKpiForCards,
-  useMonthlyKpiForPreviousPeriod, useMonthlyReview,
+  useMonthlyKpiForCompPeriod, useMonthlyReview,
   useMonthlyTickets, useKpiCategoria, useKpiEstado,
 } from "../../hooks/useDashboard";
 import { PeriodPicker } from "../atoms/PeriodPicker";
@@ -140,6 +140,12 @@ function Dashboard() {
   const [dEndMonth,   setDEndMonth]   = useState(endMonth);
   const [dEndYear,    setDEndYear]    = useState(endYear);
 
+  const [compEnabled, setCompEnabled] = useState(false);
+  const [compStartMonth, setCompStartMonth] = useState(startMonth);
+  const [compStartYear,  setCompStartYear]  = useState(startYear - 1);
+  const [compEndMonth,   setCompEndMonth]   = useState(endMonth);
+  const [compEndYear,    setCompEndYear]    = useState(endYear - 1);
+
   const [chartView, setChartView] = useState<ChartView>("status");
 
   useEffect(() => {
@@ -158,8 +164,7 @@ function Dashboard() {
   const periodoLabel = `${MESES_LABEL[dStartMonth - 1]} ${dStartYear} → ${MESES_LABEL[dEndMonth - 1]} ${dEndYear}`;
 
   // Label do período anterior para exibição
-  const prevPeriodLabel = `${MESES_SHORT[dStartMonth - 1]}/${dStartYear - 1} → ${MESES_SHORT[dEndMonth - 1]}/${dEndYear - 1}`;
-
+  const prevPeriodLabel = `${MESES_LABEL[compStartMonth -1 ]}/${compStartYear} → ${MESES_LABEL[compEndMonth - 1]} ${compEndYear}`;
   // Hooks
   const { kpiData: kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
     anoInicio: dStartYear, mesInicio: dStartMonth,
@@ -171,7 +176,7 @@ function Dashboard() {
   const { data: cardsData } =
     useMonthlyKpiForCards(dStartYear, dStartMonth, dEndYear, dEndMonth);
   const { data: prevData, available: prevAvailable } =
-    useMonthlyKpiForPreviousPeriod(dStartYear, dStartMonth, dEndYear, dEndMonth);
+    useMonthlyKpiForCompPeriod(compStartYear, compStartMonth, compEndYear, compEndMonth);
   const { data: reviewData,  loading: loadingReview,  error: errorReview  } =
     useMonthlyReview(dStartYear, dStartMonth, dEndYear, dEndMonth);
   const { data: ticketData,  loading: loadingTicket,  error: errorTicket  } =
@@ -185,7 +190,8 @@ function Dashboard() {
   // Gráfico de linha
   const monthLabels   = monthlyData?.map((item) => item.label) || [];
   const revenueValues = monthlyData?.map((item) => item.receita_total) || [];
-
+  const compRevenueLabels = prevData.map((item) => item.label) || [];  
+  const compRevenue = prevData.map((item) => item.receita_total);
   const firstLabel    = monthlyData?.[0]?.label ?? "";
   const isQuarterView = firstLabel.startsWith("Jan") || firstLabel.startsWith("Abr") ||
                         firstLabel.startsWith("Jul") || firstLabel.startsWith("Out")
@@ -261,16 +267,38 @@ function Dashboard() {
     return ((current - prev) / prev) * 100;
   };
 
-  const revenueData = {
-    labels: monthLabels,
-    datasets: [{
+
+const revenueData = {
+  labels: compEnabled ? 
+  monthLabels.map((label, index) => [
+  label,
+  compRevenueLabels[index] ?? ""
+]) : monthLabels,
+  datasets: [
+    {
+      label: "Receita",
       data: revenueValues,
       borderColor: "#8B7CF8",
       backgroundColor: "rgba(139,124,248,0.18)",
-      fill: true, tension: 0.45, pointRadius: 3,
-      pointBackgroundColor: "#8B7CF8", borderWidth: 1,
-    }],
-  };
+      fill: true,
+      tension: 0.45,
+      pointRadius: 3,
+      pointBackgroundColor: "#8B7CF8",
+      borderWidth: 1,
+    },
+      ...(compEnabled ? [{
+      label: "Receita anterior",
+      data: compRevenue,
+      borderColor: "#f87c7c",
+      backgroundColor: "rgba(248,124,124,0.18)",
+      fill: true,
+      tension: 0.45,
+      pointRadius: 3,
+      pointBackgroundColor: "#f87c7c",
+      borderWidth: 1,
+    }]  : []), 
+  ]
+};
 
   // Status chart
   const statusData = (kpiStatus || []) as KpiStatusItem[];
@@ -425,6 +453,15 @@ function Dashboard() {
     },
   };
 
+useEffect(() => {
+  if (!compEnabled) {
+    setCompStartMonth(dStartMonth);
+    setCompStartYear(dStartYear - 1);
+    setCompEndMonth(dEndMonth);
+    setCompEndYear(dEndYear - 1);
+  }
+}, [dStartMonth, dStartYear, dEndMonth, dEndYear, compEnabled]);
+
   // Componente de card com as 3 métricas
   const KpiCard = ({
     label, value, metrics, currentTotal, formatValue,
@@ -504,12 +541,17 @@ function Dashboard() {
             <p className="text-sm text-gray-500 mt-0.5">CRM 360 visão geral do período</p>
           </div>
           <PeriodPicker
-            startMonth={startMonth}
-            startYear={startYear}
-            endMonth={endMonth}
-            endYear={endYear}
+            startMonth={startMonth} startYear={startYear}
+            endMonth={endMonth}     endYear={endYear}
             onStartChange={(m, y) => { setStartMonth(m); setStartYear(y); }}
-            onEndChange={(m, y) => { setEndMonth(m); setEndYear(y); }}
+            onEndChange={(m, y)   => { setEndMonth(m);   setEndYear(y);   }}
+
+            compEnabled={compEnabled}
+            onCompToggle={setCompEnabled}
+            compStartMonth={compStartMonth} compStartYear={compStartYear}
+            compEndMonth={compEndMonth}     compEndYear={compEndYear}
+            onCompStartChange={(m, y) => { setCompStartMonth(m); setCompStartYear(y); }}
+            onCompEndChange={(m, y)   => { setCompEndMonth(m);   setCompEndYear(y);   }}
             minYear={2023}
             maxYear={currentYear}
           />

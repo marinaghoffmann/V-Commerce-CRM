@@ -3,11 +3,19 @@ export interface KpiStatusItem {
   ano_venda: number;
   mes_venda: number;
   status: string;
+  label: string;
   receita_total: number;
   ticket_medio: number;
   total_pedidos: number;
   total_clientes_unicos: number;
 }
+export interface RawMonth {
+  ano: number;
+  mes: number;
+  receita_total: number;
+  total_pedidos: number;
+}
+
 export interface KpiStateItem{
   id: string;
   ano_venda: number;
@@ -28,12 +36,18 @@ export interface KpiCategoryItem{
   total_pedidos: number;
   total_clientes_unicos: number;
 }
+
 export interface MonthlyKpiItem {
   ano: number;
   mes: number;
+  label: string;
   receita_total: number;
   total_pedidos: number;
   ticket_medio: number;
+  prev_label?: string;
+  prev_receita?: number;    
+  prev_pedidos?: number;
+  prev_ticket_medio?: number;
 }
 
 export interface MonthlyReviewProcessed {
