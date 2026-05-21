@@ -3,10 +3,6 @@ from sqlalchemy import String, Integer, Float, Boolean, Date
 from app.database import Base
 
 class Produto(Base):
-    """
-    Métricas por produto: vendas, avaliações, tickets e visualizações.
-    Tabela Gold: rocket.gold.desempenho_produtos
-    """
     __tablename__ = "desempenho_produtos"
 
     id_produto:                 Mapped[str]   = mapped_column(String,  primary_key=True, index=True)
@@ -29,3 +25,4 @@ class Produto(Base):
     total_visualizacoes:        Mapped[int]   = mapped_column(Integer, default=0)
 
     flag_alto_ticket:           Mapped[bool]  = mapped_column(Boolean, default=False)
+    data_cadastro:              Mapped[str | None] = mapped_column(String, nullable=True)

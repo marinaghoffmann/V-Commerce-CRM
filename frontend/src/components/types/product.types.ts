@@ -10,6 +10,7 @@ export interface Product {
   total_avaliacoes: number | null;
   indicador_crescimento: number | 0;
   flag_alto_ticket: boolean | false;
+  data_cadastro: string | null;
 }
 
 export type ProductListResponse = Product[];
