@@ -111,7 +111,7 @@ export function useMonthlyKpi(
  
     const groupBy: "month" | "quarter" | "year" =
       totalMonths <= 12 ? "month" :
-      totalMonths <= 36 ? "quarter" : "year";
+      totalMonths <= 72 ? "quarter" : "year";
  
     const compMonths = comp
       ? (() => {

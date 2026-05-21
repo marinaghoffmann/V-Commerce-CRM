@@ -104,14 +104,19 @@ function getStatusLabel(status: string) {
 // Calcula crescimento médio mensal (média das variações consecutivas)
 function calcAvgMonthlyGrowth(values: number[]): number {
   if (values.length < 2) return 0;
-  const variations: number[] = [];
-  for (let i = 1; i < values.length; i++) {
-    if (values[i - 1] > 0) {
-      variations.push(((values[i] - values[i - 1]) / values[i - 1]) * 100);
-    }
-  }
-  if (variations.length === 0) return 0;
-  return variations.reduce((s, v) => s + v, 0) / variations.length;
+
+  const first = values[0];
+  var last = values[values.length - 1];
+
+  console.log({ first, last, n: values.length - 1 });
+
+  if (first <= 0) return 0;
+  if (last <= 0) {
+     last = values[values.length - 2] || first;
+  };
+
+  const n = values.length - 1;
+  return (Math.pow(last / first, 1 / n) - 1) * 100;
 }
 
 // Encontra pico e baixa
@@ -125,6 +130,7 @@ function findPeakAndLow<T>(
 }
 
 interface CardMetrics {
+  
   avgGrowth:    number;
   peak:         { value: number; label: string } | null;
   low:          { value: number; label: string } | null;
@@ -634,9 +640,15 @@ useEffect(() => {
                 return (
                   <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
                     {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                    <span>
-                      {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
-                    </span>
+                      {compEnabled ? (
+                        <span>
+                          {Math.abs(growth).toFixed(1)}% vs período comparado ({prevPeriodLabel})
+                        </span>
+                      ) : (
+                        <span>
+                          {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
+                        </span>
+                      )}
                   </div>
                 );
               })()
