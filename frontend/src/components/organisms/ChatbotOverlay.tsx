@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useAIChat } from "../../hooks/useAIChat";
+import { useChatbot } from "../../contexts/ChatbotContext";
 import { ChatbotHeader } from "../molecules/ChatbotHeader";
 import { ChatbotInput } from "../molecules/ChatbotInput";
 import { EmptyState } from "../molecules/EmptyState";
@@ -22,7 +22,7 @@ export function ChatbotOverlay({
   buttonPos,
   buttonSize = 56,
 }: ChatbotOverlayProps) {
-  const { messages, loading, sendMessage, suggestions } = useAIChat();
+  const { messages, loading, sendMessage, suggestions } = useChatbot();
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef       = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
