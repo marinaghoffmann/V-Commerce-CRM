@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, Eye, Ticket, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, Eye, Ticket, Star, TrendingUp, TrendingDown, CalendarDays } from "lucide-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,6 +18,7 @@ import type { Product } from "../types/product.types";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
+// ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatCurrency(value: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value ?? 0);
@@ -32,6 +33,7 @@ function formatDate(value: string | null | undefined) {
 
 const MES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
+// ─── Category colors ─────────────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   Automotivo: { bg: "bg-zinc-50",    border: "border-zinc-200",   text: "text-zinc-700"   },
@@ -48,6 +50,7 @@ function getCategoryColor(cat: string) {
   return CATEGORY_COLORS[cat] ?? { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-600" };
 }
 
+// ─── Star rating ─────────────────────────────────────────────────────────────
 
 function StarRating({ value, size = 14 }: { value: number; size?: number }) {
   return (
@@ -67,6 +70,7 @@ function StarRating({ value, size = 14 }: { value: number; size?: number }) {
   );
 }
 
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
   label,
@@ -79,7 +83,7 @@ function KpiCard({
   value: string;
   sub?: string;
   accent?: "green" | "red";
-  progress?: number;
+  progress?: number; // 0–100
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-2">
@@ -104,6 +108,7 @@ function KpiCard({
   );
 }
 
+// ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
@@ -122,6 +127,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// ─── Shared modal shell (re-used from ProductsPage) ───────────────────────────
 
 function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
   return (
@@ -138,6 +144,10 @@ function ModalShell({ children, onClose }: { children: React.ReactNode; onClose?
     </div>
   );
 }
+
+// ─── Edit / Delete modals imported inline ─────────────────────────────────────
+// We import the logic from ProductsPage by re-declaring the same minimal modals
+// so this page is self-contained without circular imports.
 
 import { Check, X, Trash2 as Trash2Icon, ImageIcon, AlertTriangle } from "lucide-react";
 import api from "../../services/api";
@@ -676,6 +686,19 @@ export default function ProductDetailPage() {
                 <p className="text-xs text-gray-400">acessos ao produto</p>
               </div>
             </div>
+
+            {/* Data de cadastro */}
+            {produto.data_cadastro && (
+              <div className={`${cardStyle} p-5 flex items-center gap-4`}>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <CalendarDays size={18} className="text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{formatDate(produto.data_cadastro)}</p>
+                  <p className="text-xs text-gray-400">data de cadastro</p>
+                </div>
+              </div>
+            )}
 
             {/* Avaliações detalhadas */}
             <div className={`${cardStyle} p-5 flex flex-col gap-4`}>
