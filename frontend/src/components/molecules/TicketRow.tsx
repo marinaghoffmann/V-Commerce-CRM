@@ -36,7 +36,7 @@ export function TicketRow({ ticket }: TicketRowProps) {
           T-{ticket.id_ticket.slice(0, 4).toUpperCase()} · {ticket.nome_cliente ?? "Cliente"}
         </p>
         <p className="text-sm font-semibold text-[#1B2559] truncate mb-2">
-          {ticket.tipo_problema ?? "Sem descrição"}
+          {ticket.tipo_problema ? ticket.tipo_problema.charAt(0).toUpperCase() + ticket.tipo_problema.slice(1) : "Sem descrição"}
         </p>
         <StatusBadge status={ticket.status_ticket} />
       </div>
