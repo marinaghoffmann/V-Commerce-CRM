@@ -12,6 +12,7 @@ Plataforma inteligente e integrada de CRM 360 desenvolvida para o **RocketLab 20
 4. [Agente de IA (Text-to-SQL)](#-agente-de-ia-text-to-sql)
 5. [Como Configurar e Executar](#-como-configurar-e-executar)
 6. [Suíte de Testes](#-suíte-de-testes)
+7. [Documentação e Links Úteis](#-documentação-e-links-úteis)
 
 
 
@@ -25,8 +26,6 @@ Para transformar essa massa de dados brutos em inteligência competitiva, o **V-
 * **Painel Executivo (Dashboard)**: Indicadores-chave de desempenho (KPIs) de vendas estruturados por geografia, categoria de produtos e status dos pedidos.
 * **Interface Conversacional**: Um agente de inteligência artificial integrado que responde a perguntas de negócios em tempo real, gerando e executando códigos SQL de leitura de forma segura e ágil.
 
-
-Documentação do projeto: https://drive.google.com/drive/folders/14wxZUj7KuyGFpH0fWI1lYd8QQTPfXDhb?usp=sharing
 
 ## ⚡ Arquitetura de Dados (Medalhão)
 
@@ -186,3 +185,13 @@ pytest
 
 > [!TIP]  
 > A suíte de testes do agente de IA possui um limitador de requisições integrado (`time.sleep`) entre cada execução de teste para respeitar os limites de requisições por minuto impostos pelo plano de uso gratuito da API do Gemini.
+
+## 📂 Documentação e Links Úteis
+
+Abaixo estão centralizados os acessos e ferramentas de apoio ao desenvolvimento, gestão e design do ecossistema do projeto:
+
+| Plataforma | Finalidade do Recurso | Link de Acesso |
+| :--- | :--- | :--- |
+| **Jira** | Gestão de Tarefas, Sprints e Backlog do Scrum | [Acessar Workspace 🔗](https://var-zea.atlassian.net/jira/software/projects/SCRUM/summary) |
+| **Figma** | Protótipos de Interface, UI/UX e Fluxos de Telas | [Visualizar Design 🔗](https://www.figma.com/design/XCSyHO8HSz54SuqSAYzkDG/V-Commerce?node-id=0-1&t=brLlD7siVhVomxjl-1) |
+| **Google Drive** | Repositório de Artefatos, Apresentações e Data Assets | [Abrir Pasta de Arquivos 🔗](https://drive.google.com/drive/folders/14wxZUj7KuyGFpH0fWI1lYd8QQTPfXDhb?usp=sharing) |
