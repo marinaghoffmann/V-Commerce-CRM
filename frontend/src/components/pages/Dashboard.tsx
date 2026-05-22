@@ -290,11 +290,11 @@ function Dashboard() {
 
 const revenueData = {
   labels: compEnabled
-    ? monthLabels.map((label, index) => `${label}${compRevenueLabels[index] ? `\n${compRevenueLabels[index]}` : ""}`)
+    ? monthLabels.map((label, index) => `${label} | ${compRevenueLabels[index] ? `\n${compRevenueLabels[index]}` : ""}`)
     : monthLabels,
   datasets: [
     {
-      label: "Receita",
+      label: "Periodo Principal",
       data: revenueValues,
       borderColor: "#8B7CF8",
       backgroundColor: "rgba(139,124,248,0.18)",
@@ -305,7 +305,7 @@ const revenueData = {
       borderWidth: 1,
     },
     ...(compEnabled ? [{
-      label: "Receita anterior",
+      label: "Periodo comparativo",
       data: compRevenue,
       borderColor: "#f87c7c",
       backgroundColor: "rgba(248,124,124,0.18)",
@@ -1125,7 +1125,7 @@ useEffect(() => {
                 {compEnabled && (
                   <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span>O delta ao lado do <span className="font-semibold text-blue-600">Período atual</span> mostra a variação em relação ao <span className="font-semibold text-gray-500">Comparativo</span>.</span>
+                      <span>O delta ao lado do <span className="font-semibold text-blue-600">Período atual</span> mostra a variação em relação ao <span className="font-semibold text-purple-500">Comparativo</span>.</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
                       <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-600" /> Melhorou</span>

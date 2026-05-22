@@ -101,18 +101,19 @@ export function useMonthlyKpi(
   const [data, setData]       = useState<MonthlyKpiItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
- 
+
   useEffect(() => {
     const { anoInicio: anoIni, mesInicio: mesIni } =
       ensureMinMonths(anoInicio, mesInicio, anoFim, mesFim);
- 
+
     const allMonths   = getMonthsBetween(anoIni, mesIni, anoFim, mesFim);
     const totalMonths = allMonths.length;
- 
-    const groupBy: "month" | "quarter" | "year" =
-      totalMonths <= 12 ? "month" :
+
+    const groupBy: "month" | "trimester" | "quarter" | "year" =
+      totalMonths <= 18 ? "month" :
+      totalMonths <= 24 ? "trimester" :
       totalMonths <= 72 ? "quarter" : "year";
- 
+
     const compMonths = comp
       ? (() => {
           const { anoInicio: cAnoIni, mesInicio: cMesIni } =
@@ -120,15 +121,15 @@ export function useMonthlyKpi(
           return getMonthsBetween(cAnoIni, cMesIni, comp.anoFim, comp.mesFim);
         })()
       : [];
- 
+
     setLoading(true);
     setError(null);
- 
+
     const fetchMonth = ({ ano, mes }: { ano: number; mes: number }) =>
       api
         .get<KpiStatusItem[]>(`/kpi-status?page=1&limit=100&ano=${ano}&mes=${mes}`)
         .then((res) => {
-          const receita_total = res.data.reduce((s, i) => s + i.receita_total, 0);
+          const receita_total = Math.round(res.data.reduce((s, i) => s + i.receita_total, 0) * 100) / 100;
           const total_pedidos = res.data.reduce((s, i) => s + i.total_pedidos, 0);
           return {
             ano, mes,
@@ -137,7 +138,7 @@ export function useMonthlyKpi(
             label: `${MESES[mes - 1]}/${String(ano).slice(-2)}`,
           };
         });
- 
+
     Promise.all([
       Promise.all(allMonths.map(fetchMonth)),
       compMonths.length > 0
@@ -145,7 +146,7 @@ export function useMonthlyKpi(
         : Promise.resolve([] as Awaited<ReturnType<typeof fetchMonth>>[]),
     ])
       .then(([results, compResults]) => {
- 
+
         if (groupBy === "month") {
           setData(
             results.map((r, i) => {
@@ -166,7 +167,80 @@ export function useMonthlyKpi(
           );
           return;
         }
- 
+
+        if (groupBy === "trimester") {
+          type TrimesterEntry = {
+            receita: number; pedidos: number;
+            prev_receita: number; prev_pedidos: number;
+            label: string; prev_label: string;
+            ano: number; mes: number;
+          };
+
+          const trimesters: Record<string, TrimesterEntry> = {};
+          const compTrimesters: Record<string, { receita: number; pedidos: number; label: string }> = {};
+
+          results.forEach(({ ano, mes, receita_total, total_pedidos }) => {
+            const q   = Math.ceil(mes / 3);
+            const key = `${ano}-T${q}`;
+            if (!trimesters[key]) {
+              const mIni = (q - 1) * 3 + 1;
+              const mFim = Math.min(q * 3, 12);
+              trimesters[key] = {
+                receita: 0, pedidos: 0,
+                prev_receita: 0, prev_pedidos: 0,
+                label: `${MESES[mIni - 1]}-${MESES[mFim - 1]}/${String(ano).slice(-2)}`,
+                prev_label: "",
+                ano, mes: mFim,
+              };
+            }
+            trimesters[key].receita += receita_total;
+            trimesters[key].pedidos += total_pedidos;
+          });
+
+          compResults.forEach(({ ano, mes, receita_total, total_pedidos }) => {
+            const q   = Math.ceil(mes / 3);
+            const key = `${ano}-T${q}`;
+            if (!compTrimesters[key]) {
+              const mIni = (q - 1) * 3 + 1;
+              const mFim = Math.min(q * 3, 12);
+              compTrimesters[key] = {
+                receita: 0, pedidos: 0,
+                label: `${MESES[mIni - 1]}-${MESES[mFim - 1]}/${String(ano).slice(-2)}`,
+              };
+            }
+            compTrimesters[key].receita += receita_total;
+            compTrimesters[key].pedidos += total_pedidos;
+          });
+
+          const mainKeys = Object.keys(trimesters).sort();
+          const compKeys = Object.keys(compTrimesters).sort();
+
+          compKeys.forEach((ck, i) => {
+            const mk = mainKeys[i];
+            if (mk && trimesters[mk]) {
+              trimesters[mk].prev_receita = compTrimesters[ck].receita;
+              trimesters[mk].prev_pedidos = compTrimesters[ck].pedidos;
+              trimesters[mk].prev_label   = compTrimesters[ck].label;
+            }
+          });
+
+          setData(
+            Object.values(trimesters).map((v) => ({
+              ano:               v.ano,
+              mes:               v.mes,
+              label:             v.label,
+              receita_total:     v.receita,
+              total_pedidos:     v.pedidos,
+              ticket_medio:      v.pedidos > 0 ? v.receita / v.pedidos : 0,
+              prev_receita:      v.prev_receita,
+              prev_pedidos:      v.prev_pedidos,
+              prev_ticket_medio: v.prev_pedidos > 0 ? v.prev_receita / v.prev_pedidos : 0,
+              prev_label:        v.prev_label,
+            }))
+          );
+          return;
+        }
+
         if (groupBy === "quarter") {
           type QuarterEntry = {
             receita: number; pedidos: number;
@@ -174,34 +248,34 @@ export function useMonthlyKpi(
             label: string; prev_label: string;
             ano: number; mes: number;
           };
- 
+
           const quarters: Record<string, QuarterEntry> = {};
           const compQuarters: Record<string, { receita: number; pedidos: number; label: string }> = {};
- 
+
           results.forEach(({ ano, mes, receita_total, total_pedidos }) => {
-            const q   = Math.ceil(mes / 3);
-            const key = `${ano}-Q${q}`;
+            const q   = Math.ceil(mes / 6);
+            const key = `${ano}-S${q}`;
             if (!quarters[key]) {
-              const mIni = (q - 1) * 3 + 1;
-              const mFim = q * 3;
+              const mIni = (q - 1) * 6 + 1;
+              const mFim = Math.min(q * 6, 12);
               quarters[key] = {
                 receita: 0, pedidos: 0,
                 prev_receita: 0, prev_pedidos: 0,
                 label: `${MESES[mIni - 1]}-${MESES[mFim - 1]}/${String(ano).slice(-2)}`,
                 prev_label: "",
-                ano, mes: q * 3,
+                ano, mes: mFim,
               };
             }
             quarters[key].receita += receita_total;
             quarters[key].pedidos += total_pedidos;
           });
- 
+
           compResults.forEach(({ ano, mes, receita_total, total_pedidos }) => {
-            const q   = Math.ceil(mes / 3);
-            const key = `${ano}-Q${q}`;
+            const q   = Math.ceil(mes / 6);
+            const key = `${ano}-S${q}`;
             if (!compQuarters[key]) {
-              const mIni = (q - 1) * 3 + 1;
-              const mFim = q * 3;
+              const mIni = (q - 1) * 6 + 1;
+              const mFim = Math.min(q * 6, 12);
               compQuarters[key] = {
                 receita: 0, pedidos: 0,
                 label: `${MESES[mIni - 1]}-${MESES[mFim - 1]}/${String(ano).slice(-2)}`,
@@ -210,9 +284,10 @@ export function useMonthlyKpi(
             compQuarters[key].receita += receita_total;
             compQuarters[key].pedidos += total_pedidos;
           });
- 
-          const mainKeys = Object.keys(quarters);
-          const compKeys = Object.keys(compQuarters);
+
+          const mainKeys = Object.keys(quarters).sort();
+          const compKeys = Object.keys(compQuarters).sort();
+
           compKeys.forEach((ck, i) => {
             const mk = mainKeys[i];
             if (mk && quarters[mk]) {
@@ -221,7 +296,7 @@ export function useMonthlyKpi(
               quarters[mk].prev_label   = compQuarters[ck].label;
             }
           });
- 
+
           setData(
             Object.values(quarters).map((v) => ({
               ano:               v.ano,
@@ -238,30 +313,31 @@ export function useMonthlyKpi(
           );
           return;
         }
- 
+
         type YearEntry = {
           receita: number; pedidos: number;
           prev_receita: number; prev_pedidos: number;
           prev_label: string;
         };
- 
+
         const years:     Record<number, YearEntry> = {};
         const compYears: Record<number, { receita: number; pedidos: number }> = {};
- 
+
         results.forEach(({ ano, receita_total, total_pedidos }) => {
           if (!years[ano]) years[ano] = { receita: 0, pedidos: 0, prev_receita: 0, prev_pedidos: 0, prev_label: "" };
           years[ano].receita += receita_total;
           years[ano].pedidos += total_pedidos;
         });
- 
+
         compResults.forEach(({ ano, receita_total, total_pedidos }) => {
           if (!compYears[ano]) compYears[ano] = { receita: 0, pedidos: 0 };
           compYears[ano].receita += receita_total;
           compYears[ano].pedidos += total_pedidos;
         });
- 
-        const mainYearKeys = Object.keys(years).map(Number);
-        const compYearKeys = Object.keys(compYears).map(Number);
+
+        const mainYearKeys = Object.keys(years).map(Number).sort((a, b) => a - b);
+        const compYearKeys = Object.keys(compYears).map(Number).sort((a, b) => a - b);
+
         compYearKeys.forEach((cy, i) => {
           const my = mainYearKeys[i];
           if (my && years[my]) {
@@ -270,7 +346,7 @@ export function useMonthlyKpi(
             years[my].prev_label   = String(cy);
           }
         });
- 
+
         setData(
           Object.entries(years).map(([ano, v]) => ({
             ano:               parseInt(ano),
@@ -288,16 +364,14 @@ export function useMonthlyKpi(
       })
       .catch((err) => { setData([]); setError(err.message ?? String(err)); })
       .finally(() => setLoading(false));
- 
+
   }, [
     anoInicio, mesInicio, anoFim, mesFim,
     comp?.anoInicio, comp?.mesInicio, comp?.anoFim, comp?.mesFim,
   ]);
- 
+
   return { data, loading, error };
 }
-
-
 
 // Hook exclusivo para os cards — busca EXATAMENTE o período selecionado sem mínimo
 export function useMonthlyKpiForCards(
@@ -518,53 +592,140 @@ function getPreviousPeriod(
 
 export function useMonthlyKpiForCompPeriod(
   anoInicio: number, mesInicio: number,
-  anoFim: number,   mesFim: number,
+  anoFim: number, mesFim: number,
   minYear = 2023
 ) {
-  const [data, setData]         = useState<{ receita_total: number; total_pedidos: number; ticket_medio: number, label: string}[]>([]);
+  const [data, setData]           = useState<{ receita_total: number; total_pedidos: number; ticket_medio: number; label: string }[]>([]);
   const [available, setAvailable] = useState(false);
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading]     = useState(false);
 
   useEffect(() => {
     const prev = getPreviousPeriod(anoInicio, mesInicio, anoFim, mesFim);
-
     if (prev.anoInicio < minYear) {
       setAvailable(false);
       setData([]);
       return;
     }
 
-    // Aplica a mesma extensão do hook principal:
-    // se for um único mês, estende 1 mês para trás para o gráfico não ficar com 1 ponto só
-    const { anoInicio: extAno, mesInicio: extMes } =
-      ensureMinMonths(prev.anoInicio, prev.mesInicio, prev.anoFim, prev.mesFim);
+    const allMonths   = getMonthsBetween(prev.anoInicio, prev.mesInicio, prev.anoFim, prev.mesFim);
+    const totalMonths = allMonths.length;
+
+    const groupBy: "month" | "quarter" | "year" | "trimester" =
+      totalMonths <= 18 ? "month" :
+      totalMonths <= 24 ? "trimester" : 
+      totalMonths <= 72 ? "quarter" : "year";
 
     setLoading(true);
-    const months = getMonthsBetween(extAno, extMes, prev.anoFim, prev.mesFim);
 
-    const promises = months.map(({ ano, mes }) =>
+    const fetchMonth = ({ ano, mes }: { ano: number; mes: number }) =>
       api
         .get<KpiStatusItem[]>(`/kpi-status?page=1&limit=100&ano=${ano}&mes=${mes}`)
         .then((res) => {
-          const receita_total = res.data.reduce((s, i) => s + i.receita_total, 0);
+          const receita_total = Math.round(res.data.reduce((s, i) => s + i.receita_total, 0) * 100) / 100;
           const total_pedidos = res.data.reduce((s, i) => s + i.total_pedidos, 0);
           return {
+            ano, mes,
             receita_total,
             total_pedidos,
             ticket_medio: total_pedidos > 0 ? receita_total / total_pedidos : 0,
             label: `${MESES[mes - 1]}/${String(ano).slice(-2)}`,
           };
-        })
-    );
+        });
 
-    Promise.all(promises)
+    Promise.all(allMonths.map(fetchMonth))
       .then((results) => {
         const hasData = results.some((r) => r.receita_total > 0 || r.total_pedidos > 0);
-        setAvailable(hasData);
-        setData(results);
+
+        if (groupBy === "month") {
+          setAvailable(hasData);
+          setData(results.map(({ receita_total, total_pedidos, ticket_medio, label }) => ({
+            receita_total, total_pedidos, ticket_medio, label,
+          })));
+          return;
+        }
+
+        if (groupBy === "quarter") {
+          const quarters: Record<string, { receita: number; pedidos: number; label: string }> = {};
+
+          results.forEach(({ ano, mes, receita_total, total_pedidos }) => {
+            const q   = Math.ceil(mes / 6);
+            const key = `${ano}-S${q}`;
+            if (!quarters[key]) {
+              const mIni = (q - 1) * 6 + 1;
+              const mFim = Math.min(q * 6, 12);
+              quarters[key] = {
+                receita: 0, pedidos: 0,
+                label: `${MESES[mIni - 1]}-${MESES[mFim - 1]}/${String(ano).slice(-2)}`,
+              };
+            }
+            quarters[key].receita += receita_total;
+            quarters[key].pedidos += total_pedidos;
+          });
+
+          const grouped = Object.values(quarters).map((v) => ({
+            receita_total: v.receita,
+            total_pedidos: v.pedidos,
+            ticket_medio:  v.pedidos > 0 ? v.receita / v.pedidos : 0,
+            label:         v.label,
+          }));
+
+          setAvailable(grouped.some((r) => r.receita_total > 0));
+          setData(grouped);
+          return;
+        }
+
+      
+        if (groupBy === "trimester") {
+        const trimesters: Record<string, { receita: number; pedidos: number; label: string }> = {};
+
+        results.forEach(({ ano, mes, receita_total, total_pedidos }) => {
+          const q   = Math.ceil(mes / 3);
+          const key = `${ano}-T${q}`;
+          if (!trimesters[key]) {
+            const mIni = (q - 1) * 3 + 1;
+            const mFim = Math.min(q * 3, 12);
+            trimesters[key] = {
+              receita: 0, pedidos: 0,
+              label: `${MESES[mIni - 1]}-${MESES[mFim - 1]}/${String(ano).slice(-2)}`,
+            };
+          }
+          trimesters[key].receita += receita_total;
+          trimesters[key].pedidos += total_pedidos;
+        });
+
+        const grouped = Object.values(trimesters).map((v) => ({
+          receita_total: v.receita,
+          total_pedidos: v.pedidos,
+          ticket_medio:  v.pedidos > 0 ? v.receita / v.pedidos : 0,
+          label:         v.label,
+        }));
+
+        setAvailable(grouped.some((r) => r.receita_total > 0));
+        setData(grouped);
+        return;
+}
+        // year
+        const years: Record<number, { receita: number; pedidos: number }> = {};
+
+        results.forEach(({ ano, receita_total, total_pedidos }) => {
+          if (!years[ano]) years[ano] = { receita: 0, pedidos: 0 };
+          years[ano].receita += receita_total;
+          years[ano].pedidos += total_pedidos;
+        });
+
+        const grouped = Object.entries(years).map(([ano, v]) => ({
+          receita_total: v.receita,
+          total_pedidos: v.pedidos,
+          ticket_medio:  v.pedidos > 0 ? v.receita / v.pedidos : 0,
+          label:         String(ano),
+        }));
+
+        setAvailable(grouped.some((r) => r.receita_total > 0));
+        setData(grouped);
       })
       .catch(() => { setAvailable(false); setData([]); })
       .finally(() => setLoading(false));
+      
   }, [anoInicio, mesInicio, anoFim, mesFim]);
 
   return { data, available, loading };
