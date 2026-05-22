@@ -38,17 +38,23 @@ export function PeriodPicker({
 }: PeriodPickerProps) {
   const [open, setOpen] = useState(false);
 
+  // Calcula a data sugerida para comparação, evitando datas sem dados (antes de minYear)
+  const getComparisonDate = (year: number) => {
+    const suggestedYear = year - 1;
+    return suggestedYear < minYear ? year + 1 : suggestedYear;
+  };
+
   // --- Draft state — só vai pro pai quando clicar em "Aplicar" ---
   const [dStart, setDStart]               = useState<MY>({ month: startMonth, year: startYear });
   const [dEnd,   setDEnd]                 = useState<MY>({ month: endMonth,   year: endYear   });
   const [dCompEnabled, setDCompEnabled]   = useState(compEnabled);
   const [dCompStart, setDCompStart]       = useState<MY>({
     month: compStartMonth ?? startMonth,
-    year:  compStartYear  ?? startYear - 1,
+    year:  compStartYear  ?? getComparisonDate(startYear),
   });
   const [dCompEnd, setDCompEnd]           = useState<MY>({
     month: compEndMonth ?? endMonth,
-    year:  compEndYear  ?? endYear - 1,
+    year:  compEndYear  ?? getComparisonDate(endYear),
   });
 
   const [activeSide,   setActiveSide]   = useState<ActiveSide>("start");
@@ -64,11 +70,11 @@ export function PeriodPicker({
     setDCompEnabled(compEnabled);
     setDCompStart({
       month: compStartMonth ?? startMonth,
-      year:  compStartYear  ?? startYear - 1,
+      year:  compStartYear  ?? getComparisonDate(startYear),
     });
     setDCompEnd({
       month: compEndMonth ?? endMonth,
-      year:  compEndYear  ?? endYear - 1,
+      year:  compEndYear  ?? getComparisonDate(endYear),
     });
     setActiveSide("start");
     setActivePeriod("main");
@@ -94,6 +100,11 @@ export function PeriodPicker({
   function handleToggleComp() {
     const next = !dCompEnabled;
     setDCompEnabled(next);
+    if (next) {
+      // Ao ligar, recalcula as datas de comparação com base no período principal atual
+      setDCompStart({ month: dStart.month, year: getComparisonDate(dStart.year) });
+      setDCompEnd({   month: dEnd.month,   year: getComparisonDate(dEnd.year)   });
+    }
     if (!next && activePeriod === "comp") {
       setActivePeriod("main");
       setActiveSide("start");
