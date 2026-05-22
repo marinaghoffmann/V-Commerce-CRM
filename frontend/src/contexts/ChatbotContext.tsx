@@ -1,33 +1,65 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-import { ChatbotOverlay } from "../components/organisms/ChatbotOverlay";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+import { useChatbotSession } from "../hooks/useChatbotSession";
+import { getInitialSuggestionsForPage } from "./chatbot.utils";
+import type { ChatPoint, ChatbotContextType } from "./chatbot.types";
 
-interface ChatbotContextType {
-  isOpen: boolean;
-  toggleOverlay: () => void;
-  openOverlay: () => void;
-  closeOverlay: () => void;
-}
+export type { ChatMessage, UseAIChatReturn } from "./chatbot.types";
 
 const ChatbotContext = createContext<ChatbotContextType | undefined>(undefined);
 
 export function ChatbotProvider({ children }: { children: ReactNode }) {
+  const chatSession = useChatbotSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [buttonPos, setButtonPos] = useState<ChatPoint>(() => ({
+    x: window.innerWidth - 80,
+    y: window.innerHeight - 80,
+  }));
 
-  const toggleOverlay = () => setIsOpen((prev) => !prev);
-  const openOverlay = () => setIsOpen(true);
-  const closeOverlay = () => setIsOpen(false);
+  const openOverlay = useCallback((pos: ChatPoint) => {
+    setButtonPos(pos);
+    setIsOpen(true);
+  }, []);
 
-  return (
-    <ChatbotContext.Provider value={{ isOpen, toggleOverlay, openOverlay, closeOverlay }}>
-      {children}
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40 cursor-pointer" onClick={closeOverlay} />
-          <ChatbotOverlay onClose={closeOverlay} />
-        </>
-      )}
-    </ChatbotContext.Provider>
+  const closeOverlay = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const toggleOverlay = useCallback(
+    (pos?: ChatPoint) => {
+      if (isOpen) {
+        setIsOpen(false);
+        return;
+      }
+
+      if (pos) {
+        setButtonPos(pos);
+      }
+
+      setIsOpen(true);
+    },
+    [isOpen],
   );
+
+  // Derive page-specific initial suggestions when the chat is empty.
+  const location = useLocation();
+  const routePath = location.pathname;
+
+  const derivedSuggestions = chatSession.messages.length === 0
+    ? getInitialSuggestionsForPage(routePath)
+    : chatSession.suggestions;
+
+  const contextValue: ChatbotContextType = {
+    isOpen,
+    buttonPos,
+    toggleOverlay,
+    openOverlay,
+    closeOverlay,
+    ...chatSession,
+    suggestions: derivedSuggestions,
+  };
+
+  return <ChatbotContext.Provider value={contextValue}>{children}</ChatbotContext.Provider>;
 }
 
 export function useChatbot() {

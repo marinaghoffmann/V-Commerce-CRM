@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Navbar } from "./components/organisms/Navbar";
 import ClientDetail from "./components/pages/ClientDetailPage";
@@ -10,11 +9,10 @@ import SuportePage from "./components/pages/SupportPage";
 import Dashboard from "./components/pages/Dashboard";
 import { AIFloatingButton } from "./components/organisms/AIFloatingButton";
 import { ChatbotOverlay } from "./components/organisms/ChatbotOverlay";
+import { useChatbot } from "./contexts/ChatbotContext";
 
 function App() {
-  const [chatOpen, setChatOpen] = useState(false);
-
-  const [buttonPos, setButtonPos] = useState({ x: 0, y: 0 });
+  const { isOpen, buttonPos, toggleOverlay, closeOverlay } = useChatbot();
 
   return (
     <div className="min-h-screen block overflow-hidden bg-[#F4F7FE]">
@@ -32,15 +30,12 @@ function App() {
       </Routes>
 
       <AIFloatingButton
-        onClick={(pos) => {
-          setButtonPos(pos);
-          setChatOpen((prev) => !prev);
-        }}
+        onClick={toggleOverlay}
       />
 
-      {chatOpen && (
+      {isOpen && (
         <ChatbotOverlay
-          onClose={() => setChatOpen(false)}
+          onClose={closeOverlay}
           buttonPos={buttonPos}
         />
       )}
