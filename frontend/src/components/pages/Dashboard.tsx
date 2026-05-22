@@ -714,7 +714,7 @@ useEffect(() => {
         <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[#2B2B2B]">Dashboard</h1>
-             { !compEnabled ? (<p className="text-blue-600 font-semibold mt-1">Filtragem: {periodoLabel} </p>) : (<><p className="text-blue-600 font-semibold mt-1">Filtragem: {periodoLabel}</p> <p className="text-purple-600 font-semibold mt-1">Comparação: {prevPeriodLabel} </p></>)  }
+             { !compEnabled ? (<p className="text-blue-600 font-semibold mt-1">Principal: {periodoLabel} </p>) : (<><p className="text-blue-600 font-semibold mt-1">Período principal: {periodoLabel}</p> <p className="text-purple-600 font-semibold mt-1">Comparação: {prevPeriodLabel} </p></>)  }
             <p className="text-sm text-gray-500 mt-0.5">CRM 360 visão geral do período</p>
           </div>
           <PeriodPicker
@@ -796,7 +796,7 @@ useEffect(() => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <KpiCard
-                label="Receita total do período"
+                label="Receita total do período principal"
                 value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalReceita)}
                 metrics={receitaMetrics}
                 currentTotal={totalReceita}
@@ -804,7 +804,7 @@ useEffect(() => {
                 detailed={showDetailedCards}
               />
               <KpiCard
-                label="Total de pedidos do período"
+                label="Total de pedidos do período principal"
                 value={new Intl.NumberFormat("pt-BR").format(totalPedidos)}
                 metrics={pedidosMetrics}
                 currentTotal={totalPedidos}
@@ -812,7 +812,7 @@ useEffect(() => {
                 detailed={showDetailedCards}
               />
               <KpiCard
-                label="Ticket médio do período"
+                label="Ticket médio do período principal"
                 value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ticketMedio)}
                 metrics={ticketMetrics}
                 currentTotal={ticketMedio}
@@ -1042,7 +1042,7 @@ useEffect(() => {
                   <div className="flex-1 flex items-center justify-center gap-4">
                     {/* Doughnut — Período atual */}
                     <div className="flex-1 flex flex-col items-center">
-                      <span className="text-xs font-semibold text-blue-600 mb-2">Período atual</span>
+                      <span className="text-xs font-semibold text-blue-600 mb-2">Período principal</span>
                       <div className="h-[190px] w-full">
                         <Doughnut
                           key={`entrega-atual-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}`}
