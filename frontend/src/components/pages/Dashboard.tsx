@@ -693,7 +693,7 @@ useEffect(() => {
         <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[#2B2B2B]">Dashboard</h1>
-            <p className="text-blue-600 font-semibold mt-1">{periodoLabel}</p>
+             { !compEnabled ? (<p className="text-blue-600 font-semibold mt-1">Filtragem: {periodoLabel} </p>) : (<><p className="text-blue-600 font-semibold mt-1">Filtragem: {periodoLabel}</p> <p className="text-purple-600 font-semibold mt-1">Comparação: {prevPeriodLabel} </p></>)  }
             <p className="text-sm text-gray-500 mt-0.5">CRM 360 visão geral do período</p>
           </div>
           <PeriodPicker
@@ -915,7 +915,7 @@ useEffect(() => {
                         layout: { padding: { top: 20 } },
                         plugins: {
                           legend: {
-                            display: compEnabled,
+                            display: false,
                             labels: { usePointStyle: true, pointStyle: "rect" as const, boxWidth: 12, font: { size: 11 }, color: "#4B5563" },
                           },
                           tooltip: { callbacks: { label: (ctx) => ` ${Number(ctx.raw).toFixed(2).replace(".", ",")}% dos pedidos` } },
@@ -954,12 +954,23 @@ useEffect(() => {
                   </div>
                 </>
               )}
+              <div className="flex item-end justify-end">
+            {compEnabled && chartView != "estado" && (
+                <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                  </div>
+                </div>
+              )}
+              </div>
             </div>
 
             {/* BOTTOM CHARTS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={cardStyle}>
-                <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Taxa de satisfação</h2>
+                <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Taxa de satisfação dos produtos</h2>
                 <div className={compEnabled ? "h-[340px]" : "h-[300px]"}>
                   <Bar
                     key={`satisfacao-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}-${compEnabled}-${compStartYear}-${compStartMonth}`}
@@ -969,7 +980,7 @@ useEffect(() => {
                       indexAxis: "y", responsive: true, maintainAspectRatio: false,
                       plugins: {
                         legend: {
-                          display: compEnabled,
+                          display: false,
                           labels: { usePointStyle: true, pointStyle: "rect" as const, boxWidth: 12, font: { size: 11 }, color: "#4B5563" },
                         },
                         tooltip: { enabled: false },
@@ -980,9 +991,18 @@ useEffect(() => {
                       },
                     }}
                   />
-                </div>
               </div>
 
+            {compEnabled && (
+                              <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                                </div>
+                              </div>
+                            )}
+              </div>
               <div className={`${cardStyle} flex flex-col`}>
                 <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Indicador de entrega</h2>
 
@@ -1073,7 +1093,6 @@ useEffect(() => {
                 {compEnabled && (
                   <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-medium text-gray-600">Como ler:</span>
                       <span>O delta ao lado do <span className="font-semibold text-blue-600">Período atual</span> mostra a variação em relação ao <span className="font-semibold text-gray-500">Comparativo</span>.</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
