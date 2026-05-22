@@ -534,8 +534,13 @@ export function useMonthlyKpiForCompPeriod(
       return;
     }
 
+    // Aplica a mesma extensão do hook principal:
+    // se for um único mês, estende 1 mês para trás para o gráfico não ficar com 1 ponto só
+    const { anoInicio: extAno, mesInicio: extMes } =
+      ensureMinMonths(prev.anoInicio, prev.mesInicio, prev.anoFim, prev.mesFim);
+
     setLoading(true);
-    const months = getMonthsBetween(prev.anoInicio, prev.mesInicio, prev.anoFim, prev.mesFim);
+    const months = getMonthsBetween(extAno, extMes, prev.anoFim, prev.mesFim);
 
     const promises = months.map(({ ano, mes }) =>
       api

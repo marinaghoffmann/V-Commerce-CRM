@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   TrendingUp, TrendingDown, XCircle, CheckCircle2,
-  AlertCircle, RotateCcw, Clock3, Package, ArrowUp, ArrowDown,
+  AlertCircle, RotateCcw, Clock3, Package, ArrowUp, ArrowDown, Minus, Calendar,
 } from "lucide-react";
 
 import {
@@ -546,12 +546,16 @@ const revenueData = {
   const atrasadoPercentComp = totalEntregasComp > 0 ? Number((atrasadoComp / totalEntregasComp) * 100).toFixed(2).replace(".", ",") : "0";
   const semDadosComp        = totalEntregasComp === 0;
 
-  const noPrazoDelta  = totalEntregas > 0 && totalEntregasComp > 0
-    ? Number(((noPrazo / totalEntregas) - (noPrazoComp / totalEntregasComp)) * 100)
-    : null;
-  const atrasadoDelta = totalEntregas > 0 && totalEntregasComp > 0
-    ? Number(((atrasado / totalEntregas) - (atrasadoComp / totalEntregasComp)) * 100)
-    : null;
+  // Mostra delta sempre que pelo menos um dos lados tem dados.
+  // Quando o atual está zerado, a variação aparece como "-Xpp" (caiu para 0).
+  // Quando o comparativo está zerado, a variação aparece como "+Xpp" (subiu de 0).
+  const noPrazoMainPct  = totalEntregas     > 0 ? (noPrazo  / totalEntregas)     * 100 : 0;
+  const noPrazoCompPct  = totalEntregasComp > 0 ? (noPrazoComp  / totalEntregasComp) * 100 : 0;
+  const atrasadoMainPct = totalEntregas     > 0 ? (atrasado / totalEntregas)     * 100 : 0;
+  const atrasadoCompPct = totalEntregasComp > 0 ? (atrasadoComp / totalEntregasComp) * 100 : 0;
+  const temAlgumDado    = totalEntregas > 0 || totalEntregasComp > 0;
+  const noPrazoDelta    = temAlgumDado ? noPrazoMainPct  - noPrazoCompPct  : null;
+  const atrasadoDelta   = temAlgumDado ? atrasadoMainPct - atrasadoCompPct : null;
 
   const entregaData = {
     labels: ["No prazo", "Atrasado"],
@@ -624,60 +628,77 @@ useEffect(() => {
       <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">{value}</h2>
 
       {detailed && (
-        isSingleMonth ? (
-          <p className="text-xs text-gray-400 font-medium">Período único — sem comparativo</p>
-        ) : (
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
 
+          {/* Crescimento mensal médio — indicado como não aplicável para 1 mês */}
+          {isSingleMonth ? (
+            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
+              <Minus size={14} />
+              <span>Crescimento mensal não aplicável <span className="text-gray-400">(período de 1 mês)</span></span>
+            </div>
+          ) : (
             <div className={`flex items-center gap-1.5 text-xs font-medium ${metrics.avgGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
               {metrics.avgGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
               <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% ao mês em média</span>
             </div>
+          )}
 
-            {metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label && (
-              <div className="flex flex-col gap-1 text-xs text-gray-500">
-                <span className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full border border-green-300 bg-green-50 flex items-center justify-center shrink-0">
-                    <ArrowUp size={11} className="text-green-500" />
-                  </div>
-                  <span>Pico {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full border border-red-300 bg-red-50 flex items-center justify-center shrink-0">
-                    <ArrowDown size={11} className="text-red-400" />
-                  </div>
-                  <span>Baixa {metrics.low.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.low.value)}</span></span>
-                </span>
+          {/* Pico/Baixa — colapsa em "valor único" quando é 1 mês */}
+          {isSingleMonth && metrics.peak ? (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <div className="w-5 h-5 rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0">
+                <Calendar size={11} className="text-gray-400" />
               </div>
-            )}
+              <span>Valor de {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
+            </div>
+          ) : metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label ? (
+            <div className="flex flex-col gap-1 text-xs text-gray-500">
+              <span className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full border border-green-300 bg-green-50 flex items-center justify-center shrink-0">
+                  <ArrowUp size={11} className="text-green-500" />
+                </div>
+                <span>Pico {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full border border-red-300 bg-red-50 flex items-center justify-center shrink-0">
+                  <ArrowDown size={11} className="text-red-400" />
+                </div>
+                <span>Baixa {metrics.low.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.low.value)}</span></span>
+              </span>
+            </div>
+          ) : null}
 
-            {metrics.prevAvailable && metrics.prevTotal !== null ? (
-              (() => {
-                const growth = calcGrowthVsPrev(currentTotal, metrics.prevTotal);
-                return (
-                  <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
-                    {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                      {compEnabled ? (
-                        <span>
-                          {Math.abs(growth).toFixed(1)}% vs período comparado ({prevPeriodLabel})
-                        </span>
-                      ) : (
-                        <span>
-                          {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
-                        </span>
-                      )}
-                  </div>
-                );
-              })()
-            ) : (
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                <span>⚠️</span>
-                <span>Sem dados para período equivalente anterior</span>
-              </div>
-            )}
+          {/* Variação vs período anterior / comparado */}
+          {metrics.prevAvailable && metrics.prevTotal !== null ? (
+            (() => {
+              const growth = calcGrowthVsPrev(currentTotal, metrics.prevTotal);
+              return (
+                <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
+                  {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    {compEnabled ? (
+                      <span>
+                        {Math.abs(growth).toFixed(1)}% vs período comparado ({prevPeriodLabel})
+                      </span>
+                    ) : (
+                      <span>
+                        {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
+                      </span>
+                    )}
+                </div>
+              );
+            })()
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <AlertCircle size={13} className="shrink-0" />
+              <span>
+                {compEnabled
+                  ? "Sem dados no período de comparação"
+                  : "Sem dados para período equivalente anterior"}
+              </span>
+            </div>
+          )}
 
-          </div>
-        )
+        </div>
       )}
     </div>
   );
@@ -802,7 +823,7 @@ useEffect(() => {
 
             {/* LINE CHART */}
             <div className={`${cardStyle} mb-6`}>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-[#2B2B2B]">Receita ao longo do período</h2>
                 {isQuarterView && (
                   <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
@@ -815,6 +836,17 @@ useEffect(() => {
                   </span>
                 )}
               </div>
+              {isSingleMonth && (
+                <div className="flex items-start gap-2 mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
+                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                  <span>
+                    Como você selecionou apenas <span className="font-semibold">1 mês</span>, o gráfico inclui também o
+                    mês anterior para que a tendência seja visível.
+                    {compEnabled && " O mesmo vale para o período de comparação."}
+                  </span>
+                </div>
+              )}
+              {!isSingleMonth && <div className="mb-4" />}
               <div className="h-[350px]">
                 <Line
                   data={revenueData}
@@ -958,7 +990,7 @@ useEffect(() => {
             {compEnabled && chartView != "estado" && (
                 <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                    <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-600">o periodo comparativo</span>.</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
                   </div>
@@ -996,7 +1028,7 @@ useEffect(() => {
             {compEnabled && (
                               <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                  <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                                  <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-600">o periodo comparativo</span>.</span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
                                 </div>
@@ -1047,7 +1079,7 @@ useEffect(() => {
 
                     {/* Doughnut — Comparativo (só valores, sem delta) */}
                     <div className="flex-1 flex flex-col items-center">
-                      <span className="text-xs font-semibold text-gray-400 mb-2">Comparativo</span>
+                      <span className="text-xs font-semibold text-purple-600 mb-2">Comparativo</span>
                       <div className="h-[190px] w-full">
                         <Doughnut
                           key={`entrega-comp-${compStartYear}-${compStartMonth}-${compEndYear}-${compEndMonth}`}
