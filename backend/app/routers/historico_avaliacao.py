@@ -36,20 +36,36 @@ def get_avaliacoes_grafico(
     db: Session = Depends(get_db),
     ano: int | None = None,
     mes: int | None = None,
+    ano_inicio: int | None = None,
+    mes_inicio: int | None = None,
+    ano_fim: int | None = None,
+    mes_fim: int | None = None,
 ) -> AvaliacoesGrafico:
     hoje = date.today()
-    ano = ano or hoje.year
-    mes = mes or hoje.month
 
-    filtros = [
-        extract("year", Avaliacoes.data_avaliacao) == ano,
-        extract("month", Avaliacoes.data_avaliacao) == mes,
-    ]
+    filtros = []
+
+    if ano_inicio and mes_inicio and ano_fim and mes_fim:
+        data_inicio = date(ano_inicio, mes_inicio, 1)
+        from calendar import monthrange
+        ultimo_dia = monthrange(ano_fim, mes_fim)[1]
+        data_fim_date = date(ano_fim, mes_fim, ultimo_dia)
+        filtros.append(Avaliacoes.data_avaliacao >= data_inicio)
+        filtros.append(Avaliacoes.data_avaliacao <= data_fim_date)
+        ano_ref = ano_fim
+        mes_ref = mes_fim
+    else:
+        ano_ref = ano or hoje.year
+        mes_ref = mes or hoje.month
+        filtros = [
+            extract("year",  Avaliacoes.data_avaliacao) == ano_ref,
+            extract("month", Avaliacoes.data_avaliacao) == mes_ref,
+        ]
 
     row = (
         db.query(
             func.count(case((Avaliacoes.nota_produto.between(1, 2), 1))).label("ruim"),
-            func.count(case((Avaliacoes.nota_produto == 3, 1))).label("neutra"),
+            func.count(case((Avaliacoes.nota_produto == 3,          1))).label("neutra"),
             func.count(case((Avaliacoes.nota_produto.between(4, 5), 1))).label("positiva"),
         )
         .filter(*filtros)
@@ -57,9 +73,9 @@ def get_avaliacoes_grafico(
     )
 
     return AvaliacoesGrafico(
-        ano=ano,
-        mes=mes,
-        ruim=row.ruim if row else 0,
-        neutra=row.neutra if row else 0,
+        ano=ano_ref,
+        mes=mes_ref,
+        ruim=row.ruim       if row else 0,
+        neutra=row.neutra   if row else 0,
         positiva=row.positiva if row else 0,
     )

@@ -18,14 +18,27 @@ def get_kpi_status(
     limit: int = 10,
     ano: int | None = None,
     mes: int | None = None,
+    ano_inicio: int | None = None,
+    mes_inicio: int | None = None,
+    ano_fim: int | None = None,
+    mes_fim: int | None = None,
 ) -> List[KpiStatusSchema]:
     filters = []
 
-    if ano is not None:
-        filters.append(KpiPorStatus.ano_venda == ano)
-
-    if mes is not None:
-        filters.append(KpiPorStatus.mes_venda == mes)
+    if ano_inicio and mes_inicio and ano_fim and mes_fim:
+        data_inicio = ano_inicio * 100 + mes_inicio
+        data_fim    = ano_fim   * 100 + mes_fim
+        filters.append(
+            (KpiPorStatus.ano_venda * 100 + KpiPorStatus.mes_venda) >= data_inicio
+        )
+        filters.append(
+            (KpiPorStatus.ano_venda * 100 + KpiPorStatus.mes_venda) <= data_fim
+        )
+    else:
+        if ano is not None:
+            filters.append(KpiPorStatus.ano_venda == ano)
+        if mes is not None:
+            filters.append(KpiPorStatus.mes_venda == mes)
 
     offset = (page - 1) * limit
 

@@ -146,19 +146,40 @@ def get_total_pedidos_com_tickets(
     db: Session = Depends(get_db),
     ano: int | None = None,
     mes: int | None = None,
+    ano_inicio: int | None = None,
+    mes_inicio: int | None = None,
+    ano_fim: int | None = None,
+    mes_fim: int | None = None,
 ):
     hoje = date.today()
-    ano = ano or hoje.year
-    mes = mes or hoje.month
 
-    filtros_pedido = [
-        extract("year", Pedidos.data_pedido) == ano,
-        extract("month", Pedidos.data_pedido) == mes,
-    ]
-    filtros_ticket = [
-        extract("year", Ticket.data_abertura) == ano,
-        extract("month", Ticket.data_abertura) == mes,
-    ]
+    if ano_inicio and mes_inicio and ano_fim and mes_fim:
+        from calendar import monthrange
+        data_inicio   = date(ano_inicio, mes_inicio, 1)
+        ultimo_dia    = monthrange(ano_fim, mes_fim)[1]
+        data_fim_date = date(ano_fim, mes_fim, ultimo_dia)
+
+        filtros_pedido = [
+            Pedidos.data_pedido >= data_inicio,
+            Pedidos.data_pedido <= data_fim_date,
+        ]
+        filtros_ticket = [
+            Ticket.data_abertura >= data_inicio,
+            Ticket.data_abertura <= data_fim_date,
+        ]
+        ano_ref = ano_fim
+        mes_ref = mes_fim
+    else:
+        ano_ref = ano or hoje.year
+        mes_ref = mes or hoje.month
+        filtros_pedido = [
+            extract("year",  Pedidos.data_pedido) == ano_ref,
+            extract("month", Pedidos.data_pedido) == mes_ref,
+        ]
+        filtros_ticket = [
+            extract("year",  Ticket.data_abertura) == ano_ref,
+            extract("month", Ticket.data_abertura) == mes_ref,
+        ]
 
     total_pedidos = (
         db.query(func.count(Pedidos.id_pedido))
@@ -174,9 +195,9 @@ def get_total_pedidos_com_tickets(
     )
 
     return {
-        "ano": ano,
-        "mes": mes,
-        "total_pedidos": total_pedidos,
+        "ano":             ano_ref,
+        "mes":             mes_ref,
+        "total_pedidos":   total_pedidos,
         "entrega_atrasada": tickets_entrega,
         "entrega_no_prazo": total_pedidos - tickets_entrega,
     }

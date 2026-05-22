@@ -75,6 +75,13 @@ Tabela kpi_por_categoria: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER)
 Tabela kpi_por_estado: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
   estado (TEXT), receita_total (REAL), ticket_medio (REAL),
   total_pedidos (INTEGER), total_clientes_unicos (INTEGER)
+  -- IMPORTANTE: nomes de estados SEM acento e por extenso. Valores exatos:
+  -- 'Acre', 'Alagoas', 'Amapa', 'Amazonas', 'Bahia', 'Ceara',
+  -- 'Distrito Federal', 'Espirito Santo', 'Goias', 'Maranhao',
+  -- 'Mato Grosso', 'Mato Grosso Do Sul', 'Minas Gerais', 'Para',
+  -- 'Paraiba', 'Parana', 'Pernambuco', 'Piaui', 'Rio De Janeiro',
+  -- 'Rio Grande Do Norte', 'Rio Grande Do Sul', 'Rondonia', 'Roraima',
+  -- 'Santa Catarina', 'Sao Paulo', 'Sergipe', 'Tocantins'
 
 Tabela kpi_por_status: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
   status (TEXT), receita_total (REAL), ticket_medio (REAL),
@@ -87,6 +94,26 @@ Tabela kpi_por_status: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
 
 DOMAIN_KNOWLEDGE = """
 ## Conhecimento de domínio — use para inferência implícita
+
+### Normalização de nomes de estados
+Os estados no banco são armazenados **sem acento, por extenso, com iniciais maiúsculas**.
+NUNCA use siglas (SP, RJ, MG) nem nomes com acento (São Paulo, Ceará) ao filtrar.
+Use SEMPRE os nomes exatos listados no schema da tabela kpi_por_estado.
+Exemplos de mapeamento:
+- "São Paulo" → 'Sao Paulo'
+- "Ceará" → 'Ceara'  
+- "Maranhão" → 'Maranhao'
+- "Espírito Santo" → 'Espirito Santo'
+- "Pará" → 'Para'
+- "Goiás" → 'Goias'
+- "Amapá" → 'Amapa'
+- "Rondônia" → 'Rondonia'
+- "Paraíba" → 'Paraiba'
+- "Piauí" → 'Piaui'
+- "Rio de Janeiro" → 'Rio De Janeiro'
+- "Rio Grande do Norte" → 'Rio Grande Do Norte'
+- "Rio Grande do Sul" → 'Rio Grande Do Sul'
+- "Mato Grosso do Sul" → 'Mato Grosso Do Sul'
 
 ### Regiões do Brasil → estados (coluna `estado` nas tabelas)
 O banco não possui coluna "região". Quando o usuário mencionar uma região geográfica,
@@ -153,6 +180,23 @@ interpretação genérica de abreviação/nome completo.
 # ---------------------------------------------------------------------------
 
 FEW_SHOT_EXAMPLES = """
+-- Pergunta: Qual o percentual de pedidos de São Paulo em 2024?
+WITH total AS (
+  SELECT SUM(total_pedidos) AS total_pedidos
+  FROM kpi_por_estado
+  WHERE ano_venda = 2024
+),
+sp AS (
+  SELECT SUM(total_pedidos) AS pedidos_sp
+  FROM kpi_por_estado
+  WHERE estado = 'Sao Paulo' AND ano_venda = 2024
+)
+SELECT
+  'Sao Paulo'                                              AS estado,
+  sp.pedidos_sp                                            AS total_pedidos,
+  ROUND(sp.pedidos_sp * 100.0 / total.total_pedidos, 2)   AS percentual
+FROM sp, total;
+
 -- Pergunta: Quais foram os 10 produtos mais vendidos?
 SELECT nome_produto, unidades_vendidas, receita_total
 FROM desempenho_produtos
@@ -227,7 +271,7 @@ ORDER BY unidades_vendidas DESC;
 SELECT c.nome, c.sobrenome, c.email, c.estado, SUM(p.valor_pedido) AS total_gasto
 FROM pedidos_por_cliente p
 JOIN v_cliente_360 c ON p.id_cliente = c.id_cliente
-WHERE c.estado IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE')
+WHERE c.estado IN ('Alagoas','Bahia','Ceara','Maranhao','Paraiba','Pernambuco','Piaui','Rio Grande Do Norte','Sergipe')
   AND p.status = 'aprovado'
   AND p.data_pedido >= DATE(
         (SELECT MAX(data_pedido) FROM pedidos_por_cliente), '-3 months'
@@ -240,11 +284,11 @@ ORDER BY total_gasto DESC;
 WITH por_regiao_mes AS (
   SELECT
     CASE
-      WHEN estado IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
-      WHEN estado IN ('ES','MG','RJ','SP')                         THEN 'Sudeste'
-      WHEN estado IN ('PR','RS','SC')                              THEN 'Sul'
-      WHEN estado IN ('DF','GO','MS','MT')                         THEN 'Centro-Oeste'
-      WHEN estado IN ('AC','AM','AP','PA','RO','RR','TO')          THEN 'Norte'
+      WHEN estado IN ('Alagoas','Bahia','Ceara','Maranhao','Paraiba','Pernambuco','Piaui','Rio Grande Do Norte','Sergipe') THEN 'Nordeste'
+      WHEN estado IN ('Espirito Santo','Minas Gerais','Rio De Janeiro','Sao Paulo')                                       THEN 'Sudeste'
+      WHEN estado IN ('Parana','Rio Grande Do Sul','Santa Catarina')                                                      THEN 'Sul'
+      WHEN estado IN ('Distrito Federal','Goias','Mato Grosso Do Sul','Mato Grosso')                                      THEN 'Centro-Oeste'
+      WHEN estado IN ('Acre','Amazonas','Amapa','Para','Rondonia','Roraima','Tocantins')                                   THEN 'Norte'
       ELSE 'Outros'
     END AS regiao,
     ano_venda,

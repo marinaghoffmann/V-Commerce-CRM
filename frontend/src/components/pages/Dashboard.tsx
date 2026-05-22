@@ -1,50 +1,33 @@
 import { useState, useEffect } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
-  XCircle,
-  CheckCircle2,
-  AlertCircle,
-  RotateCcw,
-  Clock3,
-  Package,
+  TrendingUp, TrendingDown, XCircle, CheckCircle2,
+  AlertCircle, RotateCcw, Clock3, Package, ArrowUp, ArrowDown, Minus, Calendar,
 } from "lucide-react";
 
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  BarElement,
-  Tooltip,
-  Legend,
-  Filler,
+  Chart as ChartJS, CategoryScale, LinearScale, PointElement,
+  LineElement, ArcElement, BarElement, Tooltip, Legend, Filler,
 } from "chart.js";
 
 import { Line, Bar, Doughnut } from "react-chartjs-2";
-import type { KpiStatusItem } from "../../components/types/dashboard.types";
+import type { KpiStatusItem, MonthlyKpiItem } from "../../components/types/dashboard.types";
 import {
-  useKpiStatus,
-  useMonthlyKpi,
-  useMonthlyReview,
-  useMonthlyTickets,
-  useKpiCategoria,
-  useKpiEstado,
+  useKpiStatus, useMonthlyKpi, useMonthlyKpiForCards,
+  useMonthlyKpiForCompPeriod, useMonthlyReview,
+  useMonthlyTickets, useKpiCategoria, useKpiEstado,
 } from "../../hooks/useDashboard";
+import { PeriodPicker } from "../atoms/PeriodPicker";
 
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  BarElement,
-  Tooltip,
-  Legend,
-  Filler
+  CategoryScale, LinearScale, PointElement, LineElement,
+  ArcElement, BarElement, Tooltip, Legend, Filler
 );
+
+const MESES_LABEL = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+];
+const MESES_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 const STATUS_CONFIG = [
   { name: "recusado",    color: "#C62828", label: "Recusado"    },
@@ -55,125 +38,263 @@ const STATUS_CONFIG = [
 ];
 
 const CHART_COLORS = [
-  "#34A853", "#3B6FF6", "#7C4DFF", "#F97316",
-  "#C62828", "#E0A800", "#F63BDD", "#06B6D4",
-  "#84CC16", "#F43F5E",
+  "#34A853","#3B6FF6","#7C4DFF","#F97316",
+  "#C62828","#E0A800","#F63BDD","#06B6D4","#84CC16","#F43F5E",
 ];
 
-const CATEGORIAS_FALLBACK = [
-  "Automotivo",
-  "Beleza",
-  "Brinquedos",
-  "Casa",
-  "Eletronicos",
-  "Esportes",
-  "Moveis",
-  "Vestuario",
-];
+const CATEGORIAS_FALLBACK = ["Automotivo","Beleza","Brinquedos","Casa","Eletronicos","Esportes","Moveis","Vestuario"];
 
 const ESTADOS_FALLBACK = [
-  "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia",
-  "Ceará", "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
-  "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", "Paraíba",
-  "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", "Rio Grande do Norte",
-  "Rio Grande do Sul", "Rondônia", "Roraima", "Santa Catarina", "São Paulo",
-  "Sergipe", "Tocantins",
+  "Acre","Alagoas","Amapá","Amazonas","Bahia","Ceará","Distrito Federal",
+  "Espírito Santo","Goiás","Maranhão","Mato Grosso","Mato Grosso do Sul",
+  "Minas Gerais","Pará","Paraíba","Paraná","Pernambuco","Piauí",
+  "Rio de Janeiro","Rio Grande do Norte","Rio Grande do Sul","Rondônia",
+  "Roraima","Santa Catarina","São Paulo","Sergipe","Tocantins",
 ];
 
+const REGION_GROUPS: Record<number, string[]> = {
+  0: ["Acre","Amapá","Amazonas","Pará","Rondônia","Roraima","Tocantins"],
+  1: ["Alagoas","Bahia","Ceará","Maranhão","Paraíba","Pernambuco","Piauí","Rio Grande do Norte","Sergipe"],
+  2: ["Distrito Federal","Goiás","Mato Grosso","Mato Grosso do Sul"],
+  3: ["Espírito Santo","Minas Gerais","Rio de Janeiro","São Paulo"],
+  4: ["Paraná","Rio Grande do Sul","Santa Catarina"],
+};
+const REGION_BASE_HUES = [200, 20, 90, 260, 140];
+const normalizeKey = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+const REGION_MAP: Record<string, number> = Object.entries(REGION_GROUPS).reduce((acc, [idx, group]) => {
+  group.forEach((st) => { acc[normalizeKey(st)] = Number(idx); });
+  return acc;
+}, {} as Record<string, number>);
+
 type ChartView = "status" | "categoria" | "estado";
+
+function toCompColor(color: string): string {
+  if (color.startsWith("hsl(")) return color.replace("hsl(", "hsla(").replace(")", ", 0.45)");
+  if (color.startsWith("#") && color.length === 7) return `${color}88`;
+  return color;
+}
 
 function transformarStatus(data: KpiStatusItem[]) {
   const statusMap = new Map(data.map((item) => [item.status.toLowerCase(), item]));
   const orderedData = STATUS_CONFIG.map((config) => {
-    const item = Array.from(statusMap.values()).find((d) =>
-      d.status.toLowerCase().includes(config.name)
-    );
-    return {
-      status: config.label,
-      total_pedidos: item?.total_pedidos || 0,
-      color: config.color,
-    };
+    const item = Array.from(statusMap.values()).find((d) => d.status.toLowerCase().includes(config.name));
+    return { status: config.label, total_pedidos: item?.total_pedidos || 0, color: config.color };
   });
   return {
-    labels: orderedData.map((item) => item.status),
-    valores: orderedData.map((item) => item.total_pedidos),
-    colors: orderedData.map((item) => item.color),
+    labels: orderedData.map((i) => i.status),
+    valores: orderedData.map((i) => i.total_pedidos),
+    colors:  orderedData.map((i) => i.color),
   };
 }
 
 function getStatusIcon(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized.includes("recus"))       return <XCircle className="text-[#C62828]" size={18} />;
-  if (normalized.includes("aprov"))       return <CheckCircle2 className="text-[#34A853]" size={18} />;
-  if (normalized.includes("reembols"))    return <RotateCcw className="text-[#E0A800]" size={18} />;
-  if (normalized.includes("processando")) return <Clock3 className="text-[#F63BDD]" size={18} />;
-  if (normalized.includes("processado"))  return <Package className="text-[#7C4DFF]" size={18} />;
+  const n = status.toLowerCase();
+  if (n.includes("recus"))       return <XCircle className="text-[#C62828]" size={18} />;
+  if (n.includes("aprov"))       return <CheckCircle2 className="text-[#34A853]" size={18} />;
+  if (n.includes("reembols"))    return <RotateCcw className="text-[#E0A800]" size={18} />;
+  if (n.includes("processando")) return <Clock3 className="text-[#F63BDD]" size={18} />;
+  if (n.includes("processado"))  return <Package className="text-[#7C4DFF]" size={18} />;
   return <Package className="text-gray-500" size={18} />;
 }
 
 function getStatusLabel(status: string) {
-  const config = STATUS_CONFIG.find((c) => status.toLowerCase().includes(c.name));
-  return config?.label || status;
+  return STATUS_CONFIG.find((c) => status.toLowerCase().includes(c.name))?.label || status;
+}
+
+// Calcula crescimento médio mensal (média das variações consecutivas)
+function calcAvgMonthlyGrowth(values: number[]): number {
+  if (values.length < 2) return 0;
+
+  const first = values[0];
+  var last = values[values.length - 1];
+
+  console.log({ first, last, n: values.length - 1 });
+
+  if (first <= 0) return 0;
+  if (last <= 0) {
+     last = values[values.length - 2] || first;
+  };
+
+  const n = values.length - 1;
+  return (Math.pow(last / first, 1 / n) - 1) * 100;
+}
+
+// Encontra pico e baixa
+function findPeakAndLow<T>(
+  data: { value: number; label: string }[]
+): { peak: T | null; low: T | null } {
+  if (data.length === 0) return { peak: null, low: null };
+  const peak = data.reduce((a, b) => b.value > a.value ? b : a);
+  const low  = data.reduce((a, b) => b.value < a.value ? b : a);
+  return { peak: peak as T, low: low as T };
+}
+
+interface CardMetrics {
+  
+  avgGrowth:    number;
+  peak:         { value: number; label: string } | null;
+  low:          { value: number; label: string } | null;
+  prevTotal:    number | null;
+  prevAvailable: boolean;
 }
 
 function Dashboard() {
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: Math.max(0, currentYear - 2022) },
-    (_, index) => 2023 + index
-  );
+  const currentYear  = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
 
-  const [selectedYear, setSelectedYear]     = useState(currentYear);
-  const [selectedMonth, setSelectedMonth]   = useState(new Date().getMonth() + 1);
-  const [debouncedYear, setDebouncedYear]   = useState(selectedYear);
-  const [debouncedMonth, setDebouncedMonth] = useState(selectedMonth);
-  const [chartView, setChartView]           = useState<ChartView>("status");
+  const [startMonth, setStartMonth] = useState(currentMonth);
+  const [startYear,  setStartYear]  = useState(currentYear);
+  const [endMonth,   setEndMonth]   = useState(currentMonth);
+  const [endYear,    setEndYear]    = useState(currentYear);
+
+  const [dStartMonth, setDStartMonth] = useState(startMonth);
+  const [dStartYear,  setDStartYear]  = useState(startYear);
+  const [dEndMonth,   setDEndMonth]   = useState(endMonth);
+  const [dEndYear,    setDEndYear]    = useState(endYear);
+
+  const [compEnabled, setCompEnabled] = useState(false);
+  const [compStartMonth, setCompStartMonth] = useState(startMonth);
+  const [compStartYear,  setCompStartYear]  = useState(startYear - 1);
+  const [compEndMonth,   setCompEndMonth]   = useState(endMonth);
+  const [compEndYear,    setCompEndYear]    = useState(endYear - 1);
+
+  const [chartView, setChartView] = useState<ChartView>("status");
+  const [showDetailedCards, setShowDetailedCards] = useState(false);
+  const [distChartArea, setDistChartArea] = useState<{ left: number; right: number } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedYear(selectedYear);
-      setDebouncedMonth(selectedMonth);
-    }, 50);
+      setDStartMonth(startMonth);
+      setDStartYear(startYear);
+      setDEndMonth(endMonth);
+      setDEndYear(endYear);
+    }, 300);
     return () => clearTimeout(timer);
-  }, [selectedYear, selectedMonth]);
+  }, [startMonth, startYear, endMonth, endYear]);
 
+  const periodoValido =
+    dStartYear < dEndYear || (dStartYear === dEndYear && dStartMonth <= dEndMonth);
+
+  const periodoLabel = `${MESES_LABEL[dStartMonth - 1]} ${dStartYear} → ${MESES_LABEL[dEndMonth - 1]} ${dEndYear}`;
+
+  // Label do período anterior para exibição
+  const prevPeriodLabel = `${MESES_LABEL[compStartMonth -1 ]}/${compStartYear} → ${MESES_LABEL[compEndMonth - 1]} ${compEndYear}`;
+  // Hooks
   const { kpiData: kpiStatus, loading: loadingStatus, error: errorStatus } = useKpiStatus({
-    page: 1,
-    limit: 10,
-    ano: debouncedYear,
-    mes: debouncedMonth,
+    anoInicio: dStartYear, mesInicio: dStartMonth,
+    anoFim:    dEndYear,   mesFim:    dEndMonth,
     kpiType: "status",
   });
   const { data: monthlyData, loading: loadingMonthly, error: errorMonthly } =
-    useMonthlyKpi(debouncedYear, debouncedMonth);
+    useMonthlyKpi(dStartYear, dStartMonth, dEndYear, dEndMonth);
+  const { data: cardsData } =
+    useMonthlyKpiForCards(dStartYear, dStartMonth, dEndYear, dEndMonth);
+  const { data: prevData, available: prevAvailable } =
+    useMonthlyKpiForCompPeriod(compStartYear, compStartMonth, compEndYear, compEndMonth);
   const { data: reviewData,  loading: loadingReview,  error: errorReview  } =
-    useMonthlyReview(debouncedYear, debouncedMonth);
+    useMonthlyReview(dStartYear, dStartMonth, dEndYear, dEndMonth);
   const { data: ticketData,  loading: loadingTicket,  error: errorTicket  } =
-    useMonthlyTickets(debouncedYear, debouncedMonth);
-  const { data: kpiCategoria } = useKpiCategoria(debouncedYear, debouncedMonth);
-  const { data: kpiEstado    } = useKpiEstado(debouncedYear, debouncedMonth);
+    useMonthlyTickets(dStartYear, dStartMonth, dEndYear, dEndMonth);
+  const { data: kpiCategoria } = useKpiCategoria(dStartYear, dStartMonth, dEndYear, dEndMonth);
+  const { data: kpiEstado    } = useKpiEstado(dStartYear, dStartMonth, dEndYear, dEndMonth);
+
+  const { kpiData: kpiStatusComp    } = useKpiStatus({ anoInicio: compStartYear, mesInicio: compStartMonth, anoFim: compEndYear, mesFim: compEndMonth, kpiType: "status" });
+  const { data:    kpiCategoriaComp } = useKpiCategoria(compStartYear, compStartMonth, compEndYear, compEndMonth);
+  const { data:    kpiEstadoComp    } = useKpiEstado(compStartYear, compStartMonth, compEndYear, compEndMonth);
+  const { data:    reviewComp       } = useMonthlyReview(compStartYear, compStartMonth, compEndYear, compEndMonth);
+  const { data:    ticketComp       } = useMonthlyTickets(compStartYear, compStartMonth, compEndYear, compEndMonth);
 
   const loading = loadingStatus || loadingMonthly || loadingReview || loadingTicket;
   const error   = errorStatus  || errorMonthly  || errorReview  || errorTicket;
 
-  const monthLabels   = monthlyData?.map((item) => `${String(item.mes).padStart(2, "0")}/${String(item.ano).slice(-2)}`) || [];
+  // Gráfico de linha
+  const monthLabels   = monthlyData?.map((item) => item.label) || [];
   const revenueValues = monthlyData?.map((item) => item.receita_total) || [];
+  const compRevenueLabels = prevData.map((item) => item.label) || [];  
+  const compRevenue = prevData.map((item) => item.receita_total);
+  const firstLabel    = monthlyData?.[0]?.label ?? "";
+  const isQuarterView = firstLabel.startsWith("Jan") || firstLabel.startsWith("Abr") ||
+                        firstLabel.startsWith("Jul") || firstLabel.startsWith("Out")
+                        ? false : /^\w{3}-\w{3}\/\d{2}$/.test(firstLabel);
+  const isYearView    = /^\d{4}$/.test(firstLabel);
 
-  const lastMonth     = monthlyData?.[monthlyData.length - 1]  ?? { receita_total: 0, total_pedidos: 0, ticket_medio: 0 };
-  const previousMonth = monthlyData?.[monthlyData.length - 2] ?? { receita_total: 0, total_pedidos: 0, ticket_medio: 0 };
+  // Totais do período
+  const totalReceita = cardsData.reduce((s, i) => s + i.receita_total, 0);
+  const totalPedidos = cardsData.reduce((s, i) => s + i.total_pedidos, 0);
+  const ticketMedio  = totalPedidos > 0 ? totalReceita / totalPedidos : 0;
 
-  const calculateVariation = (current: number, previous: number) => {
-    if (previous === 0) return 0;
-    return ((current - previous) / previous) * 100;
+  // Totais do período anterior
+  const prevTotalReceita = prevData.reduce((s, i) => s + i.receita_total, 0);
+  const prevTotalPedidos = prevData.reduce((s, i) => s + i.total_pedidos, 0);
+  const prevTicketMedio  = prevTotalPedidos > 0 ? prevTotalReceita / prevTotalPedidos : 0;
+
+  const isSingleMonth = cardsData.length <= 1;
+
+  // Métricas por card
+  const receitaMetrics: CardMetrics = {
+    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.receita_total)),
+    ...(() => {
+      const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
+        cardsData.map((d, i) => ({
+          value: d.receita_total,
+          label: `${MESES_SHORT[
+            new Date(dStartYear, dStartMonth - 1 + i).getMonth()
+          ]}/${String(new Date(dStartYear, dStartMonth - 1 + i).getFullYear()).slice(-2)}`,
+        }))
+      );
+      return { peak, low };
+    })(),
+    prevTotal:    prevAvailable ? prevTotalReceita : null,
+    prevAvailable,
   };
 
-  const revenueVariation = calculateVariation(lastMonth.receita_total, previousMonth.receita_total);
-  const ordersVariation  = calculateVariation(lastMonth.total_pedidos,  previousMonth.total_pedidos);
-  const ticketVariation  = calculateVariation(lastMonth.ticket_medio,   previousMonth.ticket_medio);
+  const pedidosMetrics: CardMetrics = {
+    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.total_pedidos)),
+    ...(() => {
+      const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
+        cardsData.map((d, i) => ({
+          value: d.total_pedidos,
+          label: `${MESES_SHORT[
+            new Date(dStartYear, dStartMonth - 1 + i).getMonth()
+          ]}/${String(new Date(dStartYear, dStartMonth - 1 + i).getFullYear()).slice(-2)}`,
+        }))
+      );
+      return { peak, low };
+    })(),
+    prevTotal:    prevAvailable ? prevTotalPedidos : null,
+    prevAvailable,
+  };
 
-  const revenueData = {
-    labels: monthLabels,
-    datasets: [{
+  const ticketMetrics: CardMetrics = {
+    avgGrowth: isSingleMonth ? 0 : calcAvgMonthlyGrowth(cardsData.map((d) => d.ticket_medio)),
+    ...(() => {
+      const { peak, low } = findPeakAndLow<{ value: number; label: string }>(
+        cardsData.map((d, i) => ({
+          value: d.ticket_medio,
+          label: `${MESES_SHORT[
+            new Date(dStartYear, dStartMonth - 1 + i).getMonth()
+          ]}/${String(new Date(dStartYear, dStartMonth - 1 + i).getFullYear()).slice(-2)}`,
+        }))
+      );
+      return { peak, low };
+    })(),
+    prevTotal:    prevAvailable ? prevTicketMedio : null,
+    prevAvailable,
+  };
+
+  const calcGrowthVsPrev = (current: number, prev: number) => {
+    if (!prev || prev === 0) return 0;
+    return ((current - prev) / prev) * 100;
+  };
+
+
+const revenueData = {
+  labels: compEnabled
+    ? monthLabels.map((label, index) => `${label} | ${compRevenueLabels[index] ? `\n${compRevenueLabels[index]}` : ""}`)
+    : monthLabels,
+  datasets: [
+    {
+      label: "Periodo Principal",
       data: revenueValues,
       borderColor: "#8B7CF8",
       backgroundColor: "rgba(139,124,248,0.18)",
@@ -182,157 +303,153 @@ function Dashboard() {
       pointRadius: 3,
       pointBackgroundColor: "#8B7CF8",
       borderWidth: 1,
-    }],
-  };
+    },
+    ...(compEnabled ? [{
+      label: "Periodo comparativo",
+      data: compRevenue,
+      borderColor: "#f87c7c",
+      backgroundColor: "rgba(248,124,124,0.18)",
+      fill: true,
+      tension: 0.45,
+      pointRadius: 3,
+      pointBackgroundColor: "#f87c7c",
+      borderWidth: 1,
+    }] : []),
+  ]
+};
+
 
   // Status chart
   const statusData = (kpiStatus || []) as KpiStatusItem[];
   const { labels, valores, colors } = transformarStatus(statusData);
-  const totalPedidosStatus = valores.reduce((sum, v) => sum + v, 0);
+  const totalPedidosStatus = valores.reduce((s, v) => s + v, 0);
   const porcentagensStatus = valores.map((v) =>
     totalPedidosStatus > 0 ? Number(((v / totalPedidosStatus) * 100).toFixed(2)) : 0
   );
 
   // Categoria chart
-  let categoriasLabels: string[] = [];
-  let categoriasValores: number[] = [];
-  if (kpiCategoria && kpiCategoria.length > 0) {
-    const sortedCategorias = [...kpiCategoria].sort((a, b) =>
-      a.categoria.localeCompare(b.categoria, "pt-BR")
-    );
-    categoriasLabels = sortedCategorias.map((k) => k.categoria);
-    categoriasValores = sortedCategorias.map((k) => k.total_pedidos);
-  } else {
-    const sortedFallback = [...CATEGORIAS_FALLBACK].sort((a, b) =>
-      a.localeCompare(b, "pt-BR")
-    );
-    categoriasLabels = sortedFallback;
-    categoriasValores = sortedFallback.map(() => 0);
-  }
-  const totalPedidosCategoria = categoriasValores.reduce((sum, v) => sum + v, 0);
+  const sortedCategorias = kpiCategoria.length > 0
+    ? [...kpiCategoria].sort((a, b) => a.categoria.localeCompare(b.categoria, "pt-BR"))
+    : CATEGORIAS_FALLBACK.map((c) => ({ categoria: c, total_pedidos: 0, receita_total: 0 }));
+  const categoriasLabels  = sortedCategorias.map((k) => k.categoria);
+  const categoriasValores = sortedCategorias.map((k) => k.total_pedidos);
+  const totalPedidosCategoria = categoriasValores.reduce((s, v) => s + v, 0);
   const porcentagensCategoria = categoriasValores.map((v) =>
     totalPedidosCategoria > 0 ? Number(((v / totalPedidosCategoria) * 100).toFixed(2)) : 0
   );
   const categoriasColors = categoriasLabels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
-  // Estado chart — fallback com todos os estados brasileiros zerados
-  // Mapeamento de regiões para ordenar estados por região e depois por nome
-  const REGION_GROUPS: Record<number, string[]> = {
-    0: ["Acre", "Amapá", "Amazonas", "Pará", "Rondônia", "Roraima", "Tocantins"], // Norte
-    1: ["Alagoas", "Bahia", "Ceará", "Maranhão", "Paraíba", "Pernambuco", "Piauí", "Rio Grande do Norte", "Sergipe"], // Nordeste
-    2: ["Distrito Federal", "Goiás", "Mato Grosso", "Mato Grosso do Sul"], // Centro-Oeste
-    3: ["Espírito Santo", "Minas Gerais", "Rio de Janeiro", "São Paulo"], // Sudeste
-    4: ["Paraná", "Rio Grande do Sul", "Santa Catarina"], // Sul
-  };
-
-  // build a lookup with normalized lowercase keys
-  const REGION_MAP: Record<string, number> = Object.keys(REGION_GROUPS).reduce((acc, key) => {
-    const idx = Number(key);
-    REGION_GROUPS[idx].forEach((st) => {
-      acc[st.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()] = idx;
-    });
-    return acc;
-  }, {} as Record<string, number>);
-
-  const getRegionIndex = (estadoName: string) => {
-    const norm = estadoName ? estadoName.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase() : "";
-    return REGION_MAP[norm] ?? 99;
-  };
-
-  let estadosLabels: string[] = [];
-  let estadosValores: number[] = [];
-  if (kpiEstado && kpiEstado.length > 0) {
-    const sortedEstados = [...kpiEstado].sort((a, b) => {
-      const ra = getRegionIndex(a.estado || "");
-      const rb = getRegionIndex(b.estado || "");
-      if (ra !== rb) return ra - rb;
-      return (a.estado || "").localeCompare(b.estado || "", "pt-BR");
-    });
-    estadosLabels = sortedEstados.map((k) => k.estado);
-    estadosValores = sortedEstados.map((k) => k.total_pedidos);
-  } else {
-    const sortedFallback = [...ESTADOS_FALLBACK].sort((a, b) => {
-      const ra = getRegionIndex(a);
-      const rb = getRegionIndex(b);
-      if (ra !== rb) return ra - rb;
-      return a.localeCompare(b, "pt-BR");
-    });
-    estadosLabels = sortedFallback;
-    estadosValores = sortedFallback.map(() => 0);
-  }
-  const totalPedidosEstado = estadosValores.reduce((sum, v) => sum + v, 0);
+  // Estado chart
+  const getRegionIndex = (name: string) => REGION_MAP[normalizeKey(name)] ?? 99;
+  const sortedEstados = kpiEstado.length > 0
+    ? [...kpiEstado].sort((a, b) => {
+        const ra = getRegionIndex(a.estado || "");
+        const rb = getRegionIndex(b.estado || "");
+        if (ra !== rb) return ra - rb;
+        return (a.estado || "").localeCompare(b.estado || "", "pt-BR");
+      })
+    : ESTADOS_FALLBACK.map((e) => ({ estado: e, total_pedidos: 0, receita_total: 0 }));
+  const estadosLabels  = sortedEstados.map((k) => k.estado);
+  const estadosValores = sortedEstados.map((k) => k.total_pedidos);
+  const totalPedidosEstado = estadosValores.reduce((s, v) => s + v, 0);
   const porcentagensEstado = estadosValores.map((v) =>
     totalPedidosEstado > 0 ? Number(((v / totalPedidosEstado) * 100).toFixed(2)) : 0
   );
-  // Agrupa estados da mesma região com cores semelhantes
-  const REGION_BASE_HUES = [200, 20, 90, 260, 140]; // Norte, Nordeste, Centro-Oeste, Sudeste, Sul
-  const normalizeKey = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
   const estadosColors = estadosLabels.map((label, i) => {
     const normLabel = normalizeKey(label);
-    let regionIdx = 99;
-    let idxInRegion = 0;
-    let regionCount = 1;
+    let regionIdx = 99; let idxInRegion = 0; let regionCount = 1;
     for (const [rIdx, group] of Object.entries(REGION_GROUPS)) {
-      const normalizedGroup = group.map((g) => normalizeKey(g));
-      const found = normalizedGroup.indexOf(normLabel);
-      if (found !== -1) {
-        regionIdx = Number(rIdx);
-        idxInRegion = found;
-        regionCount = normalizedGroup.length;
-        break;
-      }
+      const ng    = group.map((g) => normalizeKey(g));
+      const found = ng.indexOf(normLabel);
+      if (found !== -1) { regionIdx = Number(rIdx); idxInRegion = found; regionCount = ng.length; break; }
     }
+    if (regionIdx === 99) return `hsl(${Math.round((i * 360) / estadosLabels.length)}, 65%, 50%)`;
+    const baseHue   = REGION_BASE_HUES[regionIdx];
+    const hueOffset = Math.round((idxInRegion / Math.max(1, regionCount)) * 18) - 9;
+    const lightness = 48 + Math.round((idxInRegion / Math.max(1, regionCount)) * 6);
+    return `hsl(${(baseHue + hueOffset + 360) % 360}, 62%, ${lightness}%)`;
+  });
 
-    if (regionIdx === 99) {
-      // estado não mapeado: espalha pelo círculo de matiz
-      const hue = Math.round((i * 360) / estadosLabels.length);
-      return `hsl(${hue}, 65%, 50%)`;
-    }
+  const { valores: valoresStatusComp } = transformarStatus((kpiStatusComp || []) as KpiStatusItem[]);
+  const totalStatusComp = valoresStatusComp.reduce((s, v) => s + v, 0);
+  const porcentagensStatusComp = valoresStatusComp.map((v) =>
+    totalStatusComp > 0 ? Number(((v / totalStatusComp) * 100).toFixed(2)) : 0
+  );
 
-    const baseHue = REGION_BASE_HUES[regionIdx] ?? Math.round((i * 360) / estadosLabels.length);
-    // ligeiro deslocamento por posição no grupo para variação sutil
-    const hueOffset = Math.round((idxInRegion / Math.max(1, regionCount)) * 18) - 9; // -9..+9
-    const hue = (baseHue + hueOffset + 360) % 360;
-    const saturation = 62;
-    const lightness = 48 + Math.round((idxInRegion / Math.max(1, regionCount)) * 6); // pequenas variações
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  const totalCategoriasComp = kpiCategoriaComp.reduce((s, c) => s + c.total_pedidos, 0);
+  const porcentagensCategoriasComp = categoriasLabels.map((cat) => {
+    const match = kpiCategoriaComp.find((c) => c.categoria === cat);
+    return match && totalCategoriasComp > 0
+      ? Number(((match.total_pedidos / totalCategoriasComp) * 100).toFixed(2))
+      : 0;
+  });
+
+  const totalEstadosComp = kpiEstadoComp.reduce((s, e) => s + e.total_pedidos, 0);
+  const porcentagensEstadoComp = estadosLabels.map((est) => {
+    const match = kpiEstadoComp.find((e) => e.estado === est);
+    return match && totalEstadosComp > 0
+      ? Number(((match.total_pedidos / totalEstadosComp) * 100).toFixed(2))
+      : 0;
   });
 
   const activeConfig = {
-    status:    { labels, porcentagens: porcentagensStatus, colors, legend: labels },
-    categoria: { labels: categoriasLabels, porcentagens: porcentagensCategoria, colors: categoriasColors, legend: categoriasLabels },
-    estado:    { labels: estadosLabels,    porcentagens: porcentagensEstado,    colors: estadosColors,    legend: estadosLabels    },
+    status:    { labels, porcentagens: porcentagensStatus, colors, legend: labels, compPorcentagens: porcentagensStatusComp },
+    categoria: { labels: categoriasLabels, porcentagens: porcentagensCategoria, colors: categoriasColors, legend: categoriasLabels, compPorcentagens: porcentagensCategoriasComp },
+    estado:    { labels: estadosLabels,    porcentagens: porcentagensEstado,    colors: estadosColors,    legend: estadosLabels,    compPorcentagens: porcentagensEstadoComp },
   }[chartView];
 
   const dynamicBarData = {
     labels: activeConfig.labels,
-    datasets: [{
-      data: activeConfig.porcentagens,
-      backgroundColor: activeConfig.colors,
-      borderColor: "#ffffff",
-      borderWidth: 1,
-      borderRadius: { topLeft: 4, topRight: 4 },
-      minBarLength: 5,
-    }],
+    datasets: [
+      {
+        label: "Período atual",
+        data: activeConfig.porcentagens,
+        backgroundColor: activeConfig.colors,
+        borderColor: "#ffffff", borderWidth: 1,
+        borderRadius: { topLeft: 4, topRight: 4 }, minBarLength: 5,
+      },
+      ...(compEnabled ? [{
+        label: "Comparativo",
+        data: activeConfig.compPorcentagens,
+        backgroundColor: activeConfig.colors.map(toCompColor),
+        borderColor: "#ffffff", borderWidth: 1,
+        borderRadius: { topLeft: 4, topRight: 4 }, minBarLength: 5,
+      }] : []),
+    ],
   };
 
   const pluginPorcentagemNoTopo = {
     id: "porcentagemNoTopo",
     afterDatasetsDraw(chart: any) {
       const { ctx } = chart;
-      chart.data.datasets.forEach((dataset: any, i: number) => {
-        const meta = chart.getDatasetMeta(i);
-        meta.data.forEach((bar: any, index: number) => {
-          const valor = dataset.data[index];
-          ctx.fillStyle = "#4B5563";
-          ctx.font = "bold 12px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "bottom";
-          ctx.fillText(
-            Number(valor).toFixed(2).replace(".", ",") + "%",
-            bar.x, bar.y - 5
-          );
+      chart.getDatasetMeta(0).data.forEach((bar: any, index: number) => {
+        const valor = chart.data.datasets[0].data[index];
+        ctx.fillStyle = "#4B5563"; ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+        ctx.fillText(Number(valor).toFixed(2).replace(".", ",") + "%", bar.x, bar.y - 5);
+      });
+      if (compEnabled && chart.getDatasetMeta(1)?.data) {
+        chart.getDatasetMeta(1).data.forEach((bar: any, index: number) => {
+          const valor = chart.data.datasets[1].data[index];
+          ctx.fillStyle = "#9CA3AF"; ctx.font = "11px sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+          ctx.fillText(Number(valor).toFixed(2).replace(".", ",") + "%", bar.x, bar.y - 5);
         });
+      }
+    },
+  };
+
+  const pluginSyncDistArea = {
+    id: "syncDistArea",
+    afterLayout(chart: any) {
+      if (!chart.chartArea) return;
+      const left = chart.chartArea.left;
+      const right = chart.width - chart.chartArea.right;
+      setDistChartArea((prev) => {
+        if (prev && Math.abs(prev.left - left) < 0.5 && Math.abs(prev.right - right) < 0.5) {
+          return prev;
+        }
+        return { left, right };
       });
     },
   };
@@ -341,79 +458,120 @@ function Dashboard() {
     id: "textoHorizontalEstado",
     afterDatasetsDraw(chart: any) {
       const { ctx } = chart;
-      const meta = chart.getDatasetMeta(0);
-      meta.data.forEach((bar: any, index: number) => {
-        const valor = chart.data.datasets[0].data[index];
-        ctx.fillStyle = "#4B5563";
-        ctx.font = "bold 11px sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(
-          `${Number(valor).toFixed(2).replace(".", ",")}%`,
-          bar.x + 6,
-          bar.y
-        );
+      chart.getDatasetMeta(0).data.forEach((bar: any, index: number) => {
+        const valor = chart.data.datasets[0].data[index] as number;
+        const mainText = `${Number(valor).toFixed(2).replace(".", ",")}%`;
+        ctx.fillStyle = "#4B5563"; ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.fillText(mainText, bar.x + 6, bar.y);
+        if (compEnabled && porcentagensEstadoComp[index] !== undefined) {
+          const compVal = porcentagensEstadoComp[index];
+          const delta = Number(valor) - compVal;
+          const rounded = parseFloat(delta.toFixed(1));
+          const mainWidth = ctx.measureText(mainText).width;
+          const sign = rounded > 0 ? "+" : "";
+          const deltaText = rounded === 0
+            ? " (= igual)"
+            : ` (${sign}${rounded.toFixed(1).replace(".", ",")}pp)`;
+          ctx.fillStyle = rounded > 0 ? "#16a34a" : rounded < 0 ? "#dc2626" : "#9CA3AF";
+          ctx.font = "10px sans-serif";
+          ctx.fillText(deltaText, bar.x + 6 + mainWidth, bar.y);
+        }
       });
     },
   };
 
   // Satisfação
-  const mesAtual = reviewData;
-  const satisfacaoValores    = [mesAtual?.positiva ?? 0, mesAtual?.neutra ?? 0, mesAtual?.ruim ?? 0];
-  const satisfacaoCores      = ["#5CA860", "#8A8D93", "#C64C4B"];
-  const positiva = mesAtual?.positiva ?? 0
-  const negativa = mesAtual?.ruim ?? 0
-  const neutra = mesAtual?.neutra ?? 0
-  const vazio = (positiva + neutra + negativa) === 0
+  const positiva = reviewData?.positiva ?? 0;
+  const negativa  = reviewData?.ruim    ?? 0;
+  const neutra    = reviewData?.neutra  ?? 0;
+  const vazio     = positiva + neutra + negativa === 0;
+
+  const positivaComp = reviewComp?.positiva ?? 0;
+  const negativaComp = reviewComp?.ruim     ?? 0;
+  const neutraComp   = reviewComp?.neutra   ?? 0;
+  const vazioComp    = positivaComp + neutraComp + negativaComp === 0;
+
   const satisfacaoData = {
     labels: ["Positivo", "Neutro", "Negativo"],
     datasets: [
-    {
-      data: vazio ? [0.75, 0.75, 0.75] : satisfacaoValores,
-      backgroundColor: satisfacaoCores,
-      barThickness: 45,
-    },
+      {
+        label: "Período atual",
+        data: vazio ? [0.75, 0.75, 0.75] : [positiva, neutra, negativa],
+        backgroundColor: ["#5CA860", "#8A8D93", "#C64C4B"],
+        barThickness: compEnabled ? 22 : 45,
+      },
+      ...(compEnabled ? [{
+        label: "Comparativo",
+        data: vazioComp ? [0.75, 0.75, 0.75] : [positivaComp, neutraComp, negativaComp],
+        backgroundColor: ["#5CA86088", "#8A8D9388", "#C64C4B88"],
+        barThickness: 22,
+      }] : []),
     ],
   };
 
   const pluginTextoHorizontal = {
     id: "textoHorizontal",
     afterDatasetsDraw(chart: any) {
-
       const { ctx } = chart;
-      const meta = chart.getDatasetMeta(0);
-      meta.data.forEach((bar: any, index: number) => {
+      chart.getDatasetMeta(0).data.forEach((bar: any, index: number) => {
         const valor = chart.data.datasets[0].data[index];
-        ctx.fillStyle = "#4B5563";
-        ctx.font = "bold 12px sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        if (vazio){
-          ctx.fillText(`0%`, bar.x + 8, bar.y);
-          return
-        }
-        ctx.fillText(`${valor}%`, bar.x + 8, bar.y);
+        ctx.fillStyle = "#4B5563"; ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.fillText(vazio ? "0%" : `${valor}%`, bar.x + 8, bar.y);
       });
+      if (compEnabled) {
+        chart.getDatasetMeta(1).data.forEach((bar: any, index: number) => {
+          const valor = chart.data.datasets[1].data[index];
+          ctx.fillStyle = "#9CA3AF"; ctx.font = "12px sans-serif";
+          ctx.textAlign = "left"; ctx.textBaseline = "middle";
+          ctx.fillText(vazioComp ? "0%" : `${valor}%`, bar.x + 8, bar.y);
+        });
+      }
     },
   };
 
   // Entrega
-  const mesAtualTicket  = ticketData;
-  const totalEntregas   = (mesAtualTicket?.entrega_no_prazo ?? 0) + (mesAtualTicket?.entrega_atrasada ?? 0);
-  const noPrazoPercent  = totalEntregas > 0 ? Math.round(((mesAtualTicket?.entrega_no_prazo  ?? 0) / totalEntregas) * 100) : 0;
-  const atrasadoPercent = totalEntregas > 0 ? Math.round(((mesAtualTicket?.entrega_atrasada ?? 0) / totalEntregas) * 100) : 0;
-  const noPrazo  = mesAtualTicket?.entrega_no_prazo  ?? 0;
-  const atrasado = mesAtualTicket?.entrega_atrasada ?? 0;
-  const semDados = noPrazo + atrasado === 0;
+  const noPrazo         = ticketData?.entrega_no_prazo  ?? 0;
+  const atrasado        = ticketData?.entrega_atrasada  ?? 0;
+  const totalEntregas   = noPrazo + atrasado;
+  const noPrazoPercent  = totalEntregas > 0 ? Number((noPrazo  / totalEntregas) * 100).toFixed(2).replace(".", ",") : "0";
+  const atrasadoPercent = totalEntregas > 0 ? Number((atrasado / totalEntregas) * 100).toFixed(2).replace(".", ",") : "0";
+  const semDados        = totalEntregas === 0;
+
+  const noPrazoComp     = ticketComp?.entrega_no_prazo ?? 0;
+  const atrasadoComp    = ticketComp?.entrega_atrasada ?? 0;
+  const totalEntregasComp = noPrazoComp + atrasadoComp;
+  const noPrazoPercentComp  = totalEntregasComp > 0 ? Number((noPrazoComp  / totalEntregasComp) * 100).toFixed(2).replace(".", ",") : "0";
+  const atrasadoPercentComp = totalEntregasComp > 0 ? Number((atrasadoComp / totalEntregasComp) * 100).toFixed(2).replace(".", ",") : "0";
+  const semDadosComp        = totalEntregasComp === 0;
+
+  // Mostra delta sempre que pelo menos um dos lados tem dados.
+  // Quando o atual está zerado, a variação aparece como "-Xpp" (caiu para 0).
+  // Quando o comparativo está zerado, a variação aparece como "+Xpp" (subiu de 0).
+  const noPrazoMainPct  = totalEntregas     > 0 ? (noPrazo  / totalEntregas)     * 100 : 0;
+  const noPrazoCompPct  = totalEntregasComp > 0 ? (noPrazoComp  / totalEntregasComp) * 100 : 0;
+  const atrasadoMainPct = totalEntregas     > 0 ? (atrasado / totalEntregas)     * 100 : 0;
+  const atrasadoCompPct = totalEntregasComp > 0 ? (atrasadoComp / totalEntregasComp) * 100 : 0;
+  const temAlgumDado    = totalEntregas > 0 || totalEntregasComp > 0;
+  const noPrazoDelta    = temAlgumDado ? noPrazoMainPct  - noPrazoCompPct  : null;
+  const atrasadoDelta   = temAlgumDado ? atrasadoMainPct - atrasadoCompPct : null;
 
   const entregaData = {
     labels: ["No prazo", "Atrasado"],
     datasets: [{
       data: semDados ? [1] : [noPrazo, atrasado],
-      backgroundColor: semDados ? ["#95959543", "#95959543"] : ["#5CA860", "#F47B20"],
-      borderColor: "#ffffff",
-      borderWidth: 2,
-      cutout: "70%",
+      backgroundColor: semDados ? ["#95959543","#95959543"] : ["#5CA860","#F47B20"],
+      borderColor: "#ffffff", borderWidth: 2, cutout: "70%",
+    }],
+  };
+
+  const entregaDataComp = {
+    labels: ["No prazo", "Atrasado"],
+    datasets: [{
+      data: semDadosComp ? [1] : [noPrazoComp, atrasadoComp],
+      backgroundColor: semDadosComp ? ["#95959543","#95959543"] : ["#5CA860","#F47B20"],
+      borderColor: "#ffffff", borderWidth: 2, cutout: "70%",
     }],
   };
 
@@ -422,21 +580,130 @@ function Dashboard() {
     beforeDraw(chart: any) {
       const { ctx, width, height } = chart;
       ctx.save();
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#2B2B2B";
-      ctx.font = "bold 24px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#2B2B2B"; ctx.font = "bold 24px sans-serif";
       ctx.fillText(new Intl.NumberFormat("pt-BR").format(totalEntregas), width / 2, height / 2 - 12);
-      ctx.fillStyle = "#2B2B2B";
       ctx.font = "12px sans-serif";
       ctx.fillText("entregas", width / 2, height / 2 + 16);
       ctx.restore();
     },
   };
 
-  const cardStyle = "bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm";
+  const pluginTextoCentralRoscaComp = {
+    id: "textoCentralRoscaComp",
+    beforeDraw(chart: any) {
+      const { ctx, width, height } = chart;
+      ctx.save();
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#2B2B2B"; ctx.font = "bold 24px sans-serif";
+      ctx.fillText(new Intl.NumberFormat("pt-BR").format(totalEntregasComp), width / 2, height / 2 - 12);
+      ctx.font = "12px sans-serif";
+      ctx.fillText("entregas", width / 2, height / 2 + 16);
+      ctx.restore();
+    },
+  };
 
-  // Altura dinâmica do gráfico de estado baseada na quantidade de itens
+useEffect(() => {
+  if (!compEnabled) {
+    setCompStartMonth(dStartMonth);
+    setCompStartYear(dStartYear - 1);
+    setCompEndMonth(dEndMonth);
+    setCompEndYear(dEndYear - 1);
+  }
+}, [dStartMonth, dStartYear, dEndMonth, dEndYear, compEnabled]);
+
+  // Componente de card com as 3 métricas
+  const KpiCard = ({
+    label, value, metrics, currentTotal, formatValue, detailed,
+  }: {
+    label: string;
+    value: string;
+    metrics: CardMetrics;
+    currentTotal: number;
+    formatValue: (v: number) => string;
+    detailed: boolean;
+  }) => (
+    <div className={cardStyle}>
+      <p className="text-sm text-[#333] font-medium mb-3">{label}</p>
+      <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">{value}</h2>
+
+      {detailed && (
+        <div className="flex flex-col gap-2">
+
+          {/* Crescimento mensal médio — indicado como não aplicável para 1 mês */}
+          {isSingleMonth ? (
+            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
+              <Minus size={14} />
+              <span>Crescimento mensal não aplicável <span className="text-gray-400">(período de 1 mês)</span></span>
+            </div>
+          ) : (
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${metrics.avgGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
+              {metrics.avgGrowth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <span>{Math.abs(metrics.avgGrowth).toFixed(1)}% ao mês em média</span>
+            </div>
+          )}
+
+          {/* Pico/Baixa — colapsa em "valor único" quando é 1 mês */}
+          {isSingleMonth && metrics.peak ? (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <div className="w-5 h-5 rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0">
+                <Calendar size={11} className="text-gray-400" />
+              </div>
+              <span>Valor de {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
+            </div>
+          ) : metrics.peak && metrics.low && metrics.peak.label !== metrics.low.label ? (
+            <div className="flex flex-col gap-1 text-xs text-gray-500">
+              <span className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full border border-green-300 bg-green-50 flex items-center justify-center shrink-0">
+                  <ArrowUp size={11} className="text-green-500" />
+                </div>
+                <span>Pico {metrics.peak.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.peak.value)}</span></span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full border border-red-300 bg-red-50 flex items-center justify-center shrink-0">
+                  <ArrowDown size={11} className="text-red-400" />
+                </div>
+                <span>Baixa {metrics.low.label} · <span className="font-semibold text-gray-700">{formatValue(metrics.low.value)}</span></span>
+              </span>
+            </div>
+          ) : null}
+
+          {/* Variação vs período anterior / comparado */}
+          {metrics.prevAvailable && metrics.prevTotal !== null ? (
+            (() => {
+              const growth = calcGrowthVsPrev(currentTotal, metrics.prevTotal);
+              return (
+                <div className={`flex items-center gap-1.5 text-xs font-medium ${growth >= 0 ? "text-green-600" : "text-red-500"}`}>
+                  {growth >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    {compEnabled ? (
+                      <span>
+                        {Math.abs(growth).toFixed(1)}% vs período comparado ({prevPeriodLabel})
+                      </span>
+                    ) : (
+                      <span>
+                        {Math.abs(growth).toFixed(1)}% vs período equivalente ({prevPeriodLabel})
+                      </span>
+                    )}
+                </div>
+              );
+            })()
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <AlertCircle size={13} className="shrink-0" />
+              <span>
+                {compEnabled
+                  ? "Sem dados no período de comparação"
+                  : "Sem dados para período equivalente anterior"}
+              </span>
+            </div>
+          )}
+
+        </div>
+      )}
+    </div>
+  );
+
+  const cardStyle = "bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm";
   const estadoChartHeight = Math.max(400, estadosLabels.length * 28);
 
   return (
@@ -444,40 +711,42 @@ function Dashboard() {
       <div className="max-w-7xl mx-auto px-6">
 
         {/* HEADER */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-[#2B2B2B]">Dashboard Mensal</h1>
-            <p className="text-sm text-gray-500 mt-1">CRM 360 visão geral mensal</p>
+            <h1 className="text-4xl font-black tracking-tight text-[#2B2B2B]">Dashboard</h1>
+             { !compEnabled ? (<p className="text-blue-600 font-semibold mt-1">Principal: {periodoLabel} </p>) : (<><p className="text-blue-600 font-semibold mt-1">Período principal: {periodoLabel}</p> <p className="text-purple-600 font-semibold mt-1">Comparação: {prevPeriodLabel} </p></>)  }
+            <p className="text-sm text-gray-500 mt-0.5">CRM 360 visão geral do período</p>
           </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
-            >
-              {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m, i) => (
-                <option key={i + 1} value={i + 1}>{m}</option>
-              ))}
-            </select>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B7CF8]"
-            >
-              {yearOptions.map((year) => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
+          <PeriodPicker
+            startMonth={startMonth} startYear={startYear}
+            endMonth={endMonth}     endYear={endYear}
+            onStartChange={(m, y) => { setStartMonth(m); setStartYear(y); }}
+            onEndChange={(m, y)   => { setEndMonth(m);   setEndYear(y);   }}
+
+            compEnabled={compEnabled}
+            onCompToggle={setCompEnabled}
+            compStartMonth={compStartMonth} compStartYear={compStartYear}
+            compEndMonth={compEndMonth}     compEndYear={compEndYear}
+            onCompStartChange={(m, y) => { setCompStartMonth(m); setCompStartYear(y); }}
+            onCompEndChange={(m, y)   => { setCompEndMonth(m);   setCompEndYear(y);   }}
+            minYear={2023}
+            maxYear={currentYear}
+          />
         </div>
 
-        {loading ? (
+        {!periodoValido ? (
+          <div className="p-6 text-red-500 bg-white rounded-2xl border-2 border-red-200 text-sm">
+            Selecione um período válido para visualizar os dados.
+          </div>
+        ) : loading ? (
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {Array(3).fill(null).map((_, i) => (
                 <div key={i} className="bg-white border-2 border-black/10 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
                   <div className="h-4 w-2/5 bg-gray-200 rounded animate-pulse" />
                   <div className="h-8 w-3/5 bg-gray-300 rounded animate-pulse" />
+                  <div className="h-3 w-2/5 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 w-3/5 bg-gray-200 rounded animate-pulse" />
                   <div className="h-3 w-2/5 bg-gray-200 rounded animate-pulse" />
                 </div>
               ))}
@@ -506,52 +775,101 @@ function Dashboard() {
         ) : (
           <>
             {/* KPI CARDS */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold text-gray-500">Métricas principais</span>
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full p-1.5">
+                {([["resumo", "Resumo"], ["detalhado", "Cards detalhados"]] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setShowDetailedCards(key === "detalhado")}
+                    className={[
+                      "rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150 cursor-pointer",
+                      (key === "detalhado") === showDetailedCards
+                        ? "bg-blue-500 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-600",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className={cardStyle}>
-                <p className="text-sm text-[#333] font-medium mb-4">Receita mensal total</p>
-                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(lastMonth.receita_total)}
-                </h2>
-                <div className={`flex items-center gap-1 text-xs font-medium ${revenueVariation >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {revenueVariation >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  <span>{Math.abs(revenueVariation).toFixed(1)}% vs. mês anterior</span>
-                </div>
-              </div>
-              <div className={cardStyle}>
-                <p className="text-sm text-[#333] font-medium mb-4">Total de pedidos mensal</p>
-                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
-                  {new Intl.NumberFormat("pt-BR").format(lastMonth.total_pedidos)}
-                </h2>
-                <div className={`flex items-center gap-1 text-xs font-medium ${ordersVariation >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {ordersVariation >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  <span>{Math.abs(ordersVariation).toFixed(1)}% vs. mês anterior</span>
-                </div>
-              </div>
-              <div className={cardStyle}>
-                <p className="text-sm text-[#333] font-medium mb-4">Ticket médio</p>
-                <h2 className="text-3xl font-black text-[#2E2E2E] mb-4">
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(lastMonth.ticket_medio)}
-                </h2>
-                <div className={`flex items-center gap-1 text-xs font-medium ${ticketVariation >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {ticketVariation >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  <span>{Math.abs(ticketVariation).toFixed(1)}% vs. mês anterior</span>
-                </div>
-              </div>
+              <KpiCard
+                label="Receita total do período principal"
+                value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalReceita)}
+                metrics={receitaMetrics}
+                currentTotal={totalReceita}
+                formatValue={(v) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)}
+                detailed={showDetailedCards}
+              />
+              <KpiCard
+                label="Total de pedidos do período principal"
+                value={new Intl.NumberFormat("pt-BR").format(totalPedidos)}
+                metrics={pedidosMetrics}
+                currentTotal={totalPedidos}
+                formatValue={(v) => new Intl.NumberFormat("pt-BR").format(v)}
+                detailed={showDetailedCards}
+              />
+              <KpiCard
+                label="Ticket médio do período principal"
+                value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ticketMedio)}
+                metrics={ticketMetrics}
+                currentTotal={ticketMedio}
+                formatValue={(v) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)}
+                detailed={showDetailedCards}
+              />
             </div>
 
             {/* LINE CHART */}
             <div className={`${cardStyle} mb-6`}>
-              <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Gráfico de receita mensal</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xl font-bold text-[#2B2B2B]">Receita ao longo do período</h2>
+                {isQuarterView && (
+                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    Agrupado por trimestre — período entre 13 e 36 meses
+                  </span>
+                )}
+                {isYearView && (
+                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    Agrupado por ano — período acima de 36 meses
+                  </span>
+                )}
+              </div>
+              {isSingleMonth && (
+                <div className="flex items-start gap-2 mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
+                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                  <span>
+                    Como você selecionou apenas <span className="font-semibold">1 mês</span>, o gráfico inclui também o
+                    mês anterior para que a tendência seja visível.
+                    {compEnabled && " O mesmo vale para o período de comparação."}
+                  </span>
+                </div>
+              )}
+              {!isSingleMonth && <div className="mb-4" />}
               <div className="h-[350px]">
                 <Line
                   data={revenueData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                            legend: {
+                              display: compEnabled,
+                              position: "top",
+                              labels: {
+                                color: "black",
+                                boxWidth: 12,
+                                padding: 16,
+                                font: {
+                                  size: 12,
+                                },
+                              },
+                            },
+                          },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: true, grid: { color: "#F3F4F6" }, border: { display: false }, suggestedMax: 35000000 },
+                      y: { beginAtZero: true, grid: { color: "#F3F4F6" }, border: { display: false } },
                     },
                   }}
                 />
@@ -568,9 +886,7 @@ function Dashboard() {
                       key={view}
                       onClick={() => setChartView(view)}
                       className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        chartView === view
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        chartView === view ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
                       {view === "status" ? "Status" : view === "categoria" ? "Categoria" : "Estado"}
@@ -580,104 +896,87 @@ function Dashboard() {
               </div>
 
               {chartView === "estado" ? (
+                <>
                 <div style={{ height: `${estadoChartHeight}px` }}>
                   <Bar
-                    key={`estado-${debouncedYear}-${debouncedMonth}`}
+                    key={`estado-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}-${compEnabled}-${compStartYear}-${compStartMonth}`}
                     data={{
                       labels: activeConfig.labels,
                       datasets: [{
                         data: activeConfig.porcentagens,
                         backgroundColor: activeConfig.colors,
-                        borderColor: "#ffffff",
-                        borderWidth: 1,
+                        borderColor: "#ffffff", borderWidth: 1,
                         borderRadius: { topLeft: 4, topRight: 4 },
-                        minBarLength: 8,
-                        barThickness: 14,
+                        minBarLength: 8, barThickness: 14,
                       }],
                     }}
                     plugins={[pluginTextoHorizontalEstado]}
                     options={{
-                      indexAxis: "y",
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      layout: { padding: { right: 60 } },
+                      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                      layout: { padding: { right: compEnabled ? 130 : 60 } },
                       plugins: {
                         legend: { display: false },
-                        tooltip: {
-                          callbacks: {
-                            label: (context) => {
-                              const v = Number(context.raw).toFixed(2).replace(".", ",");
-                              return ` ${v}% dos pedidos`;
-                            },
-                          },
-                        },
+                        tooltip: { callbacks: { label: (ctx) => ` ${Number(ctx.raw).toFixed(2).replace(".", ",")}% dos pedidos` } },
                       },
                       scales: {
-                        x: {
-                          min: 0,
-                          max: 100,
-                          ticks: { callback: (value) => `${value}%`, stepSize: 20 },
-                          grid: { color: "#F3F4F6" },
-                          border: { display: false },
-                        },
-                        y: {
-                          grid: { display: false },
-                          border: { display: true, color: "#9CA3AF" },
-                          ticks: { font: { size: 11 } },
-                        },
+                        x: { min: 0, max: 100, ticks: { callback: (v) => `${v}%`, stepSize: 20 }, grid: { color: "#F3F4F6" }, border: { display: false } },
+                        y: { grid: { display: false }, border: { display: true, color: "#9CA3AF" }, ticks: { font: { size: 11 } } },
                       },
                     }}
                   />
                 </div>
+                {compEnabled && (
+                  <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 flex-wrap">
+                    <span className="font-medium text-gray-600">Variação vs comparativo:</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-600" /> Cresceu</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" /> Reduziu</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-gray-400" /> Sem variação</span>
+                    <span className="text-gray-400 ml-1">· pp = pontos percentuais</span>
+                  </div>
+                )}
+                </>
               ) : (
                 <>
-                  <div className="h-[300px]">
+                  <div className={compEnabled ? "h-[340px]" : "h-[300px]"}>
                     <Bar
-                      key={`${chartView}-${debouncedYear}-${debouncedMonth}`}
+                      key={`${chartView}-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}-${compEnabled}-${compStartYear}-${compStartMonth}`}
                       data={dynamicBarData}
-                      plugins={[pluginPorcentagemNoTopo]}
+                      plugins={[pluginPorcentagemNoTopo, pluginSyncDistArea]}
                       options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         layout: { padding: { top: 20 } },
                         plugins: {
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const v = Number(context.raw).toFixed(2).replace(".", ",");
-                                return ` ${v}% dos pedidos`;
-                              },
-                            },
+                          legend: {
+                            display: false,
+                            labels: { usePointStyle: true, pointStyle: "rect" as const, boxWidth: 12, font: { size: 11 }, color: "#4B5563" },
                           },
+                          tooltip: { callbacks: { label: (ctx) => ` ${Number(ctx.raw).toFixed(2).replace(".", ",")}% dos pedidos` } },
                         },
                         scales: {
                           x: { display: false },
                           y: {
-                            display: false,
+                            display: true,
                             min: 0,
                             max: 100,
-                            grid: { display: false },
+                            ticks: { callback: (v) => `${v}%`, stepSize: 20, font: { size: 11 }, color: "#6B7280" },
+                            grid: { color: "#F3F4F6" },
+                            border: { display: false },
                           },
                         },
                       }}
                     />
                   </div>
-
-                  {/* Legenda alinhada com as barras */}
-                  <div className="flex mt-4 border-t border-gray-100 pt-4">
+                  <div
+                    className="flex mt-4 border-t border-gray-100 pt-4"
+                    style={{
+                      paddingLeft:  distChartArea?.left  ?? 0,
+                      paddingRight: distChartArea?.right ?? 0,
+                    }}
+                  >
                     {activeConfig.legend.map((label, i) => (
-                      <div
-                        key={label}
-                        className="flex-1 flex flex-col items-center gap-1 font-medium text-gray-700"
-                      >
-                        {chartView === "status" ? (
-                          getStatusIcon(label)
-                        ) : (
-                          <span
-                            className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: activeConfig.colors[i] }}
-                          />
+                      <div key={label} className="flex-1 flex flex-col items-center gap-1 font-medium text-gray-700">
+                        {chartView === "status" ? getStatusIcon(label) : (
+                          <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: activeConfig.colors[i] }} />
                         )}
                         <span className="text-xs text-center leading-tight">
                           {chartView === "status" ? getStatusLabel(label) : label}
@@ -687,66 +986,154 @@ function Dashboard() {
                   </div>
                 </>
               )}
+              <div className="flex item-end justify-end">
+            {compEnabled && chartView != "estado" && (
+                <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span>As cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                  </div>
+                </div>
+              )}
+              </div>
             </div>
 
             {/* BOTTOM CHARTS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={cardStyle}>
-                <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Taxa de satisfação</h2>
-                <div className="h-[300px]">
+                <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Taxa de satisfação dos produtos</h2>
+                <div className={compEnabled ? "h-[340px]" : "h-[300px]"}>
                   <Bar
+                    key={`satisfacao-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}-${compEnabled}-${compStartYear}-${compStartMonth}`}
                     data={satisfacaoData}
                     plugins={[pluginTextoHorizontal]}
                     options={{
-                      indexAxis: "y",
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false,
+                          labels: { usePointStyle: true, pointStyle: "rect" as const, boxWidth: 12, font: { size: 11 }, color: "#4B5563" },
+                        },
+                        tooltip: { enabled: false },
+                      },
                       scales: {
-                        x: {
-                          stacked: true,
-                          position: "top",
-                          min: 0,
-                          max: 100,
-                          ticks: { callback: (value) => `${value}%`, stepSize: 20 },
-                          grid: { color: "#F3F4F6" },
-                          border: { display: false },
-                        },
-                        y: {
-                          stacked: true,
-                          grid: { display: false },
-                          border: { display: true, color: "#9CA3AF" },
-                        },
+                        x: { position: "top", min: 0, max: 100, ticks: { callback: (v) => `${v}%`, stepSize: 20 }, grid: { color: "#F3F4F6" }, border: { display: false } },
+                        y: { grid: { display: false }, border: { display: true, color: "#9CA3AF" } },
                       },
                     }}
                   />
-                </div>
               </div>
 
-              <div className={cardStyle}>
+            {compEnabled && (
+                              <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  <span>As cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                                </div>
+                              </div>
+                            )}
+              </div>
+              <div className={`${cardStyle} flex flex-col`}>
                 <h2 className="text-xl font-bold text-[#2B2B2B] mb-6">Indicador de entrega</h2>
-                <div className="h-[250px]">
-                  <Doughnut
-                    key={`entrega-chart-${debouncedYear}-${debouncedMonth}-${totalEntregas}`}
-                    data={entregaData}
-                    plugins={[pluginTextoCentralRosca]}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    }}
-                  />
-                </div>
-                <div className="flex justify-around items-center mt-4 border-t border-gray-100 pt-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="text-[#5CA860]" size={20} />
-                    <span className="text-base font-semibold text-gray-700">No prazo {noPrazoPercent}%</span>
+
+                {compEnabled ? (
+                  <div className="flex-1 flex items-center justify-center gap-4">
+                    {/* Doughnut — Período atual */}
+                    <div className="flex-1 flex flex-col items-center">
+                      <span className="text-xs font-semibold text-blue-600 mb-2">Período principal</span>
+                      <div className="h-[190px] w-full">
+                        <Doughnut
+                          key={`entrega-atual-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}`}
+                          data={entregaData}
+                          plugins={[pluginTextoCentralRosca]}
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }}
+                        />
+                      </div>
+                      {/* Delta fica aqui: atual vs comparativo */}
+                      <div className="flex flex-col items-center gap-1.5 mt-3 text-xs text-gray-600">
+                        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#5CA860] flex-shrink-0" />
+                          <span className="font-medium">No prazo {noPrazoPercent}%</span>
+                          {noPrazoDelta !== null && (
+                            <span className={`font-semibold ${noPrazoDelta >= 0 ? "text-green-600" : "text-red-500"}`}>
+                              ({noPrazoDelta >= 0 ? "+" : ""}{noPrazoDelta.toFixed(1).replace(".", ",")}pp)
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#F47B20] flex-shrink-0" />
+                          <span className="font-medium">Atrasado {atrasadoPercent}%</span>
+                          {atrasadoDelta !== null && (
+                            <span className={`font-semibold ${atrasadoDelta <= 0 ? "text-green-600" : "text-red-500"}`}>
+                              ({atrasadoDelta >= 0 ? "+" : ""}{atrasadoDelta.toFixed(1).replace(".", ",")}pp)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Divisor */}
+                    <div className="w-px bg-gray-100 self-stretch" />
+
+                    {/* Doughnut — Comparativo (só valores, sem delta) */}
+                    <div className="flex-1 flex flex-col items-center">
+                      <span className="text-xs font-semibold text-purple-600 mb-2">Comparativo</span>
+                      <div className="h-[190px] w-full">
+                        <Doughnut
+                          key={`entrega-comp-${compStartYear}-${compStartMonth}-${compEndYear}-${compEndMonth}`}
+                          data={entregaDataComp}
+                          plugins={[pluginTextoCentralRoscaComp]}
+                          options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }}
+                        />
+                      </div>
+                      <div className="flex flex-col items-center gap-1.5 mt-3 text-xs text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#5CA860] flex-shrink-0" />
+                          <span className="font-medium">No prazo {noPrazoPercentComp}%</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#F47B20] flex-shrink-0" />
+                          <span className="font-medium">Atrasado {atrasadoPercentComp}%</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="text-[#F47B20]" size={20} />
-                    <span className="text-base font-semibold text-gray-700">Atrasado {atrasadoPercent}%</span>
+                ) : (
+                  <div className="flex-1 flex flex-col justify-center">
+                    <div className="h-[250px]">
+                      <Doughnut
+                        key={`entrega-${dStartYear}-${dStartMonth}-${dEndYear}-${dEndMonth}-${totalEntregas}`}
+                        data={entregaData}
+                        plugins={[pluginTextoCentralRosca]}
+                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }}
+                      />
+                    </div>
+                    <div className="flex justify-around items-center mt-4 border-t border-gray-100 pt-4">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="text-[#5CA860]" size={20} />
+                        <span className="text-base font-semibold text-gray-700">No prazo {noPrazoPercent}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="text-[#F47B20]" size={20} />
+                        <span className="text-base font-semibold text-gray-700">Atrasado {atrasadoPercent}%</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+                {compEnabled && (
+                  <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span>O delta ao lado do <span className="font-semibold text-blue-600">Período atual</span> mostra a variação em relação ao <span className="font-semibold text-purple-500">Comparativo</span>.</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                      <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-600" /> Melhorou</span>
+                      <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" /> Piorou</span>
+                      <span className="text-gray-400">· pp = pontos percentuais</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </>
