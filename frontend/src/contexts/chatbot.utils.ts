@@ -14,7 +14,7 @@ export const DEFAULT_SUGGESTIONS = [
 export const PAGE_SUGGESTIONS: Record<string, string[]> = {
   dashboard: [
     "Qual o mês com maior receita total?",
-    "Quantos % das vendas cada região representa?",
+    "Qual o estado com mais vendas totais?",
     "Qual o ano tem mais entregas no prazo?",
     "Qual categoria tem mais pedidos?",
   ],

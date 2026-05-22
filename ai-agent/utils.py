@@ -16,9 +16,10 @@ def get_tabelas_validas():
 def extrair_tabelas(sql: str) -> set[str]:
     try:
         tree = parse_one(sql)
-        return {
-            table.name for table in tree.find_all(exp.Table)
-        }
+        # Nomes de CTEs (WITH ... AS) não são tabelas reais — não devem entrar na validação
+        cte_names = {cte.alias for cte in tree.find_all(exp.CTE)}
+        tabelas = {table.name for table in tree.find_all(exp.Table)}
+        return tabelas - cte_names
     except Exception as e:
         raise ValueError(f"SQL inválido: {e}")
 

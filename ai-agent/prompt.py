@@ -71,6 +71,10 @@ Tabela kpi_por_categoria: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER)
   categoria (TEXT), receita_total (REAL), ticket_medio (REAL),
   total_pedidos (INTEGER), total_clientes_unicos (INTEGER)
   -- anos disponíveis: 2023, 2024, 2025, 2026
+  -- ATENÇÃO: ticket_medio aqui é POR CATEGORIA individual, não o ticket médio geral do período.
+  -- Para ticket médio GERAL (todos as categorias somadas), SEMPRE calcule:
+  --   SUM(receita_total) / SUM(total_pedidos)
+  -- NUNCA use SELECT ticket_medio direto quando a pergunta pedir o ticket médio geral.
 
 Tabela kpi_por_estado: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
   estado (TEXT), receita_total (REAL), ticket_medio (REAL),
@@ -82,10 +86,14 @@ Tabela kpi_por_estado: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
   -- 'Paraiba', 'Parana', 'Pernambuco', 'Piaui', 'Rio De Janeiro',
   -- 'Rio Grande Do Norte', 'Rio Grande Do Sul', 'Rondonia', 'Roraima',
   -- 'Santa Catarina', 'Sao Paulo', 'Sergipe', 'Tocantins'
+  -- ATENÇÃO: ticket_medio aqui é POR ESTADO individual, não o ticket médio geral do período.
+  -- Para ticket médio GERAL, SEMPRE calcule: SUM(receita_total) / SUM(total_pedidos)
 
 Tabela kpi_por_status: id (TEXT PK), ano_venda (INTEGER), mes_venda (INTEGER),
   status (TEXT), receita_total (REAL), ticket_medio (REAL),
   total_pedidos (INTEGER), total_clientes_unicos (INTEGER)
+  -- ATENÇÃO: ticket_medio aqui é POR STATUS individual, não o ticket médio geral do período.
+  -- Para ticket médio GERAL, SEMPRE calcule: SUM(receita_total) / SUM(total_pedidos)
 """
 
 # ---------------------------------------------------------------------------
@@ -235,6 +243,25 @@ WHERE ano_venda = (SELECT MAX(ano_venda) FROM kpi_por_categoria)
   AND mes_venda = (SELECT MAX(mes_venda) FROM kpi_por_categoria
                    WHERE ano_venda = (SELECT MAX(ano_venda) FROM kpi_por_categoria))
 ORDER BY ticket_medio DESC;
+
+-- Pergunta: Qual foi o ticket médio geral em janeiro de 2025?
+-- ATENÇÃO: ticket_medio na tabela é por categoria. Para o ticket médio geral,
+-- calcule SUM(receita_total) / SUM(total_pedidos).
+SELECT ROUND(SUM(receita_total) / SUM(total_pedidos), 2) AS ticket_medio
+FROM kpi_por_categoria
+WHERE ano_venda = 2025 AND mes_venda = 1;
+
+-- Pergunta: Qual foi o ticket médio geral em 2024?
+SELECT ROUND(SUM(receita_total) / SUM(total_pedidos), 2) AS ticket_medio
+FROM kpi_por_categoria
+WHERE ano_venda = 2024;
+
+-- Pergunta: Qual foi o ticket médio geral no último mês disponível?
+SELECT ROUND(SUM(receita_total) / SUM(total_pedidos), 2) AS ticket_medio
+FROM kpi_por_categoria
+WHERE ano_venda = (SELECT MAX(ano_venda) FROM kpi_por_categoria)
+  AND mes_venda = (SELECT MAX(mes_venda) FROM kpi_por_categoria
+                   WHERE ano_venda = (SELECT MAX(ano_venda) FROM kpi_por_categoria));
 
 -- Pergunta: Quais clientes são do segmento Premium?
 SELECT nome, sobrenome, email, estado, receita_total_cliente, total_compras
