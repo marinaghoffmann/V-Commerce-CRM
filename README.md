@@ -195,3 +195,4 @@ Abaixo estão centralizados os acessos e ferramentas de apoio ao desenvolvimento
 | **Jira** | Gestão de Tarefas, Sprints e Backlog do Scrum | [Acessar Workspace 🔗](https://var-zea.atlassian.net/jira/software/projects/SCRUM/summary) |
 | **Figma** | Protótipos de Interface, UI/UX e Fluxos de Telas | [Visualizar Design 🔗](https://www.figma.com/design/XCSyHO8HSz54SuqSAYzkDG/V-Commerce?node-id=0-1&t=brLlD7siVhVomxjl-1) |
 | **Google Drive** | Repositório de Artefatos, Apresentações e Data Assets | [Abrir Pasta de Arquivos 🔗](https://drive.google.com/drive/folders/14wxZUj7KuyGFpH0fWI1lYd8QQTPfXDhb?usp=sharing) |
+| **Google Docs** | Documentação do projeto | [Abrir documentação 🔗](https://docs.google.com/document/d/1eVuHfP1Eu-6URpHoQoVXxuHvTlXp84StgDIapI4Xf8w/edit?usp=sharing)|
