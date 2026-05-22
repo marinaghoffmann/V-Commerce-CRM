@@ -990,7 +990,7 @@ useEffect(() => {
             {compEnabled && chartView != "estado" && (
                 <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span>as cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
+                    <span>As cores vibrantes indicam o <span className="font-semibold text-blue-600">periodo principal</span> enquanto as translucidas <span className="font-semibold text-purple-500">o periodo comparativo</span>.</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
                   </div>
