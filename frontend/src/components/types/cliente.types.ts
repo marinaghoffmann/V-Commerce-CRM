@@ -27,6 +27,10 @@ export interface ClienteApiResponse {
   categoria_preferida?: string;
   produto_mais_comprado?: string;
   origem?: string;
+  total_sessoes?: number;
+  taxa_conversao_compra?: number;
+  taxa_abandono_carrinho?: number;
+  canal_predominante?: string;
   pedidos?: Array<Pick<Pedido, "id_pedido" | "data_pedido" | "status">>;
   tickets?: Array<Pick<Ticket, "id_ticket" | "data_abertura" | "tipo_problema" | "status_ticket">>;
 }
@@ -49,5 +53,9 @@ export interface Cliente {
   categoria_preferida?: string;
   produto_mais_comprado?: string;
   origem?: string;
+  total_sessoes?: number;
+  taxa_conversao_compra?: number;
+  taxa_abandono_carrinho?: number;
+  canal_predominante?: string;
   eventos?: EventoCliente[];
 }

@@ -55,6 +55,7 @@ class ProdutoSchemaRead(BaseModel):
     total_visualizacoes: int | None = Field(None, ge=0, description="Quantidade total de visualizações")
     flag_alto_ticket: bool | None = Field(None, description="Indica se o produto possui alto volume de tickets")
     indicador_crescimento: float | None = Field(0, description="Indicador de crescimento ou resseção do produto")
+    data_cadastro: str | None = Field(None, description="Data de cadastro do produto")
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
     @field_validator("categoria")

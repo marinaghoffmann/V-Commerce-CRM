@@ -4,6 +4,7 @@ import ClientDetail from "./components/pages/ClientDetailPage";
 import Clients from "./components/pages/ClientsPage";
 import { OrdersPage } from "./components/pages/OrdersPage";
 import ProductsPage from "./components/pages/ProductsPage";
+import ProductDetailPage from "./components/pages/ProductDetailPage";
 import SuportePage from "./components/pages/SupportPage";
 import Dashboard from "./components/pages/Dashboard";
 import { AIFloatingButton } from "./components/organisms/AIFloatingButton";
@@ -23,8 +24,9 @@ function App() {
         <Route path="/clientes"  element={<Clients />} />
         <Route path="/clientes/:id" element={<ClientDetail />} />
         <Route path="/pedidos"   element={<OrdersPage />} />
-        <Route path="/produtos"  element={<ProductsPage />} />
-        <Route path="/suporte"   element={<SuportePage />} />
+        <Route path="/produtos"     element={<ProductsPage />} />
+        <Route path="/produtos/:id"  element={<ProductDetailPage />} />
+        <Route path="/suporte"       element={<SuportePage />} />
       </Routes>
 
       <AIFloatingButton

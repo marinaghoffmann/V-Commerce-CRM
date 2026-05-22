@@ -72,6 +72,9 @@ class ClienteSchema(BaseModel):
     total_sessoes:              int     = 0
     total_produtos_visitados:   int     = 0
     tempo_medio_sessao_seg:     float   = 0.0
+    taxa_conversao_compra:      float   = 0.0
+    taxa_abandono_carrinho:     float   = 0.0
+    canal_predominante:         str | None = None
 
     # Segmento derivado
     segmento_cliente:           str | None = None

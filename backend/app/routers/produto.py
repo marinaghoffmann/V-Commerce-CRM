@@ -179,3 +179,91 @@ def delete_produto(id_produto: str, db: Session = Depends(get_db)):
     db.delete(produto)
     db.commit()
     return None
+
+
+@router.get("/{id_produto}/historico-mensal")
+def get_historico_mensal(id_produto: str, db: Session = Depends(get_db)):
+    """Retorna receita e quantidade de pedidos mês a mês para um produto."""
+    produto = db.query(Produto).filter(Produto.id_produto == id_produto).first()
+    if not produto:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
+
+    rows = (
+        db.query(
+            func.strftime("%Y", Pedido.data_pedido).label("ano"),
+            func.strftime("%m", Pedido.data_pedido).label("mes"),
+            func.sum(Pedido.valor_pedido).label("receita_total"),
+            func.count(Pedido.id_pedido).label("total_pedidos"),
+        )
+        .filter(
+            Pedido.id_produto == id_produto,
+            Pedido.data_pedido.isnot(None),
+        )
+        .group_by(
+            func.strftime("%Y", Pedido.data_pedido),
+            func.strftime("%m", Pedido.data_pedido),
+        )
+        .order_by(
+            func.strftime("%Y", Pedido.data_pedido),
+            func.strftime("%m", Pedido.data_pedido),
+        )
+        .all()
+    )
+
+    return [
+        {
+            "ano": int(r.ano),
+            "mes": int(r.mes),
+            "receita_total": float(r.receita_total or 0),
+            "total_pedidos": int(r.total_pedidos or 0),
+        }
+        for r in rows
+        if r.ano is not None and r.mes is not None
+    ]
+
+
+@router.get("/{id_produto}/tickets")
+def get_tickets_produto(
+    id_produto: str,
+    page: int = 1,
+    limit: int = 6,
+    db: Session = Depends(get_db),
+):
+    """Retorna tickets vinculados ao produto via nome_produto."""
+    from app.models.ticket import Ticket
+
+    produto = db.query(Produto).filter(Produto.id_produto == id_produto).first()
+    if not produto:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
+
+    total = (
+        db.query(func.count(Ticket.id_ticket))
+        .filter(Ticket.nome_produto == produto.nome_produto)
+        .scalar()
+    )
+
+    offset = (page - 1) * limit
+    tickets = (
+        db.query(Ticket)
+        .filter(Ticket.nome_produto == produto.nome_produto)
+        .order_by(Ticket.data_abertura.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "items": [
+            {
+                "id_ticket": t.id_ticket,
+                "nome_cliente": t.nome_cliente,
+                "tipo_problema": t.tipo_problema,
+                "status_ticket": t.status_ticket,
+                "data_abertura": str(t.data_abertura) if t.data_abertura else None,
+            }
+            for t in tickets
+        ],
+    }

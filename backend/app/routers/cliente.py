@@ -11,6 +11,7 @@ from app.models.cliente import Cliente
 from app.schemas.cliente import ClienteSchema, ClienteCreateSchema, ClienteUpdateSchema
 from app.models.ticket import Ticket
 from app.models.pedido import Pedido
+from app.models.comportamento_digital import ComportamentoDigital
 
 CLIENTE_ORDER_FIELDS = {
     "receita_total_cliente": Cliente.receita_total_cliente,
@@ -94,11 +95,16 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
     
     list_tickets = db.query(Ticket).filter(Ticket.id_cliente == cliente_id).all()
     list_pedidos = db.query(Pedido).filter(Pedido.id_cliente == cliente_id).all()
+    comp_digital = db.query(ComportamentoDigital).filter(ComportamentoDigital.id_cliente == cliente_id).first()
     
     resultado = {
         **cliente.__dict__, 
         "pedidos": list_pedidos,
-        "tickets": list_tickets
+        "tickets": list_tickets,
+        "total_sessoes": comp_digital.total_sessoes if comp_digital else 0,
+        "taxa_conversao_compra": comp_digital.taxa_conversao_click if comp_digital else 0.0,
+        "taxa_abandono_carrinho": comp_digital.taxa_abandono_carrinho if comp_digital else 0.0,
+        "canal_predominante": comp_digital.canal_predominante if comp_digital else None
     }
     
     return resultado
