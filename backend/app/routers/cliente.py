@@ -102,7 +102,6 @@ def obter_perfil_cliente(cliente_id: str, db: Session = Depends(get_db)):
         "pedidos": list_pedidos,
         "tickets": list_tickets,
         "total_sessoes": comp_digital.total_sessoes if comp_digital else 0,
-        "taxa_conversao_compra": comp_digital.taxa_conversao_click if comp_digital else 0.0,
         "taxa_abandono_carrinho": comp_digital.taxa_abandono_carrinho if comp_digital else 0.0,
         "canal_predominante": comp_digital.canal_predominante if comp_digital else None
     }
