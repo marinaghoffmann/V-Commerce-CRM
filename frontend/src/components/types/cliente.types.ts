@@ -28,7 +28,6 @@ export interface ClienteApiResponse {
   produto_mais_comprado?: string;
   origem?: string;
   total_sessoes?: number;
-  taxa_conversao_compra?: number;
   taxa_abandono_carrinho?: number;
   canal_predominante?: string;
   pedidos?: Array<Pick<Pedido, "id_pedido" | "data_pedido" | "status">>;

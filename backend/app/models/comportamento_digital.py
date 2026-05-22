@@ -15,7 +15,6 @@ class ComportamentoDigital(Base):
     total_eventos:              Mapped[int]   = mapped_column(Integer, default=0)
     total_visualizacoes_produto:Mapped[int]   = mapped_column(Integer, default=0)
     total_compras_click:        Mapped[int]   = mapped_column(Integer, default=0)
-    taxa_conversao_click:       Mapped[float] = mapped_column(Float,   default=0.0)
     taxa_abandono_carrinho:     Mapped[float] = mapped_column(Float,   default=0.0)
     canal_predominante:         Mapped[str]   = mapped_column(String)
     produto_mais_visitado:      Mapped[str]   = mapped_column(String)
