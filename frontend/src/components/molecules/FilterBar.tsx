@@ -16,6 +16,7 @@ interface FilterBarProps {
   selectedStatus: string[];
   onStatusChange: (v: string[]) => void;
   statusColors?: Record<string, OptionColor>;
+  categoriaColors?: Record<string, OptionColor>;
 }
 
 export const FilterBar = ({
@@ -30,6 +31,7 @@ export const FilterBar = ({
   selectedStatus,
   onStatusChange,
   statusColors,
+  categoriaColors,
 }: FilterBarProps) => {
   return (
     <div className="flex items-center gap-4 w-full">
@@ -51,6 +53,7 @@ export const FilterBar = ({
         options={categoriaOptions}
         selected={selectedCategoria}
         onChange={onCategoriaChange}
+        optionColors={categoriaColors}
       />
 
       <DropdownFilter

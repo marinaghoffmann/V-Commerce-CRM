@@ -118,7 +118,7 @@ export const DropdownFilter = ({
                     </span>
                     {color ? (
                       <span
-                        className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${color.bg} ${color.border} ${color.text}`}
+                        className={`px-2.5 py-0.5 rounded-lg capitalize text-xs font-medium border ${color.bg} ${color.border} ${color.text}`}
                       >
                         {option}
                       </span>

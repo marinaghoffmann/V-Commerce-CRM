@@ -55,6 +55,17 @@ const STATUS_FILTER_COLORS: Record<string, OptionColor> = {
   "processado": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
 };
 
+const CATEGORY_COLORS: Record<string, OptionColor> = {
+  "Automotivo": { bg: "bg-zinc-50", border: "border-zinc-200", text: "text-zinc-700" },
+  "Beleza": { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
+  "Brinquedos": { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
+  "Casa": { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" },
+  "Eletronicos": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
+  "Esportes": { bg: "bg-green-50", border: "border-green-200", text: "text-green-700" },
+  "Moveis": { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  "Vestuario": { bg: "bg-pink-50", border: "border-pink-200", text: "text-pink-700" },
+};
+
 const columns = [
   {
     key: "id_pedido",
@@ -123,7 +134,7 @@ const columns = [
 
     render: (value: string) => (
       <span
-        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
+        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusStyle(
           value
         )}`}
       >
@@ -288,6 +299,7 @@ export const OrdersPage = () => {
             onCategoriaChange={
               setSelectedCategoria
             }
+            categoriaColors={CATEGORY_COLORS}
 
             statusOptions={statusOptions}
             selectedStatus={
