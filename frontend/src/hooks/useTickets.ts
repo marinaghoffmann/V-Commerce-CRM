@@ -7,6 +7,7 @@ interface UseTicketsArgs {
   limit?: number;
   status?: string | null;
   search?: string | null;
+  categoria?: string | null;
 }
 
 export function useTickets(initArgs: UseTicketsArgs = {}) {
@@ -18,6 +19,16 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
   const [limit] = useState<number>(initArgs.limit ?? 7);
   const [kpis, setKpis] = useState<Record<string, number | string>>({});
 
+  const [filters, setFilters] = useState<{
+    status: string | null;
+    search: string | null;
+    categoria: string | null;
+  }>({
+    status: initArgs.status ?? null,
+    search: initArgs.search ?? null,
+    categoria: initArgs.categoria ?? null,
+  });
+
   const fetchKpis = useCallback(async () => {
     try {
       const res = await api.get(`/ticket/kpis/resumo`);
@@ -27,52 +38,83 @@ export function useTickets(initArgs: UseTicketsArgs = {}) {
     }
   }, []);
 
-  const fetchTickets = useCallback(
-    async (args?: UseTicketsArgs) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const currentPage = args?.page ?? page;
-        const st = args?.status ?? initArgs.status;
-        const q = args?.search ?? initArgs.search;
+  function buildParams(
+    currentPage: number,
+    currentLimit: number,
+    currentFilters: typeof filters
+  ): URLSearchParams {
+    const params = new URLSearchParams();
+    params.append("page", String(currentPage));
+    params.append("limit", String(currentLimit));
 
-        const params = new URLSearchParams();
-        params.append("page", String(currentPage));
-        params.append("limit", String(limit));
-        if (st && st !== "Todos") params.append("status", st);
-        if (q) params.append("search", q);
+    if (currentFilters.status) {
+      currentFilters.status
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .forEach((s) => params.append("status[]", s));
+    }
 
-        // busca tickets e total em paralelo
-        const [resTickets, resCount] = await Promise.all([
-          api.get(`/ticket?${params.toString()}`),
-          api.get(`/ticket/count?${params.toString()}`),
-        ]);
+    if (currentFilters.search?.trim()) {
+      params.append("search", currentFilters.search.trim());
+    }
 
-        const json = resTickets.data;
-        const countJson = resCount.data;
+    if (currentFilters.categoria) {
+      currentFilters.categoria
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean)
+        .forEach((c) => params.append("categoria[]", c));
+    }
 
-        setData(Array.isArray(json) ? json : json.items ?? json.data ?? []);
-        setTotal(countJson.total ?? 0);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
-      }
-    },
-    [page, limit] // eslint-disable-line
-  );
+    return params;
+  }
+
+  const fetchTickets = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = buildParams(page, limit, filters);
+
+      const [resTickets, resCount] = await Promise.all([
+        api.get(`/ticket?${params.toString()}`),
+        api.get(`/ticket/count?${params.toString()}`),
+      ]);
+
+      const json = resTickets.data;
+      const countJson = resCount.data;
+
+      setData(Array.isArray(json) ? json : json.items ?? json.data ?? []);
+      setTotal(countJson.total ?? 0);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, filters]); 
 
   useEffect(() => {
-    fetchTickets({ page, limit });
-  }, [fetchTickets, page, limit]);
+    fetchTickets();
+  }, [fetchTickets]);
 
   useEffect(() => {
     fetchKpis();
   }, [fetchKpis]);
 
   const refetch = useCallback(
-    (args?: UseTicketsArgs) => fetchTickets({ page, limit, ...args }),
-    [fetchTickets, page, limit]
+    (args?: UseTicketsArgs) => {
+      if (args) {
+        if (args.page !== undefined) setPage(args.page);
+        setFilters({
+          status: args.status !== undefined ? args.status ?? null : filters.status,
+          search: args.search !== undefined ? args.search ?? null : filters.search,
+          categoria: args.categoria !== undefined ? args.categoria ?? null : filters.categoria,
+        });
+      } else {
+        fetchTickets();
+      }
+    },
+    [filters, fetchTickets]
   );
 
   return { data, total, loading, error, page, setPage, limit, refetch, kpis, fetchKpis };

@@ -1,20 +1,19 @@
-import { useState } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { Navbar } from "./components/organisms/Navbar";
 import ClientDetail from "./components/pages/ClientDetailPage";
 import Clients from "./components/pages/ClientsPage";
 import { OrdersPage } from "./components/pages/OrdersPage";
 import ProductsPage from "./components/pages/ProductsPage";
+import ProductDetailPage from "./components/pages/ProductDetailPage";
 import SuportePage from "./components/pages/SupportPage";
 import Dashboard from "./components/pages/Dashboard";
 import LandingPage from "./components/pages/LandingPage";
 import { AIFloatingButton } from "./components/organisms/AIFloatingButton";
 import { ChatbotOverlay } from "./components/organisms/ChatbotOverlay";
+import { useChatbot } from "./contexts/ChatbotContext";
 
 function App() {
-  const [chatOpen, setChatOpen] = useState(false);
-
-  const [buttonPos, setButtonPos] = useState({ x: 0, y: 0 });
+  const { isOpen, buttonPos, toggleOverlay, closeOverlay } = useChatbot();
 
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
@@ -29,22 +28,20 @@ function App() {
         <Route path="/clientes"  element={<Clients />} />
         <Route path="/clientes/:id" element={<ClientDetail />} />
         <Route path="/pedidos"   element={<OrdersPage />} />
-        <Route path="/produtos"  element={<ProductsPage />} />
-        <Route path="/suporte"   element={<SuportePage />} />
+        <Route path="/produtos"     element={<ProductsPage />} />
+        <Route path="/produtos/:id"  element={<ProductDetailPage />} />
+        <Route path="/suporte"       element={<SuportePage />} />
       </Routes>
 
       {!isLandingPage && (
         <AIFloatingButton
-          onClick={(pos) => {
-            setButtonPos(pos);
-            setChatOpen((prev) => !prev);
-          }}
+          onClick={toggleOverlay}
         />
       )}
 
-      {(!isLandingPage && chatOpen) && (
+      {!isLandingPage && isOpen && (
         <ChatbotOverlay
-          onClose={() => setChatOpen(false)}
+          onClose={closeOverlay}
           buttonPos={buttonPos}
         />
       )}

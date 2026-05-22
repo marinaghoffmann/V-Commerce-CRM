@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useAIChat } from "../../hooks/useAIChat";
+import { useChatbot } from "../../contexts/ChatbotContext";
 import { ChatbotHeader } from "../molecules/ChatbotHeader";
 import { ChatbotInput } from "../molecules/ChatbotInput";
 import { EmptyState } from "../molecules/EmptyState";
@@ -7,7 +7,7 @@ import { BotMessage } from "../molecules/BotMessage";
 import { UserMessage } from "../molecules/UserMessage";
 import { TypingIndicator } from "../atoms/TypingIndicator";
 
-const WINDOW_W = 400;
+const WINDOW_W = 460;
 const WINDOW_H = 560;
 const MARGIN   = 12;
 
@@ -22,7 +22,7 @@ export function ChatbotOverlay({
   buttonPos,
   buttonSize = 56,
 }: ChatbotOverlayProps) {
-  const { messages, loading, sendMessage, suggestions } = useAIChat();
+  const { messages, loading, sendMessage, suggestions, clearMessages } = useChatbot();
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef       = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +37,7 @@ export function ChatbotOverlay({
     if (y + WINDOW_H > window.innerHeight - 8) y = window.innerHeight - WINDOW_H - 8;
 
     return { x, y };
-  }, []); 
+  }, [buttonPos.x, buttonPos.y, buttonSize]); 
 
   const [pos, setPos] = useState(calcInitialPos);
 
@@ -121,7 +121,7 @@ export function ChatbotOverlay({
 
   return (
     <div
-      className={`fixed z-[9998] flex h-[560px] w-[400px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-200 ease-out ${
+      className={`fixed z-[9998] flex h-[560px] w-[460px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-200 ease-out ${
         isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
       }`}
       style={{ left: pos.x, top: pos.y }}
@@ -139,7 +139,7 @@ export function ChatbotOverlay({
             onHeaderPointerDown(e.touches[0].clientX, e.touches[0].clientY);
           }}
         >
-          <ChatbotHeader onClose={onClose} />
+          <ChatbotHeader onClose={onClose} onClear={clearMessages} />
         </div>
 
         {/* Área de mensagens */}

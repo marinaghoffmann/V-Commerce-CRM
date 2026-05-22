@@ -1,6 +1,5 @@
-from typing import List
-from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -13,6 +12,21 @@ from app.schemas.ticket import TicketCreateSchema, TicketSchemaRead, TicketUpdat
 router = APIRouter(prefix="/ticket", tags=["Ticket"])
 
 
+def _apply_filters(query, status: Optional[List[str]], search: Optional[str], categoria: Optional[List[str]]):
+    if status:
+        query = query.filter(Ticket.status_ticket.in_(status))
+    if search:
+        query = query.filter(
+            Ticket.nome_cliente.ilike(f"%{search}%")
+            | Ticket.tipo_problema.ilike(f"%{search}%")
+        )
+    if categoria:
+        # Filtra pelo tipo de problema do ticket (reembolso, entrega, produto, pagamento)
+        query = query.filter(Ticket.tipo_problema.in_(categoria))
+    return query
+
+
+
 @router.get("/kpis/resumo")
 def get_kpis(
     db: Session = Depends(get_db),
@@ -23,10 +37,7 @@ def get_kpis(
         m = str(mes).zfill(2)
         a = str(ano)
     else:
-        ultima_data = (
-            db.query(func.max(Ticket.data_abertura))
-            .scalar()
-        )
+        ultima_data = db.query(func.max(Ticket.data_abertura)).scalar()
         if ultima_data:
             m = ultima_data[5:7]
             a = ultima_data[:4]
@@ -61,23 +72,16 @@ def get_kpis(
     return kpis
 
 
+
 @router.get("/count")
 def count_tickets(
     db: Session = Depends(get_db),
-    status: str | None = None,
+    status: Optional[List[str]] = Query(default=None, alias="status[]"),
     search: str | None = None,
+    categoria: Optional[List[str]] = Query(default=None, alias="categoria[]"),
 ):
     query = db.query(func.count(Ticket.id_ticket))
-
-    if status and status != "Todos":
-        query = query.filter(Ticket.status_ticket.ilike(f"%{status}%"))
-
-    if search:
-        query = query.filter(
-            Ticket.nome_cliente.ilike(f"%{search}%")
-            | Ticket.tipo_problema.ilike(f"%{search}%")
-        )
-
+    query = _apply_filters(query, status, search, categoria)
     return {"total": query.scalar()}
 
 
@@ -86,23 +90,17 @@ def list_ticket(
     db: Session = Depends(get_db),
     page: int = 1,
     limit: int = 10,
-    status: str | None = None,
+    status: Optional[List[str]] = Query(default=None, alias="status[]"),
     search: str | None = None,
+    categoria: Optional[List[str]] = Query(default=None, alias="categoria[]"),
     id_cliente: str | None = None,
 ):
     query = db.query(Ticket)
 
-    if status and status != "Todos":
-        query = query.filter(Ticket.status_ticket.ilike(f"%{status}%"))
-
     if id_cliente:
         query = query.filter(Ticket.id_cliente.ilike(f"%{id_cliente}%"))
 
-    if search:
-        query = query.filter(
-            Ticket.nome_cliente.ilike(f"%{search}%")
-            | Ticket.tipo_problema.ilike(f"%{search}%")
-        )
+    query = _apply_filters(query, status, search, categoria)
 
     offset = (page - 1) * limit
     return query.order_by(Ticket.data_abertura.desc()).offset(offset).limit(limit).all()
@@ -120,12 +118,10 @@ def get_ticket(id_ticket: str, db: Session = Depends(get_db)):
 def create_ticket(payload: TicketCreateSchema, db: Session = Depends(get_db)):
     if db.query(Ticket).filter(Ticket.id_ticket == payload.id_ticket).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ticket com este ID já existe")
-
     if not db.query(Cliente).filter(Cliente.id_cliente == payload.id_cliente).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
-    
     if not db.query(Pedido).filter(Pedido.id_pedido == payload.id_pedido).first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
 
     obj = Ticket(**payload.model_dump())
     db.add(obj)
@@ -139,13 +135,10 @@ def update_ticket(id_ticket: str, payload: TicketUpdateSchema, db: Session = Dep
     ticket = db.query(Ticket).filter(Ticket.id_ticket == id_ticket).first()
     if not ticket:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket não encontrado")
-
     if not db.query(Cliente).filter(Cliente.id_cliente == ticket.id_cliente).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
-    
     if not db.query(Pedido).filter(Pedido.id_pedido == ticket.id_pedido).first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado")
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
 
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(ticket, key, value)
