@@ -215,14 +215,37 @@ function OrderFilter({ selected, onSelect, onClear }: { selected: string | null;
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center justify-between gap-2 px-5 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
-            ${open || selected
-            ? "bg-white border-blue-500 text-gray-800"
-            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+        className={`flex items-center justify-between gap-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
+            ${selected
+            ? "bg-blue-500 border-blue-500 text-white pl-2 pr-5 hover:bg-blue-600 hover:border-blue-600"
+            : open
+            ? "border-blue-500 bg-white text-gray-800 px-5"
+            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 px-5"
           }`}
       >
-        <span className="font-medium truncate">{selectedOption ? selectedOption.label : "Ordenar por"}</span>
-        <ChevronDown size={16} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <div className="flex items-center gap-2 overflow-hidden">
+          {selected && (
+            <>
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClear();
+                  setOpen(false);
+                }}
+                className="flex items-center justify-center shrink-0 w-6 h-6 rounded-full hover:bg-blue-400 transition-colors cursor-pointer"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.5" />
+                  <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="w-px h-5 bg-white/40 shrink-0" />
+            </>
+          )}
+          <span className="font-medium truncate">{selectedOption ? selectedOption.label : "Ordenar por"}</span>
+        </div>
+        <ChevronDown size={16} className={`transition-transform duration-200 shrink-0 ${selected ? "text-white" : ""} ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -254,14 +277,6 @@ function OrderFilter({ selected, onSelect, onClear }: { selected: string | null;
                 </button>
               );
             })}
-          </div>
-          <div className="px-3 pt-3 mt-1 border-t border-gray-100">
-            <button
-              onClick={() => { onClear(); setOpen(false); }}
-              className="w-full py-2 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
-            >
-              Limpar filtro
-            </button>
           </div>
         </div>
       )}
