@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
+export interface OptionColor {
+  bg: string;
+  border: string;
+  text: string;
+}
+
 interface DropdownFilterProps {
   label: string;
   options: string[];
   selected: string[];
   onChange: (selected: string[]) => void;
+  optionColors?: Record<string, OptionColor>;
 }
 
 export const DropdownFilter = ({
@@ -13,7 +20,12 @@ export const DropdownFilter = ({
   options,
   selected,
   onChange,
+  optionColors,
 }: DropdownFilterProps) => {
+  const getColor = (option: string): OptionColor | undefined => {
+    if (!optionColors) return undefined;
+    return optionColors[option] ?? optionColors[option.toLowerCase()] ?? optionColors[option.charAt(0).toUpperCase() + option.slice(1).toLowerCase()];
+  };
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,23 +54,36 @@ export const DropdownFilter = ({
       <button
         onClick={() => setOpen((prev) => !prev)}
         className={[
-          "flex items-center justify-between gap-2 px-4 py-2.5 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap cursor-pointer select-none w-48",
+          "flex items-center justify-between gap-2 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap cursor-pointer select-none w-48",
           hasSelection
-            ? "border-blue-500 bg-blue-50 text-blue-700"
-            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50",
+            ? "border-blue-500 bg-blue-500 text-white pl-2 pr-4 py-2.5 hover:bg-blue-600 hover:border-blue-600"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 px-4 py-2.5",
         ].join(" ")}
       >
         <div className="flex items-center gap-2">
-          <span>{label}</span>
           {hasSelection && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold leading-none">
-              {selected.length}
-            </span>
+            <>
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange([]);
+                }}
+                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-400 transition-colors cursor-pointer"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.5" />
+                  <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="w-px h-5 bg-white/40" />
+            </>
           )}
+          <span>{label}</span>
         </div>
         <ChevronDown
           size={14}
-          className={`transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`}
+          className={`transition-transform duration-200 shrink-0 ${hasSelection ? "text-white" : ""} ${open ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -67,32 +92,44 @@ export const DropdownFilter = ({
           {options.length === 0 ? (
             <p className="px-4 py-2 text-xs text-gray-400">Sem opções</p>
           ) : (
-            options.map((option) => {
-              const isSelected = selected.includes(option);
-              return (
-                <button
-                  key={option}
-                  onClick={() => toggle(option)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-gray-700 hover:bg-blue-50 transition-colors cursor-pointer"
-                >
-                  <span
-                    className={[
-                      "shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
-                      isSelected
-                        ? "bg-blue-500 border-blue-500"
-                        : "border-gray-300 bg-white",
-                    ].join(" ")}
+            <div className={optionColors ? "flex flex-col gap-1 max-h-64 overflow-y-auto px-1" : ""}>
+              {options.map((option) => {
+                const isSelected = selected.includes(option);
+                const color = getColor(option);
+                return (
+                  <button
+                    key={option}
+                    onClick={() => toggle(option)}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer ${
+                      optionColors ? "rounded-xl px-3 py-2" : ""
+                    }`}
                   >
-                    {isSelected && (
-                      <Check size={9} className="text-white" strokeWidth={3.5} />
+                    <span
+                      className={[
+                        "shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                        isSelected
+                          ? "bg-blue-500 border-blue-500"
+                          : "border-gray-300 bg-white",
+                      ].join(" ")}
+                    >
+                      {isSelected && (
+                        <Check size={12} className="text-white" strokeWidth={3} />
+                      )}
+                    </span>
+                    {color ? (
+                      <span
+                        className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${color.bg} ${color.border} ${color.text}`}
+                      >
+                        {option}
+                      </span>
+                    ) : (
+                      <span className="capitalize leading-tight">{option}</span>
                     )}
-                  </span>
-                  <span className="capitalize leading-tight">{option}</span>
-                </button>
-              );
-            })
+                  </button>
+                );
+              })}
+            </div>
           )}
-
         </div>
       )}
     </div>

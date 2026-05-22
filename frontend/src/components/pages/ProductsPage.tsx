@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, Check, Trash2, ImageIcon, AlertTriangle, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Check, Trash2, ImageIcon, AlertTriangle, Search } from "lucide-react";
 
 import ProductGrid from "../organisms/ProductGrid";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
@@ -97,15 +97,36 @@ function CategoryFilter({ selected, onApply, onClear, availableCategories }: Cat
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center justify-between gap-2 px-5 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
-            ${
-              open || hasActive
-                ? "bg-white border-blue-500 text-gray-800"
-                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-            }`}
+        className={`flex items-center justify-between gap-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
+            ${hasActive
+            ? "bg-blue-500 border-blue-500 text-white pl-2 pr-5 hover:bg-blue-600 hover:border-blue-600"
+            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 px-5"
+          }`}
       >
-        <span className="font-medium">Categoria</span>
-        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <div className="flex items-center gap-2">
+          {hasActive && (
+            <>
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClear();
+                  setDraft([]);
+                  setOpen(false);
+                }}
+                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-400 transition-colors cursor-pointer"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.5" />
+                  <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="w-px h-5 bg-white/40" />
+            </>
+          )}
+          <span className="font-medium">Categoria</span>
+        </div>
+        <ChevronDown size={16} className={`transition-transform duration-200 ${hasActive ? "text-white" : ""} ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -119,9 +140,8 @@ function CategoryFilter({ selected, onApply, onClear, availableCategories }: Cat
                   className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors rounded-xl"
                 >
                   <div
-                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                      checked ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300 bg-white"
-                    }`}
+                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${checked ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300 bg-white"
+                      }`}
                   >
                     {checked && <Check size={12} strokeWidth={3} />}
                   </div>
@@ -132,9 +152,8 @@ function CategoryFilter({ selected, onApply, onClear, availableCategories }: Cat
                     className="hidden"
                   />
                   <span
-                    className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${getCategoryColor(cat).bg} ${
-                      getCategoryColor(cat).border
-                    } ${getCategoryColor(cat).text}`}
+                    className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${getCategoryColor(cat).bg} ${getCategoryColor(cat).border
+                      } ${getCategoryColor(cat).text}`}
                   >
                     {cat}
                   </span>
@@ -149,12 +168,6 @@ function CategoryFilter({ selected, onApply, onClear, availableCategories }: Cat
               className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               Aplicar filtro
-            </button>
-            <button
-              onClick={() => { onClear(); setDraft([]); setOpen(false); }}
-              className="w-full py-2 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
-            >
-              Limpar filtro
             </button>
           </div>
         </div>
@@ -203,14 +216,13 @@ function OrderFilter({ selected, onSelect, onClear }: { selected: string | null;
       <button
         onClick={() => setOpen((o) => !o)}
         className={`flex items-center justify-between gap-2 px-5 py-2 rounded-full text-sm border transition-all shadow-sm cursor-pointer w-48 h-10
-            ${
-              open || selected
-                ? "bg-white border-blue-500 text-gray-800"
-                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-            }`}
+            ${open || selected
+            ? "bg-white border-blue-500 text-gray-800"
+            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+          }`}
       >
         <span className="font-medium truncate">{selectedOption ? selectedOption.label : "Ordenar por"}</span>
-        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <ChevronDown size={16} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -228,9 +240,8 @@ function OrderFilter({ selected, onSelect, onClear }: { selected: string | null;
                   className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
                 >
                   <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                      isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white"
-                    }`}
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white"
+                      }`}
                   >
                     {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
@@ -343,7 +354,7 @@ function ProductFormModal({ initial, isEdit, onClose, onSave, addProduct, editPr
     if (!form.preco || isNaN(Number(form.preco)) || Number(form.preco) < 0)
       e.preco = "Preço inválido";
     if (form.estoque_disponivel && isNaN(Number(form.estoque_disponivel)) || Number(form.estoque_disponivel) < 0)
-        e.estoque_disponivel = "Estoque inválido";
+      e.estoque_disponivel = "Estoque inválido";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -688,7 +699,7 @@ export default function ProductsPage() {
       const res = await api.get("/produto/categorias");
       const fromDb = res.data || [];
       const predefined = Object.keys(CATEGORY_COLORS);
-      
+
       // Mescla as categorias predefinidas esteticamente com as existentes no banco
       setAvailableCategories(Array.from(new Set([...predefined, ...fromDb])).sort());
     } catch (err) {
@@ -724,16 +735,16 @@ export default function ProductsPage() {
   function openCreate() { setFormModal({ open: true, product: null }); }
   function openEdit(product: Product) { setFormModal({ open: true, product }); }
   function closeForm() { setFormModal({ open: false, product: null }); }
-  
-  function handleSaved() { 
-    closeForm(); 
-    refetch(); 
+
+  function handleSaved() {
+    closeForm();
+    refetch();
     fetchCategories(); // <-- Re-requisita do banco para capturar se uma nova categoria foi criada
   }
-  
-  function handleDeleted() { 
-    setDeleteModal(null); 
-    refetch(); 
+
+  function handleDeleted() {
+    setDeleteModal(null);
+    refetch();
     fetchCategories(); // <-- Atualiza a lista caso a última unidade pertencente àquela categoria tenha sumido
   }
 

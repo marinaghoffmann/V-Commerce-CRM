@@ -11,6 +11,7 @@ import { useOrders } from "../../hooks/useOrders";
 import api from "../../services/api";
 
 import type { DateRange } from "../organisms/DateRangeFilter";
+import type { OptionColor } from "../atoms/DropdownFilter";
 
 type StatusKey =
   | "entregue"
@@ -42,6 +43,17 @@ function getStatusStyle(value: string) {
 
   return "bg-gray-100 text-gray-600";
 }
+
+const STATUS_FILTER_COLORS: Record<string, OptionColor> = {
+  "aprovado": { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+  "recusado": { bg: "bg-red-50", border: "border-red-200", text: "text-red-600" },
+  "reembolsado": { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-600" },
+  "processando": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
+  "entregue": { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+  "em trânsito": { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  "atrasado": { bg: "bg-red-50", border: "border-red-200", text: "text-red-600" },
+  "processado": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
+};
 
 const columns = [
   {
@@ -284,6 +296,8 @@ export const OrdersPage = () => {
             onStatusChange={
               setSelectedStatus
             }
+
+            statusColors={STATUS_FILTER_COLORS}
           />
         </div>
 
