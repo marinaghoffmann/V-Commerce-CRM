@@ -8,6 +8,7 @@ import { TableSkeletonLoader } from "../molecules/TableSkeletonLoader";
 import { PageSizeSelect } from "../atoms/PageSizeSelect";
 import { ExportCSVModal } from "../molecules/ExportCSVModal";
 import { DropdownFilter } from "../atoms/DropdownFilter";
+import type { OptionColor } from "../atoms/DropdownFilter";
 
 function getInitials(nome: string, sobrenome: string) {
   return `${nome?.[0] ?? ""}${sobrenome?.[0] ?? ""}`.toUpperCase();
@@ -22,6 +23,13 @@ function getSegmentStyle(segmento: string): string {
     default: return "bg-gray-100 text-gray-600";
   }
 }
+
+const SEGMENT_COLORS: Record<string, OptionColor> = {
+  "Premium": { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  "Inativo": { bg: "bg-red-50", border: "border-red-200", text: "text-red-600" },
+  "Recorrente": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700" },
+  "Novo": { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+};
 
 function getAvatarColor(nome: string): string {
   const colors = [
@@ -228,6 +236,7 @@ function Clients() {
             options={["Premium", "Inativo", "Recorrente", "Novo"]}
             selected={status}
             onChange={handleStatus}
+            optionColors={SEGMENT_COLORS}
           />
         </div>
 

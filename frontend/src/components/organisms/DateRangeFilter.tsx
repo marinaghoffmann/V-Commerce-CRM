@@ -213,16 +213,36 @@ export const DateRangeFilter = ({ selected, onChange }: DateRangeFilterProps) =>
           });
         }}
         className={[
-          "flex items-center justify-between gap-2 px-5 py-2.5 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap cursor-pointer select-none min-w-[180px]",
+          "flex items-center justify-between gap-2 rounded-full border text-sm font-medium transition-all shadow-sm whitespace-nowrap cursor-pointer select-none min-w-[180px]",
           hasSelection
-            ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
-            : "border-[#D2DDEC] bg-white text-slate-700 hover:border-slate-355 hover:bg-slate-50",
+            ? "border-blue-500 bg-blue-500 text-white pl-2 pr-5 py-2.5 hover:bg-blue-600 hover:border-blue-600 font-semibold"
+            : "border-[#D2DDEC] bg-white text-slate-700 hover:border-slate-355 hover:bg-slate-50 px-5 py-2.5",
         ].join(" ")}
       >
-        <span className="truncate">{displayText}</span>
+        <div className="flex items-center gap-2">
+          {hasSelection && (
+            <>
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClear();
+                }}
+                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-400 transition-colors cursor-pointer"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.5" />
+                  <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="w-px h-5 bg-white/40" />
+            </>
+          )}
+          <span className="truncate">{displayText}</span>
+        </div>
         <ChevronDown
           size={16}
-          className={`transition-transform duration-200 flex-shrink-0 text-slate-500 ${open ? "rotate-180" : ""}`}
+          className={`transition-transform duration-200 flex-shrink-0 ${hasSelection ? "text-white" : "text-slate-500"} ${open ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -274,18 +294,11 @@ export const DateRangeFilter = ({ selected, onChange }: DateRangeFilterProps) =>
               onDayClick={handleDayClick}
             />
           ) : (
-            <div className="flex items-center justify-center gap-3 mt-5 w-full">
-              <button
-                type="button"
-                onClick={handleClear}
-                className="flex-1 py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-sm font-semibold text-slate-700 transition-all cursor-pointer text-center"
-              >
-                Limpar filtro
-              </button>
+            <div className="flex items-center justify-center mt-5 w-full">
               <button
                 type="button"
                 onClick={handleApply}
-                className="flex-1 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-sm font-semibold text-white transition-all cursor-pointer text-center shadow-md shadow-blue-500/10"
+                className="w-full py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-sm font-semibold text-white transition-all cursor-pointer text-center shadow-md shadow-blue-500/10"
               >
                 Aplicar filtro
               </button>

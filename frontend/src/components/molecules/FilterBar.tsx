@@ -1,5 +1,6 @@
 import { SearchInput } from "../atoms/SearchInput";
 import { DropdownFilter } from "../atoms/DropdownFilter";
+import type { OptionColor } from "../atoms/DropdownFilter";
 import { DateRangeFilter } from "../organisms/DateRangeFilter";
 import type { DateRange } from "../organisms/DateRangeFilter";
 
@@ -14,6 +15,7 @@ interface FilterBarProps {
   statusOptions: string[];
   selectedStatus: string[];
   onStatusChange: (v: string[]) => void;
+  statusColors?: Record<string, OptionColor>;
 }
 
 export const FilterBar = ({
@@ -27,6 +29,7 @@ export const FilterBar = ({
   statusOptions,
   selectedStatus,
   onStatusChange,
+  statusColors,
 }: FilterBarProps) => {
   return (
     <div className="flex items-center gap-4 w-full">
@@ -55,6 +58,7 @@ export const FilterBar = ({
         options={statusOptions}
         selected={selectedStatus}
         onChange={onStatusChange}
+        optionColors={statusColors}
       />
     </div>
   );
